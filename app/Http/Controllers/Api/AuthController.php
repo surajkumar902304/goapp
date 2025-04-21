@@ -17,24 +17,45 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
+        // ✅ Validate input
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6|confirmed',
+            'first_name'    => 'required|string|max:50',
+            'last_name'     => 'required|string|max:50',
+            'email'         => 'required|string|email|max:50|unique:users,email',
+            'password'      => 'required|string|min:6',
+            'mobile'        => 'required|string|max:15',
+            'rep_code'      => 'nullable|string|max:50',
+            'company_name'  => 'required|string|max:50',
+            'address1'      => 'required|string|max:50',
+            'address2'      => 'nullable|string|max:50',
+            'city'          => 'required|string|max:50',
+            'country'       => 'required|string|max:50',
+            'postcode'      => 'required|string|max:50',
         ]);
-    
+
+        // ✅ Create user
         $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => bcrypt($request->password),
+            'name'          => $request->first_name . ' ' . $request->last_name,
+            'email'         => $request->email,
+            'password'      => bcrypt($request->password),
+            'mobile'        => $request->mobile,
+            'rep_code'      => $request->rep_code,
+            'company_name'  => $request->company_name,
+            'address1'      => $request->address1,
+            'address2'      => $request->address2,
+            'city'          => $request->city,
+            'country'       => $request->country,
+            'postcode'      => $request->postcode,
         ]);
-     
+
+        // ✅ Return success response
         return response()->json([
-            'status'     => true,
-            'message'    => 'User registered successfully.',
-            'user'       => $user->id,
+            'status'  => true,
+            'message' => 'User registered successfully.',
+            'user_id' => $user->id,
         ]);
     }
+
      
     /**
      * Login user via JWT.
