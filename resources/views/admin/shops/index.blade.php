@@ -4,5 +4,4 @@
 
 @section('content')
     <admin-shopslist></admin-shopslist>
-{{--    @livewire('shops-table')--}}
 @endsection

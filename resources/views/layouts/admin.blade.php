@@ -67,11 +67,23 @@
                             </v-list-item-icon>
                             <v-list-item-title>Categories</v-list-item-title>
                         </v-list-item>
+                        <v-list-item href="{{route('msubcats.list')}}" class="{{ request()->routeIs('msubcats.list') ? 'active' : '' }}">
+                            <v-list-item-icon>
+                              <v-icon>mdi-format-list-group</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>Sub-Categories</v-list-item-title>
+                        </v-list-item>
                         <v-list-item href="{{ route('moptions.list') }}" class="{{ request()->routeIs('moptions.list') ? 'active' : '' }}">
                             <v-list-item-icon>
                               <v-icon>mdi-filter-variant</v-icon>
                             </v-list-item-icon>
                             <v-list-item-title>Option Name</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item href="{{ route('mbrands.list') }}" class="{{ request()->routeIs('mbrands.list') ? 'active' : '' }}">
+                            <v-list-item-icon>
+                              <v-icon>mdi-domain</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>Brands</v-list-item-title>
                         </v-list-item>
                         <v-list-item href="/admin/logout">
                             <v-list-item-icon>

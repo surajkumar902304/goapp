@@ -56,7 +56,6 @@ class AuthController extends Controller
         ]);
     }
 
-     
     /**
      * Login user via JWT.
      */

@@ -13,8 +13,10 @@ Vue.component('admin-addproduct', require('./admin/AdminAddproduct.vue').default
 Vue.component('admin-editproduct', require('./admin/AdminEditproduct.vue').default);
 Vue.component('admin-moptions', require('./admin/AdminMoptions.vue').default);
 Vue.component('admin-shopslist',require('./admin/AdminShopslist.vue').default);
-Vue.component('admin-mcatlist',require('./admin/AdminMcatlist.vue').default);
-Vue.component('admin-addmcat',require('./admin/AdminAddmcat.vue').default);
+Vue.component('admin-brandlist',require('./admin/AdminBrandlist.vue').default);
+Vue.component('admin-addsubcat',require('./admin/category/AddSubCategory.vue').default);
+Vue.component('admin-mcatlist',require('./admin/category/Mcatlist.vue').default);
+Vue.component('admin-msubcatlist',require('./admin/category/Msubcatlist.vue').default);
 
 
 const app = new Vue({

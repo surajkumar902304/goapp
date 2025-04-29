@@ -12,4 +12,9 @@ class Mbrand extends Model
     protected $table = 'mbrands';
 
     protected $fillable = ['mbrand_name'];
+
+    public function mproducts()
+    {
+        return $this->hasMany(Mproduct::class, 'mbrand_id', 'mbrand_id');
+    }
 }

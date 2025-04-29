@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\CategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -35,3 +37,6 @@ Route::middleware(['auth.api'])->group(function () {
 
     // Add any other protected endpoints here...
 });
+
+Route::get('/brands', [BrandController::class, 'index']);
+Route::get('/categories', [CategoryController::class, 'index']);

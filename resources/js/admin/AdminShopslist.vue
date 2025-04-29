@@ -135,7 +135,7 @@ export default {
             auserRule:[(v) => !!v || "Name is required"],
             ashopsHeaders:[
                 {text:'ID',value:'shop_id'},
-                {text:'Shops',value:'shop_name'},
+                {text:'Shop',value:'shop_name'},
                 {text:'User',value:'suser'},
                 {text:'Status',value:'shop_status'},
                 {text:'Actions',value:'actions'},

@@ -102,6 +102,80 @@ class AdminController extends Controller
         ]);
     }
 
+    public function mbrandList()
+    {
+       return view('admin.brand.index');
+    }
+
+    public function mbrandVlist()
+    {
+        $mbrand = Mbrand::get();
+        return response()->json([
+            'status' => true,
+            'mbrands' => $mbrand,
+        ],200);
+    }
+
+    public function addBrand(Request $request)
+    {
+        $request->validate([
+            'mbrand_name'  => 'required|string|max:50',
+            'mbrand_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $bimagepath = null;
+        if ($request->hasFile('mbrand_image')) {
+            $image  = $request->file('mbrand_image');
+            $filename = 'mbrand_' . uniqid() . '.png';
+            $img = Image::make($image->getRealPath())->resize(600, 800, function ($constraint) {
+                $constraint->aspectRatio();
+            });
+            $bimagepath      = 'goapp/images/mbrands/' . $filename;
+            Storage::disk('s3')->put($bimagepath, (string) $img->encode());
+        }
+
+        $brand                 = new Mbrand();
+        $brand->mbrand_name    = $request->mbrand_name;
+        $brand->mbrand_image   = $bimagepath;
+        $brand->save();
+
+        return response()->json(['status' => true]);
+    }
+
+    public function editBrand(Request $request)
+    {
+        $request->validate([
+            'mbrand_id'    => 'required|exists:mbrands,mbrand_id',
+            'mbrand_name'  => 'required|string|max:255',
+            'mbrand_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $brand = Mbrand::find($request->mbrand_id);
+        $brand->mbrand_name  = $request->mbrand_name;
+        $bimagepath = $brand->mbrand_image;
+
+        if ($request->hasFile('mbrand_image')) {
+            if (!empty($bimagepath) && Storage::disk('s3')->exists($bimagepath)) {
+                Storage::disk('s3')->delete($bimagepath);
+            }
+            $image = $request->file('mbrand_image');
+            $filename = 'mbrand_' . uniqid() . '.png';
+            $img = Image::make($image->getRealPath())->resize(600, 800, function ($constraint) {
+                $constraint->aspectRatio();
+            });
+            
+            $bimagepath      = "goapp/images/mbrands/$filename";
+            Storage::disk('s3')->put($bimagepath, (string) $img->encode());
+
+            $brand->mbrand_image = $bimagepath;
+        }
+
+        $brand->save();
+
+        return response()->json(['status' => true]);
+    }
+
+
     public function adminProductlist()
     {
         $mproducts = Mproduct::with('mvariants')
@@ -212,30 +286,6 @@ class AdminController extends Controller
         return response()->json(['success' => true, 'message' => 'Shop status updated successfully']);
     }
 
-    public function mcatList()
-    {
-        return view('admin.category.list');
-    }
-
-    public function mcatvList()
-    {
-        return response()->json([
-            'status' => true,
-        ]);
-    }
-
-    public function addMcat()
-    {
-        return view('admin.category.add');
-    }
-
-    public function addVmcat(Request $request)
-    {
-        return response()->json([
-            'status' => true,
-            'message' => "Category added successfully",
-        ]);
-    }
 
     public function productAddData()
     {

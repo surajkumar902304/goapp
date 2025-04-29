@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\McategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductTypeController;
 use App\Http\Controllers\ShopController;
@@ -37,23 +38,28 @@ Route::group(['prefix'=> 'admin'], function (){
     Route::group(['middleware'=>'admin.auth'], function(){
         Route::get('/logout', [AdminController::class, 'adminlogout'])->name('admin.logout');
         Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.index');
+        // Products routes
         Route::get('/products/list',[AdminController::class,'productsList'])->name('products.list');
         Route::get('/products/vlist',[AdminController::class,'adminProductlist'])->name('products.vlist');
         Route::get('/product/addview',[AdminController::class,'productAddView'])->name('adminproduct.addview');
         Route::get('/product/pdata',[AdminController::class,'productAddData'])->name('adminproduct.pdata');
+        // Options routes
         Route::get('/moptions/list',[AdminController::class,'moptionsList'])->name('moptions.list');
         Route::get('/moptions/vlist',[AdminController::class,'moptionsVlist'])->name('moptions.vlist');
         Route::post('/moption/add',[AdminController::class,'addMoption'])->name('moption.add');
         Route::post('/moption/update',[AdminController::class,'editMoption'])->name('moption.edit');
+        // Brands routes
+        Route::get('/mbrands/list',[AdminController::class,'mbrandList'])->name('mbrands.list');
+        Route::get('/mbrands/vlist',[AdminController::class,'mbrandVlist'])->name('mbrands.vlist');
+        Route::post('/mbrands/add',[AdminController::class,'addBrand'])->name('mbrand.add');
+        Route::post('/mbrands/update',[AdminController::class,'editBrand'])->name('mbrand.edit');
+        // Shops routes
         Route::get('/shops/vlist',[AdminController::class,'adminShoplist'])->name('shops.vlist');
         Route::post('/shop/add',[AdminController::class,'adminAddShop'])->name('shop.add');
         Route::post('/shop/add/nuser',[AdminController::class,'addUserToShop'])->name('shop.add.nuser');
         Route::post('/shop/add/owner',[AdminController::class,'addOwnertoShop'])->name('shop.add.owner');
         Route::post('/shop-toggle-status', [AdminController::class, 'toggleStatus']);
-        Route::get('/mcats/list',[AdminController::class,'mcatList'])->name('mcats.list');
-        Route::get('/mcats/vlist',[AdminController::class,'mcatvList'])->name('mcats.vlist');
-        Route::get('/mcat/add',[AdminController::class,'addMcat'])->name('mcat.add');
-        Route::post('/mcat/vadd',[AdminController::class,'addVmcat'])->name('mcat.vadd');
+        // Product Variations routes
         Route::post('/save-product', [AdminController::class, 'productStoreData'])->name('adminproduct.storedata');
         Route::post('/mproduct-types', [AdminController::class, 'storeProductType']);
         Route::post('/mbrands', [AdminController::class, 'storeBrand']);
@@ -61,6 +67,21 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::get('/product/{mproduct_id}',[AdminController::class,'adminProductEdit'])->name('adminproduct.edit');
         Route::get('/vproduct/editdata',[AdminController::class,'productEditData'])->name('adminproduct.editdata');
         Route::post('/update-product', [AdminController::class, 'updateProductData'])->name('adminproduct.update-product');
+        // Categories routes
+        Route::get('/mcategories/list',[McategoryController::class,'index'])->name('mcats.list');
+        Route::get('/mcategories/vlist',[McategoryController::class,'mcatVlist'])->name('mcats.vlist');
+        Route::post('/mcategory/add',[McategoryController::class,'addMcat'])->name('mcat.add');
+        Route::post('/mcategory/update',[McategoryController::class,'editMcat'])->name('mcat.edit');
+        // Sub-Categories routes
+        Route::get('/msub-categories/list',[McategoryController::class,'mcatsubList'])->name('msubcats.list');
+        Route::get('/msub-categories/vlist',[McategoryController::class,'mcatsubVlist'])->name('msubcats.vlist');
+        Route::post('/msub-category/add',[McategoryController::class,'addMsubcat'])->name('msubcat.add');
+        Route::post('/msub-category/update',[McategoryController::class,'editMsubcat'])->name('msubcat.edit');
+        Route::get('/msub-category/add',[McategoryController::class,'addViewMsubcat'])->name('mcoll.add');
+
+        // Sub-Categories Collection API routes
+        Route::get('/mcollproducts/vlist', [McategoryController::class,'productsVlist'])->name('mcollproducts.vlist');
+        Route::get('/querys/vlist', [McategoryController::class,'querysVlist'])->name('querys.vlist');
     });
 });
 
