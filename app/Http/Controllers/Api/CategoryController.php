@@ -69,8 +69,8 @@ foreach ($products as $p) {
             'mproduct_desc'  => $p->mproduct_desc,
             'status'         => $p->status,
             'saleschannel'   => $p->saleschannel,
-            'product_type'   => $p->type?->mproduct_type_name,
-            'brand_name'     => $p->brand?->mbrand_name,
+            'product_type'   => $p->type ? $p->type->mproduct_type_name : null,
+            'brand_name'     => $p->brand ? $p->brand->mbrand_name : null,
 
             /* variant-specific कॉलम सीधा इसी लेवल पर */
             'mvariant_id'    => $v->mvariant_id,
@@ -195,8 +195,8 @@ foreach ($products as $p) {
                         'mproduct_desc'  => $p->mproduct_desc,
                         'status'         => $p->status,
                         'saleschannel'   => $p->saleschannel,
-                        'product_type'   => $p->type?->mproduct_type_name,
-                        'brand_name'     => $p->brand?->mbrand_name,
+                        'product_type'   => $p->type ? $p->type->mproduct_type_name : null,
+                        'brand_name'     => $p->brand ? $p->brand->mbrand_name : null,
             
                         /* variant-specific कॉलम सीधा इसी लेवल पर */
                         'mvariant_id'    => $v->mvariant_id,
@@ -230,28 +230,52 @@ foreach ($products as $p) {
 /* text-based comparisons */
 private function applyTextRule($q, string $col, string $op, string $val)
 {
-    return match ($op) {
-        'is equal to'        => $q->where($col, $val),
-        'is not equal to'    => $q->where($col, '!=', $val),
-        'contains'           => $q->where($col, 'like', "%$val%"),
-        'does not contains'  => $q->where($col, 'not like', "%$val%"),
-        'starts with'        => $q->where($col, 'like', "$val%"),
-        'ends with'          => $q->where($col, 'like', "%$val"),
-        default              => $q,
-    };
+    switch ($op) {
+        case 'is equal to':
+            return $q->where($col, $val);
+
+        case 'is not equal to':
+            return $q->where($col, '!=', $val);
+
+        case 'contains':
+            return $q->where($col, 'like', "%$val%");
+
+        case 'does not contains':
+            return $q->where($col, 'not like', "%$val%");
+
+        case 'starts with':
+            return $q->where($col, 'like', "$val%");
+
+        case 'ends with':
+            return $q->where($col, 'like', "%$val");
+
+        default:
+            return $q;          // unchanged
+    }
 }
+
 
 /* numeric comparisons (Price, Inventory … ) */
 private function applyNumericRule($q, string $col, string $op, $val)
 {
-    return match ($op) {
-        'is equal to'     => $q->where($col,  $val),
-        'is not equal to' => $q->where($col, '!=', $val),
-        'greater than'    => $q->where($col, '>',  $val),
-        'less than'       => $q->where($col, '<',  $val),
-        default           => $q,
-    };
+    switch ($op) {
+        case 'is equal to':
+            return $q->where($col, $val);
+
+        case 'is not equal to':
+            return $q->where($col, '!=', $val);
+
+        case 'greater than':
+            return $q->where($col, '>', $val);
+
+        case 'less than':
+            return $q->where($col, '<', $val);
+
+        default:
+            return $q;   // unchanged
+    }
 }
+
 
     
 }
