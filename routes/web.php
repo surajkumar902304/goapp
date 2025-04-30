@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\BannerController;
 use App\Http\Controllers\McategoryController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -71,6 +72,13 @@ Route::group(['prefix'=> 'admin'], function (){
         // Sub-Categories Collection API routes
         Route::get('/mcollproducts/vlist', [McategoryController::class,'productsVlist'])->name('mcollproducts.vlist');
         Route::get('/querys/vlist', [McategoryController::class,'querysVlist'])->name('querys.vlist');
+
+        // Browse Banners routes
+        Route::get('/browsebanners/list',[BannerController::class,'browseBannerList'])->name('browsebanners.list');
+        Route::get('/browsebanners/vlist',[BannerController::class,'browseBannerVlist'])->name('browsebanners.vlist');
+        Route::post('/browsebanners/add',[BannerController::class,'addBrowseBanner'])->name('browsebanner.add');
+        Route::post('/browsebanners/update',[BannerController::class,'editBrowseBanner'])->name('browsebanner.edit');
+        Route::post('/browsebanners/reorder', [BannerController::class, 'reorder']);
     });
 });
 

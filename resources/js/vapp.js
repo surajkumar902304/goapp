@@ -17,6 +17,9 @@ Vue.component('admin-addsubcat',require('./admin/category/AddSubCategory.vue').d
 Vue.component('admin-mcatlist',require('./admin/category/Mcatlist.vue').default);
 Vue.component('admin-msubcatlist',require('./admin/category/Msubcatlist.vue').default);
 
+// Banner
+Vue.component('admin-browsebanner',require('./admin/banner/BrowseBanner.vue').default);
+
 
 const app = new Vue({
     el: '#app',

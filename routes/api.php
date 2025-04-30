@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
 use Illuminate\Http\Request;
@@ -38,5 +39,11 @@ Route::middleware(['auth.api'])->group(function () {
     // Add any other protected endpoints here...
 });
 
+// Brands API 
 Route::get('/brands', [BrandController::class, 'index']);
+
+// Categories API 
 Route::get('/categories', [CategoryController::class, 'index']);
+
+// Banner API 
+Route::get('/browse-banner', [BannerController::class, 'browseBanner']);

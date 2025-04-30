@@ -50,6 +50,7 @@ class CategoryController extends Controller
                         }
                     ])
                     ->whereIn('mproduct_id', $sub->product_ids ?? [])
+                    ->where('status', 'Active')
                     ->get();
                     
                     $flattened = collect();  
@@ -101,8 +102,8 @@ class CategoryController extends Controller
                         )
                         ->get();
                 
-                    $query = Mproduct::query();
-                
+                    $query = Mproduct::where('status', 'Active');
+
                     foreach ($rules as $r) {
                         [$field, $op, $val] = [$r->field_name, $r->query_name, $r->value];
                 

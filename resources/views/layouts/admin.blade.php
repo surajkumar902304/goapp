@@ -79,6 +79,12 @@
                             </v-list-item-icon>
                             <v-list-item-title>Brands</v-list-item-title>
                         </v-list-item>
+                        <v-list-item href="{{ route('browsebanners.list') }}" class="{{ request()->routeIs('browsebanners.list') ? 'active' : '' }}">
+                            <v-list-item-icon>
+                              <v-icon>mdi-simple-icons</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>Browse Banners</v-list-item-title>
+                        </v-list-item>
                         <v-list-item href="/admin/logout">
                             <v-list-item-icon>
                               <v-icon>mdi-logout</v-icon>
