@@ -51,22 +51,6 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'email_verified_at' => 'datetime',
     ];
     
-    public function shops()
-    {
-        return $this->belongsToMany(Shop::class, 'shop_users', 'user_id', 'shop_id')
-                ->withPivot('user_role');
-    }
-
-    public function ownerShops()
-    {
-        return $this->shops()->wherePivot('user_role', 'owner'); 
-    }
-
-    public function shopUsers()
-    {
-        return $this->hasMany(Shop_user::class, 'user_id', 'id');
-    }
-
     public function getJWTIdentifier()
     {
         return $this->getKey();
