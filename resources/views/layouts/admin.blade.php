@@ -49,12 +49,6 @@
                             </v-list-item-icon>
                             <v-list-item-title>Dashboard</v-list-item-title>
                         </v-list-item>
-                        <v-list-item href="/shops" class="{{ request()->routeIs('shops.index') ? 'active' : '' }}">
-                            <v-list-item-icon>
-                              <v-icon>mdi-storefront</v-icon>
-                            </v-list-item-icon>
-                            <v-list-item-title>Shop List</v-list-item-title>
-                        </v-list-item>
                         <v-list-item href="{{route('products.list')}}" class="{{ request()->routeIs('products.list') ? 'active' : '' }}">
                             <v-list-item-icon>
                               <v-icon>mdi-format-list-text</v-icon>
@@ -63,7 +57,7 @@
                         </v-list-item>
                         <v-list-item href="{{route('mcats.list')}}" class="{{ request()->routeIs('mcats.list') ? 'active' : '' }}">
                             <v-list-item-icon>
-                              <v-icon>mdi-format-list-group</v-icon>
+                              <v-icon>mdi-storefront</v-icon>
                             </v-list-item-icon>
                             <v-list-item-title>Categories</v-list-item-title>
                         </v-list-item>

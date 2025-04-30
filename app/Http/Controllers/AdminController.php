@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\ExistingUserNotificationMail;
-use App\Mail\NewUserNotificationMail;
 use App\Models\Mbrand;
 use App\Models\Mlocation;
 use App\Models\Moption;
@@ -11,9 +9,6 @@ use App\Models\Mproduct;
 use App\Models\Mproduct_type;
 use App\Models\Mstock;
 use App\Models\Mtag;
-use App\Models\Shop;
-use App\Models\Shop_user;
-use App\Models\User;
 use App\Models\Mvariant;
 use App\Models\Mvariant_detail;
 use Illuminate\Http\Request;
@@ -102,6 +97,7 @@ class AdminController extends Controller
         ]);
     }
 
+    // Brands 
     public function mbrandList()
     {
        return view('admin.brand.index');
@@ -194,99 +190,7 @@ class AdminController extends Controller
         ]);
     }
 
-    public function adminShoplist()
-    {
-        $shops = Shop::get();
-        $ausers = User::get();
-        foreach ($shops as $shop) {
-            $shopuser = Shop_user::where('shop_id','=' , $shop->shop_id)
-                ->join('users','users.id','=','shop_users.user_id')
-                ->select('shop_users.*','users.email','users.name')
-                ->first();
-            if ($shopuser) {
-                $shop['suser'] = $shopuser;
-            } else {
-                $shop['suser'] = null;
-            }
-        }
-        return response()->json([
-            'success' => true,
-            'shops' => $shops,
-            'ausers' => $ausers,
-        ]);
-    }
-
-    public function adminAddShop(Request $request)
-    {
-        $shop = new Shop();
-        $shop->shop_name = $request->shop_name;
-        $shop->save();
-        return response()->json([
-            'success' => true,
-            'shop' => $shop,
-        ]);
-    }
-
-    public function addUserToShop(Request $request)
-    {
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-        ]);
-
-        Shop_user::create([
-            'user_id' => $user->id,
-            'shop_id' => $request->shop_id,
-            'user_role'=>'owner'
-        ]);
-        $email = $request->email;
-        $password = $request->password;
-        $name = $request->name;
-
-        \Mail::to($email)->send(new NewUserNotificationMail($email, $password, $name));
-
-        return response()->json([
-            'success' => true,
-            'user' => $user,
-        ]);
-    }
-
-    public function addOwnertoShop(Request $request)
-    {
-        $shopuser = Shop_user::create([
-            'user_id' => $request->user_id,
-            'shop_id' => $request->shop_id,
-            'user_role'=>'owner'
-        ]);
-
-        $shopName = optional(Shop::find($request->shop_id))->shop_name;
-        $name = optional(User::find($request->user_id))->name;
-        $email = optional(User::find($request->user_id))->email;
-
-        \Mail::to($email)->send(new ExistingUserNotificationMail($shopName, $name));
-
-        return response()->json([
-            'success' => true,
-            'shopuser' => $shopuser,
-        ]);
-    }
-
-    public function toggleStatus(Request $request)
-    {
-        $request->validate([
-            'shop_id' => 'required|exists:shops,shop_id',
-            'status' => 'required|in:0,1'
-        ]);
-
-        $shop = Shop::find($request->shop_id);
-        $shop->shop_status = $request->status;
-        $shop->save();
-
-        return response()->json(['success' => true, 'message' => 'Shop status updated successfully']);
-    }
-
-
+    // Product functionalty 
     public function productAddData()
     {
         $mptypes = Mproduct_type::get();

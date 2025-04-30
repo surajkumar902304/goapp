@@ -104,7 +104,6 @@ class McategoryController extends Controller
     }
     public function addMsubcat(Request $request)
     {
-        /* --------------------------------------------------------- 1️⃣  VALIDATE */
         $validated = $request->validate([
             'mcat_id'    => ['required', 'integer', 'exists:mcategories,mcat_id'],
             'subcatname' => ['required', 'string', 'max:120',],
@@ -179,20 +178,5 @@ class McategoryController extends Controller
     {
         
     }
-
-    // Collection Routes
-    
-
-    
-
-    public function addMcoll(Request $request)
-    {
-        return response()->json([
-            'status' => true,
-            'message' => "Category added successfully",
-        ]);
-    }
-
-
 
 }

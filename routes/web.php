@@ -1,13 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\BrandController;
-use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\McategoryController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProductTypeController;
-use App\Http\Controllers\ShopController;
-use App\Http\Controllers\TagController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,12 +47,7 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::get('/mbrands/vlist',[AdminController::class,'mbrandVlist'])->name('mbrands.vlist');
         Route::post('/mbrands/add',[AdminController::class,'addBrand'])->name('mbrand.add');
         Route::post('/mbrands/update',[AdminController::class,'editBrand'])->name('mbrand.edit');
-        // Shops routes
-        Route::get('/shops/vlist',[AdminController::class,'adminShoplist'])->name('shops.vlist');
-        Route::post('/shop/add',[AdminController::class,'adminAddShop'])->name('shop.add');
-        Route::post('/shop/add/nuser',[AdminController::class,'addUserToShop'])->name('shop.add.nuser');
-        Route::post('/shop/add/owner',[AdminController::class,'addOwnertoShop'])->name('shop.add.owner');
-        Route::post('/shop-toggle-status', [AdminController::class, 'toggleStatus']);
+        
         // Product Variations routes
         Route::post('/save-product', [AdminController::class, 'productStoreData'])->name('adminproduct.storedata');
         Route::post('/mproduct-types', [AdminController::class, 'storeProductType']);
@@ -91,44 +80,3 @@ Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 // User Routes
 Route::post('/logout', [HomeController::class, 'logout'])->name('logout');
-Route::get('/approval', [HomeController::class, 'approval'])->name('approval.page');
-Route::post('/select-shop', [HomeController::class, 'selectShop'])->name('select.shop');
-Route::get('/mangeuser', [HomeController::class, 'mangeuser'])->name('mange.user');
-
-
-// Product type Routes
-Route::get('/product-types', [ProductTypeController::class, 'index'])->name('product_types.index');
-
-// Brand Routes
-Route::get('/brands',[BrandController::class,'index'])->name('brands.index');
-
-// Tag Routes
-Route::get('/tags',[TagController::class,'index'])->name('tags.index');
-
-// Shop Routes
-Route::get('/shops', [ShopController::class, 'index'])->name('shops.index');
-Route::get('/optioname', [ShopController::class, 'optioname'])->name('optioname');
-
-
-// Product Routes
-Route::middleware(['auth'])->prefix('products')->group(function () {
-    Route::get('/', [ProductController::class, 'index'])->name('product.index');
-    Route::get('/add', [ProductController::class, 'add'])->name('product.add');
-    Route::post('/', [ProductController::class, 'store'])->name('product.store');
-    Route::get('/{product_id}/edit', [ProductController::class, 'edit'])->name('product.edit');
-    Route::put('/{product_id}', [ProductController::class, 'update'])->name('product.update');
-    Route::post('/{product}/duplicate', [ProductController::class, 'duplicate'])->name('product.duplicate');
-
-});
-
-// Category Routes
-Route::middleware(['auth'])->prefix('categories')->group(function () {
-    Route::get('/', [CategoryController::class, 'index'])->name('category.index');
-    Route::get('/add', [CategoryController::class, 'add'])->name('category.add');
-    Route::post('/', [CategoryController::class, 'store'])->name('category.store');
-    Route::get('/{cat_id}/edit', [CategoryController::class, 'edit'])->name('category.edit');
-    Route::put('/{cat_id}', [CategoryController::class, 'update'])->name('category.update');
-    Route::get('/{cat_id}/view', [CategoryController::class, 'view'])
-    ->where('cat_id', '[0-9]+')
-    ->name('category.view');
-});

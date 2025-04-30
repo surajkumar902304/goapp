@@ -1,54 +1,41 @@
 <template>
   <v-container fluid>
     <v-row><h2>Add New Sub-Category</h2></v-row>
-    <!-- HEADER -->
     <v-row>
       <v-col cols="6" class="d-flex">
         <v-btn :loading="backLoading" :disabled="backLoading" small @click="navigateBack">
-                        <template v-slot:loader>
-                            <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
-                        </template>
-                        <v-icon v-if="!backLoading">mdi-arrow-left</v-icon>
-                        <span v-if="!backLoading">Back</span>
-                    </v-btn>
+            <template v-slot:loader>
+                <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
+            </template>
+            <v-icon v-if="!backLoading">mdi-arrow-left</v-icon>
+            <span v-if="!backLoading">Back</span>
+        </v-btn>
       </v-col>
 
       <v-col cols="6" class="text-end">
         <v-btn small outlined @click="discard" class="mr-2">Discard</v-btn>
         <v-btn small color="success" :loading="saveLoading" :disabled="saveDisabled" @click="saveSubCategory">
           <template v-slot:loader>
-                            <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
-                        </template>
-                    <span v-if="!saveLoading">Save</span>
-                    </v-btn>
+                <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
+            </template>
+          <span v-if="!saveLoading">Save</span>
+        </v-btn>
       </v-col>
     </v-row>
 
     <v-row>
-      <!-- MAIN COLUMN -->
       <v-col cols="12" md="9">
-        <!-- Category + Sub-Cat name -->
         <v-card outlined>
           <v-card-text>
             <v-card-subtitle class="black--text">Category</v-card-subtitle>
-            <v-select dense outlined
-                      v-model="form.mcat_id"
-                      :items="mcats"
-                      item-text="mcat_name"
-                      item-value="mcat_id"
-                      label="Select Category"
-                      :rules="[v=>!!v||'Required']"
-                      @change="resetSubcat"/>
+            <v-select dense outlined v-model="form.mcat_id" :items="mcats" item-text="mcat_name" item-value="mcat_id" 
+              label="Select Category" :rules="[v=>!!v||'Required']" @change="resetSubcat"/>
 
-            <v-text-field dense outlined class="mt-4"
-                          v-model="form.subcatname"
-                          label="Sub-Category Name"
-                          :rules="msubcatnameRule"
-                          @blur="checkDuplicate"/>
+            <v-text-field dense outlined class="mt-4" v-model="form.subcatname" label="Sub-Category Name" 
+              :rules="msubcatnameRule" @blur="checkDuplicate"/>
           </v-card-text>
         </v-card>
 
-        <!-- Collection type -->
         <v-card outlined class="my-3">
           <v-card-subtitle>Collection Type</v-card-subtitle>
           <v-card-text>
@@ -59,21 +46,19 @@
           </v-card-text>
         </v-card>
 
-        <!-- MANUAL block -->
         <v-card v-if="mcattype==='manual'" outlined class="my-3">
           <v-card-subtitle>Products</v-card-subtitle>
           <v-card-text>
             <v-row>
               <v-col cols="6">
-                <v-text-field dense outlined prepend-inner-icon="mdi-magnify"
-                              v-model="productSearch" placeholder="Search Product"/>
+                <v-text-field dense outlined prepend-inner-icon="mdi-magnify" v-model="productSearch" 
+                  placeholder="Search Product"/>
               </v-col>
               <v-col cols="2">
                 <v-btn outlined @click="productDialog=true">Browse</v-btn>
               </v-col>
               <v-col cols="4">
-                <v-select dense outlined prefix="Sort:" :items="sorts"
-                          v-model="sortMethod" @change="sortSelected"/>
+                <v-select dense outlined prefix="Sort:" :items="sorts" v-model="sortMethod" @change="sortSelected"/>
               </v-col>
             </v-row>
 
@@ -84,9 +69,7 @@
               <v-list dense>
                 <v-list-item v-for="p in selectedProducts" :key="p.mproduct_id">
                   <v-list-item-avatar>
-                    <img :src="p.mproduct_image
-                              ? cdn+p.mproduct_image
-                              : '/images/no-image-available.png'"/>
+                    <img :src="p.mproduct_image ? cdn+p.mproduct_image : '/images/no-image-available.png'"/>
                   </v-list-item-avatar>
                   <v-list-item-content>
                     <v-list-item-title>{{ p.mproduct_title }}</v-list-item-title>
@@ -102,7 +85,6 @@
           </v-card-text>
         </v-card>
 
-        <!-- SMART block -->
         <v-card v-else outlined class="my-3">
           <v-card-subtitle>Conditions</v-card-subtitle>
           <v-card-text>
@@ -116,29 +98,18 @@
 
             <div v-for="(row,idx) in conditions" :key="idx" class="row mb-2">
               <div class="col-md-4">
-                <v-autocomplete dense outlined
-                  v-model="row.tag"
-                  :items="ruleColumns"
-                  item-text="field_name"
-                  item-value="field_id"
-                  label="Field"
-                  @change="updateRelations(idx)"/>
+                <v-autocomplete dense outlined v-model="row.tag" :items="ruleColumns" item-text="field_name" 
+                  item-value="field_id" label="Field" @change="updateRelations(idx)"/>
               </div>
 
               <div class="col-md-4">
-                <v-autocomplete dense outlined
-                  v-model="row.condition"
-                  :items="row.relations"
-                  item-text="query_name"
-                  item-value="query_id"
-                  label="Condition"/>
+                <v-autocomplete dense outlined v-model="row.condition" :items="row.relations" item-text="query_name" 
+                  item-value="query_id" label="Condition"/>
               </div>
 
               <div class="col-md-4 d-flex">
-                <v-combobox dense outlined v-model="row.value"
-                            label="Value" class="flex-grow-1"/>
-                <v-btn icon v-if="conditions.length>1"
-                       @click="removeCondition(idx)">
+                <v-combobox dense outlined v-model="row.value" label="Value" class="flex-grow-1"/>
+                <v-btn icon v-if="conditions.length>1" @click="removeCondition(idx)">
                   <v-icon color="red">mdi-trash-can</v-icon>
                 </v-btn>
               </div>
@@ -151,9 +122,7 @@
         </v-card>
       </v-col>
 
-      <!-- SIDE BAR -->
       <v-col cols="12" md="3">
-        <!-- Publishing -->
         <v-card outlined class="mb-3">
           <v-card-actions><span class="body-2 fw-semibold">Publishing</span></v-card-actions>
           <v-card-text>
@@ -164,15 +133,12 @@
           </v-card-text>
         </v-card>
 
-        <!-- Image -->
         <v-card outlined>
           <v-card-actions><span class="body-2 fw-semibold">Image</span></v-card-actions>
           <v-card-text>
             <div v-if="!imagePreview">
-              <v-file-input dense hide-input accept="image/*"
-                            prepend-icon="mdi-camera-outline"
-                            label="Upload image"
-                            @change="onImageSelect"/>
+              <v-file-input dense hide-input accept="image/*" prepend-icon="mdi-camera-outline" label="Upload image" 
+                @change="onImageSelect"/>
             </div>
             <div v-else class="d-flex align-center">
               <v-img :src="imagePreview" max-width="80" max-height="80" contain/>
@@ -183,40 +149,31 @@
           </v-card-text>
         </v-card>
 
-        <!-- Sub-Category Tag -->
         <v-card outlined class="mt-3">
           <v-card-actions><span class="body-2 fw-semibold">Sub-Category Tag</span></v-card-actions>
           <v-card-text>
-            <v-text-field dense outlined v-model="form.subcattag"
-                          label="Sub-Category Tag Name"/>
+            <v-text-field dense outlined v-model="form.subcattag" label="Sub-Category Tag Name"/>
           </v-card-text>
         </v-card>
       </v-col>
     </v-row>
 
-    <!-- PRODUCT DIALOG -->
     <v-dialog v-model="productDialog" max-width="650">
       <v-card>
         <v-card-title>
           <span class="text-h6">Select Products</span>
-          <v-spacer/><v-icon @click="productDialog=false">mdi-close</v-icon>
+          <v-spacer/>
+          <v-icon @click="productDialog=false">mdi-close</v-icon>
         </v-card-title>
 
         <v-card-text>
-          <v-text-field dense outlined prepend-inner-icon="mdi-magnify"
-                        v-model="productSearch" placeholder="Search Product"/>
+          <v-text-field dense outlined prepend-inner-icon="mdi-magnify" v-model="productSearch" placeholder="Search Product"/>
         </v-card-text>
 
-        <v-data-table
-          v-model="productSelection"
-          :items="allProducts"
-          :headers="productHeaders"
-          :search="productSearch"
-          show-select item-key="mproduct_id" return-object>
+        <v-data-table v-model="productSelection" :items="allProducts" :headers="productHeaders" :search="productSearch" show-select 
+          item-key="mproduct_id" return-object>
           <template #item.mproduct_image="{ item }">
-            <img :src="item.mproduct_image
-                     ? cdn+item.mproduct_image
-                     : '/images/no-image-available.png'" width="50"/>
+            <img :src="item.mproduct_image ? cdn+item.mproduct_image : '/images/no-image-available.png'" width="50"/>
           </template>
         </v-data-table>
 
@@ -238,10 +195,8 @@ export default {
     return {
       cdn : 'https://cdn.truewebpro.com/',
 
-      /* dropdowns */
       mcats : [],
       msubcats: [],
-      /* products */
       allProducts: [], productSearch:'', productSelection:[],
       selectedProducts:[], sortMethod:null,
       productHeaders:[
@@ -252,12 +207,14 @@ export default {
         'Product Title A-Z','Product Title Z-A'
       ],
 
-      /* smart-collection */
-      ruleColumns:[], allQueries:[], fieldQueryMap:{},
-      conditions:[{ tag:'', condition:'', value:'', relations:[] }],
+      ruleColumns:[], 
+      allQueries:[], 
+      fieldQueryMap:{},
+      conditions:[
+        { tag:'', condition:'', value:'', relations:[] }
+      ],
       acondition:'all',
 
-      /* form */
       form:{
         mcat_id:null, 
         subcatname:'', 
@@ -267,45 +224,42 @@ export default {
       },
 
       mcattype:'manual',
-      imagePreview:null, nameError:'',
+      imagePreview:null, 
+      nameError:'',
 
-      /* dialog */
       productDialog:false,
       backLoading: false,
       saveLoading: false,
       msubcatnameRule: [
-                v => !!v || 'Sub-Category is required',
-                v => (v && v.length >= 3) || 'Name must be at least 3 characters',
-                (v) =>
-                    !this.msubcats.some(
-                        (msubcat) =>
-                        msubcat.msubcat_name === v &&
-                        msubcat.msubcat_id !== this.msubcat_id
-                    ) || "Sub-Category already exists"
-            ]
+          v => !!v || 'Sub-Category is required',
+          v => (v && v.length >= 3) || 'Name must be at least 3 characters',
+          (v) =>
+              !this.msubcats.some(
+                  (msubcat) =>
+                  msubcat.msubcat_name === v &&
+                  msubcat.msubcat_id !== this.msubcat_id
+            ) || "Sub-Category already exists"
+      ]
     }
   },
 
   computed:{
     saveDisabled () {
-    /* base checks */
-    const base = !this.form.mcat_id ||
-                 !this.form.subcatname.trim() ||
-                 !this.form.image ||
-                 !!this.nameError
-    /* smart extra check */
-    if (this.mcattype === 'smart') {
-      return base || !this.hasValidConditionRow
-    }
-    return base
-  },
+      const base = !this.form.mcat_id ||
+        !this.form.subcatname.trim() ||
+        !this.form.image ||
+        !!this.nameError
+      if (this.mcattype === 'smart') {
+        return base || !this.hasValidConditionRow
+      }
+      return base
+    },
 
-  /* ➤ क्या कम‐से‐कम एक valid स्मार्ट-row है? */
-  hasValidConditionRow () {
-    return this.conditions.some(r =>
-      r.tag && r.condition && (r.value !== '' && r.value !== null)
-    )
-  },
+    hasValidConditionRow () {
+      return this.conditions.some(r =>
+        r.tag && r.condition && (r.value !== '' && r.value !== null)
+      )
+    },
   },
 
   created () {
@@ -315,7 +269,6 @@ export default {
   },
 
   methods:{
-    /* ---- category & subcat ---- */
     async fetchCats () {
       const [catR, subR] = await Promise.all([
         axios.get('/admin/mcategories/vlist'),
@@ -339,7 +292,6 @@ export default {
         })
     },
 
-    /* ---- products ---- */
     async fetchProducts () {
       const { data } = await axios.get('/admin/mcollproducts/vlist')
       this.allProducts = data.products
@@ -362,7 +314,6 @@ export default {
       }
     },
 
-    /* ---- smart rules ---- */
     async fetchRuleMeta () {
       const { data } = await axios.get('/admin/querys/vlist')
       this.ruleColumns = data.fields
@@ -381,54 +332,44 @@ export default {
     addCondition(){ this.conditions.push({ tag:'',condition:'',value:'',relations:[] }) },
     removeCondition(idx){ this.conditions.splice(idx,1) },
 
-    /* ---- image ---- */
     onImageSelect(file){
       if(file){ this.form.image=file; this.imagePreview=URL.createObjectURL(file) }
       else this.clearImage()
     },
     clearImage(){ this.form.image=null; this.imagePreview=null },
 
-    /* ---- save / discard ---- */
     async saveSubCategory () {
 
-            this.saveLoading = true;
+      this.saveLoading = true;
 
-        const fd = new FormData()
-        Object.entries(this.form).forEach(([k, v]) => fd.append(k, v ?? ''))
-
-        fd.append('mcattype', this.mcattype)
-
-        if (this.mcattype === 'smart') {
-          const trimmed = this.conditions.map(c => ({
-            field_id : c.tag,
-            query_id : c.condition,
-            value    : c.value ?? ''
-          }))
-          fd.append('condition_logic', this.acondition)
-          fd.append('conditions', JSON.stringify(trimmed))
-
-        } else {                                // manual
-          const ids = this.selectedProducts.map(p => p.mproduct_id)
-          fd.append('product_ids', JSON.stringify(ids))
-        }
-
-
-          await axios.post('/admin/msub-category/add', fd)
-          .then((resp)=>{
-                      console.log(resp.data);
-                      window.location.href = '/admin/msub-categories/list';
-                  })
-          
-      },
-navigateBack() {
-            if (this.backLoading) return;
-
-            this.backLoading = true;
-
-            setTimeout(() => {
-                window.location.href = '/admin/msub-categories/list';
-            }, 500); 
-        },
+      const fd = new FormData()
+      Object.entries(this.form).forEach(([k, v]) => fd.append(k, v ?? ''))
+      fd.append('mcattype', this.mcattype)
+      if (this.mcattype === 'smart') {
+        const trimmed = this.conditions.map(c => ({
+          field_id : c.tag,
+          query_id : c.condition,
+          value    : c.value ?? ''
+        }))
+        fd.append('condition_logic', this.acondition)
+        fd.append('conditions', JSON.stringify(trimmed))
+      } else {                           
+        const ids = this.selectedProducts.map(p => p.mproduct_id)
+        fd.append('product_ids', JSON.stringify(ids))
+      }
+      await axios.post('/admin/msub-category/add', fd)
+      .then((resp)=>{
+          console.log(resp.data);
+          window.location.href = '/admin/msub-categories/list';
+      })
+    },
+    navigateBack() {
+          if (this.backLoading) return;
+          this.backLoading = true;
+          setTimeout(() => {
+              window.location.href = '/admin/msub-categories/list';
+          }, 500); 
+    },
     discard () {
       this.form={mcat_id:null,subcatname:'',subcattag:'',publish_to:'Online Store',image:null}
       this.imagePreview=null; this.nameError=''; this.mcattype='manual'
