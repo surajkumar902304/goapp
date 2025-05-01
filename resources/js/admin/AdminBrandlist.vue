@@ -57,9 +57,11 @@
                     </div>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn type="submit" color="success" small :disabled="!fsvalid || submitting">
-                        {{ editedIndex === -1 ? 'Add' : 'Update' }}
-                    </v-btn>
+                    <template v-if="editedIndex !== -1 || isImageSelected">
+                        <v-btn type="submit" color="success" small :disabled="!fsvalid || submitting">
+                            {{ editedIndex === -1 ? 'Add' : 'Update' }}
+                        </v-btn>
+                    </template>
                 </v-card-actions>
             </v-form>
         </v-card>

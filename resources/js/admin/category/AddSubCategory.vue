@@ -27,10 +27,11 @@
       <v-col cols="12" md="9">
         <v-card outlined>
           <v-card-text>
-            <v-card-subtitle class="black--text">Category</v-card-subtitle>
+            <v-card-subtitle class="black--text">Category *</v-card-subtitle>
             <v-select dense outlined v-model="form.mcat_id" :items="mcats" item-text="mcat_name" item-value="mcat_id" 
               label="Select Category" :rules="[v=>!!v||'Required']" @change="resetSubcat"/>
 
+            <v-card-subtitle class="black--text">Sub-Category *</v-card-subtitle>
             <v-text-field dense outlined class="mt-4" v-model="form.subcatname" label="Sub-Category Name" 
               :rules="msubcatnameRule" @blur="checkDuplicate"/>
           </v-card-text>
@@ -134,7 +135,7 @@
         </v-card>
 
         <v-card outlined>
-          <v-card-actions><span class="body-2 fw-semibold">Image</span></v-card-actions>
+          <v-card-actions><span class="body-2 fw-semibold">Image *</span></v-card-actions>
           <v-card-text>
             <div v-if="!imagePreview">
               <v-file-input dense hide-input accept="image/*" prepend-icon="mdi-camera-outline" label="Upload image" 

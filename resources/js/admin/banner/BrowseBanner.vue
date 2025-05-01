@@ -27,19 +27,14 @@
             <v-simple-table>
               <thead>
                 <tr>
-                  <th style="width:40px"></th> <!-- drag column -->
-                  <th style="width:30%">Image</th>
+                  <th style="width:30%">Imagedefwsdf</th>
                   <th>Name</th>
                   <th>Actions</th>
+                  <th style="width:40px">Position</th> <!-- drag column -->
                 </tr>
               </thead>
               <draggable tag="tbody" :list="browsebanners" handle=".drag-handle" @end="onDragEnd">
                 <tr v-for="item in filteredBanners" :key="item.browsebanner_id">
-                  <!-- drag handle column -->
-                  <td class="text-center drag-handle" style="cursor: grab">
-                    <v-icon small>mdi-drag</v-icon>
-                  </td>
-  
                   <td class="p-2">
                     <img :src="cdn + item.browsebanner_image || 'https://via.placeholder.com/50'" width="150" height="100" />
                   </td>
@@ -50,6 +45,10 @@
                     <v-btn icon color="primary" @click="editItem(item)">
                       <v-icon small>mdi-pencil</v-icon>
                     </v-btn>
+                  </td>
+                  <!-- drag handle column -->
+                  <td class="text-center drag-handle" style="cursor: grab">
+                    <v-icon small>mdi-drag</v-icon>
                   </td>
                 </tr>
               </draggable>
@@ -74,6 +73,11 @@
                 label="Banner Name"
               />
               <div class="d-flex flex-column align-center">
+                <v-card-actions class="pb-0 pt-0">
+                  <span class="body-2 fw-semibold">
+                    {{ isImageSelected ? 'Selected Image' : 'Select Image' }}
+                  </span>
+                </v-card-actions>
                 <input ref="imageInput" type="file" accept="image/*" style="display:none" @change="handleImageUpload" />
                 <div class="uploader-box mb-2" @click="triggerFileInput">
                   <v-img
@@ -90,9 +94,11 @@
               </div>
             </v-card-text>
             <v-card-actions>
-              <v-btn type="submit" color="success" small :disabled="!fsvalid || submitting">
-                {{ editedIndex === -1 ? 'Add' : 'Update' }}
-              </v-btn>
+              <template v-if="editedIndex !== -1 || isImageSelected">
+                <v-btn type="submit" color="success" small :disabled="!fsvalid || submitting">
+                  {{ editedIndex === -1 ? 'Add' : 'Update' }}
+                </v-btn>
+              </template>
             </v-card-actions>
           </v-form>
         </v-card>

@@ -75,6 +75,14 @@ class AuthController extends Controller
                 'message' => 'Invalid email or password.',
             ], 401);
         }
+
+        if ($user->admin_approval == false) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Your account is awaiting admin approval.',
+                'admin_approval' => $user->admin_approval,
+            ], 401);
+        }
     
         try {
             $token = JWTAuth::fromUser($user);
@@ -91,8 +99,8 @@ class AuthController extends Controller
             'message'    => 'Login successful.',
             'token'      => $token,
             'token_type' => 'bearer',
-            'user'       => $user->id,
-            'expires_in' => auth('api')->factory()->getTTL() * 60
+            'user'       => $user,
+            'expires_in' => auth('api')->factory()->getTTL() * 21900
         ]);
     }
 
