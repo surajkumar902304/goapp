@@ -24,7 +24,7 @@ class AuthController extends Controller
                 'last_name'     => 'required|string|max:50',
                 'email'         => 'required|string|email|max:50|unique:users,email',
                 'password'      => 'required|string|min:6',
-                'mobile'        => 'required|string|max:15',
+                'mobile'        => 'required|string|max:15|unique:users,mobile',
                 'rep_code'      => 'nullable|string|max:50',
                 'company_name'  => 'required|string|max:50',
                 'address1'      => 'required|string|max:255',
