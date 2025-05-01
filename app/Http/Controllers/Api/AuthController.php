@@ -93,13 +93,6 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if ($user->admin_approval == false) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Your account is awaiting admin approval.',
-                'admin_approval' => $user->admin_approval,
-            ], 401);
-        }
     
         try {
             $token = JWTAuth::fromUser($user);
@@ -110,7 +103,18 @@ class AuthController extends Controller
                 'error'   => $e->getMessage(),
             ], 500);
         }
-    
+
+        if ($user->admin_approval == false) {
+            return response()->json([
+                'status'     => true,
+                'message'    => 'Your account is awaiting admin approval.',
+                'token'      => $token,
+                'token_type' => 'bearer',
+                'user'       => $user,
+                'expires_in' => auth('api')->factory()->getTTL() * 21900
+            ], 200);
+        }
+
         return response()->json([
             'status'     => true,
             'message'    => 'Login successful.',
@@ -118,7 +122,7 @@ class AuthController extends Controller
             'token_type' => 'bearer',
             'user'       => $user,
             'expires_in' => auth('api')->factory()->getTTL() * 21900
-        ]);
+        ],200);
     }
 
     /**
