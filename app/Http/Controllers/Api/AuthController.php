@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Hash;
 use Tymon\JWTAuth\Exceptions\JWTException;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -17,23 +18,40 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        // ✅ Validate input
-        $request->validate([
-            'first_name'    => 'required|string|max:50',
-            'last_name'     => 'required|string|max:50',
-            'email'         => 'required|string|email|max:50|unique:users,email',
-            'password'      => 'required|string|min:6',
-            'mobile'        => 'required|string|max:15',
-            'rep_code'      => 'nullable|string|max:50',
-            'company_name'  => 'required|string|max:50',
-            'address1'      => 'required|string|max:50',
-            'address2'      => 'nullable|string|max:50',
-            'city'          => 'required|string|max:50',
-            'country'       => 'required|string|max:50',
-            'postcode'      => 'required|string|max:50',
-        ]);
+        try {
+            $request->validate([
+                'first_name'    => 'required|string|max:50',
+                'last_name'     => 'required|string|max:50',
+                'email'         => 'required|string|email|max:50|unique:users,email',
+                'password'      => 'required|string|min:6',
+                'mobile'        => 'required|string|max:15',
+                'rep_code'      => 'nullable|string|max:50',
+                'company_name'  => 'required|string|max:50',
+                'address1'      => 'required|string|max:255',
+                'address2'      => 'nullable|string|max:50',
+                'city'          => 'required|string|max:50',
+                'country'       => 'required|string|max:50',
+                'postcode'      => 'required|string|max:50',
+            ]);
+        } catch (ValidationException $e) {
+            $errors = $e->validator->errors();
 
-        // ✅ Create user
+            // Custom message if email already taken
+            if ($errors->has('email')) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'This email is already registered.',
+                ], 422);
+            }
+
+            // For other validation errors
+            return response()->json([
+                'status' => false,
+                'message' => $errors->first(),
+            ], 422);
+        }
+
+        // Create user
         $user = User::create([
             'name'          => $request->first_name . ' ' . $request->last_name,
             'email'         => $request->email,
@@ -48,7 +66,6 @@ class AuthController extends Controller
             'postcode'      => $request->postcode,
         ]);
 
-        // ✅ Return success response
         return response()->json([
             'status'  => true,
             'message' => 'User registered successfully.',
