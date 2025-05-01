@@ -209,25 +209,25 @@
                             <v-row>
                                 <v-col cols="12" md="12">
                                     <v-autocomplete v-model="pro.ptype" :items="mptypes" item-text="mproduct_type_name" item-value="mproduct_type_id" 
-                                        :filter="ptypeFilter" label="Product Type" outlined dense clearable>
+                                        :filter="ptypeFilter" label="Product Type" outlined dense clearable :search-input.sync="typedText">
                                         <template v-slot:no-data>
-                                            <v-btn @click="addNewProductType" :disabled="!typedText" >
+                                            <v-btn @click="addNewProductType" :disabled="!typedText?.trim()" >
                                                 Add "{{ typedText }}"
                                             </v-btn>
                                         </template>
                                     </v-autocomplete>
                                     <v-autocomplete v-model="pro.brand" :items="mbrands" item-text="mbrand_name" item-value="mbrand_id" label="Brand" 
-                                        :filter="brandFilter" outlined dense clearable>
+                                        :filter="brandFilter" outlined dense clearable :search-input.sync="typedBrand">
                                         <template v-slot:no-data>
-                                            <v-btn @click="addNewBrand" :disabled="!typedBrand" >
+                                            <v-btn @click="addNewBrand" :disabled="!typedBrand?.trim()" >
                                                 Add "{{ typedBrand }}"
                                             </v-btn>
                                         </template>
                                     </v-autocomplete>
                                     <v-autocomplete ref="tagsAutocomplete" multiple v-model="pro.tags" :items="mtags" item-text="mtag_name" 
-                                        item-value="mtag_id" label="Tags" :filter="tagFilter" outlined dense small-chips deletable-chips>
+                                        item-value="mtag_id" label="Tags" :filter="tagFilter" outlined dense small-chips deletable-chips :search-input.sync="typedTag">
                                         <template v-slot:no-data>
-                                            <v-btn @click="addNewTag" :disabled="!typedTag" >
+                                            <v-btn @click="addNewTag" :disabled="!typedTag?.trim()" >
                                                 Add “{{ typedTag }}”
                                             </v-btn>
                                         </template>
