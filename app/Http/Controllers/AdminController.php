@@ -11,6 +11,7 @@ use App\Models\Mstock;
 use App\Models\Mtag;
 use App\Models\Mvariant;
 use App\Models\Mvariant_detail;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Intervention\Image\Facades\Image;
@@ -50,6 +51,36 @@ class AdminController extends Controller
         return redirect()->route('admin.login');
     }
 
+    // User
+    public function userList()
+    {
+        return view('admin.user.adminapproval');
+    }
+
+    public function userVlist()
+    {
+        $users = User::get();
+        return response()->json([
+            'status' => true,
+            'users' => $users,
+        ],200);
+    }
+
+    public function updateUserApproval(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'admin_approval' => 'required|boolean'
+        ]);
+
+        $user = User::find($request->user_id);
+        $user->admin_approval = $request->admin_approval;
+        $user->save();
+
+        return response()->json(['success' => true]);
+    }
+
+    // product
     public function productsList()
     {
         return view('admin.product.list');

@@ -20,6 +20,8 @@ Vue.component('admin-msubcatlist',require('./admin/category/Msubcatlist.vue').de
 // Banner
 Vue.component('admin-browsebanner',require('./admin/banner/BrowseBanner.vue').default);
 
+// User
+Vue.component('admin-adminapproval',require('./admin/user/AdminApproval.vue').default);
 
 const app = new Vue({
     el: '#app',

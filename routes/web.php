@@ -33,6 +33,12 @@ Route::group(['prefix'=> 'admin'], function (){
     Route::group(['middleware'=>'admin.auth'], function(){
         Route::get('/logout', [AdminController::class, 'adminlogout'])->name('admin.logout');
         Route::get('/dashboard', [AdminController::class, 'index'])->name('admin.index');
+
+        // User routes
+        Route::get('/users/list',[AdminController::class,'userList'])->name('users.list');
+        Route::get('/users/vlist',[AdminController::class,'userVlist'])->name('users.vlist');
+        Route::post('/users/update-approval', [AdminController::class, 'updateUserApproval']);
+
         // Products routes
         Route::get('/products/list',[AdminController::class,'productsList'])->name('products.list');
         Route::get('/products/vlist',[AdminController::class,'adminProductlist'])->name('products.vlist');
