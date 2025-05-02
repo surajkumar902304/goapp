@@ -107,7 +107,7 @@ export default {
                     this.getMoptions();
                     this.addDialog = false;
                     this.defaultItem.moption_name = '';
-                    console.log(resp.data.moption);
+                    this.$toast?.success('Option added successfully!');
                 })
         },
         editMoption(){
@@ -119,7 +119,7 @@ export default {
                 .then((resp)=>{
                     this.getMoptions();
                     this.editDialog = false;
-                    console.log(resp.data.moption);
+                    this.$toast?.success('Option updated successfully!');
                 })
         },
         editItem(item){

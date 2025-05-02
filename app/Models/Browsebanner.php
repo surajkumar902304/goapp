@@ -11,5 +11,5 @@ class Browsebanner extends Model
     protected $primaryKey = 'browsebanner_id';
     protected $table = 'browsebanners';
 
-    protected $fillable = ['browsebanner_name','browsebanner_image','browsebanner_position'];
+    protected $fillable = ['mcat_id', 'browsebanner_name','browsebanner_image','browsebanner_position'];
 }

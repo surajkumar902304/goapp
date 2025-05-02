@@ -14,8 +14,10 @@
                 <v-card outlined>
                     <v-data-table :items="users" :headers="userHeaders" :search="ssearch">
                         <template v-slot:item.admin_approval="{ item }">
-                            <v-switch v-model="item.admin_approval" @change="updateApproval(item)" inset
-                                :true-value="1" :false-value="0" ></v-switch>
+                            <v-btn :color="item.admin_approval ? 'success' : 'error'" small  @click="updateApproval(item)" 
+                                style="width: 100px; justify-content: center; font-weight: bold;" >
+                                {{ item.admin_approval ? 'Approved' : 'Unapproved' }}
+                            </v-btn>
                         </template>
                     </v-data-table>
                 </v-card>
@@ -49,15 +51,18 @@ export default {
                 })
         },
         updateApproval(user) {
+            user.admin_approval = user.admin_approval ? 0 : 1;
+
+            // Send update to the server
             axios.post('/admin/users/update-approval', {
             user_id: user.id,
-            admin_approval: user.admin_approval
+            admin_approval: user.admin_approval,
             })
             .then(() => {
-            this.$toast?.success("User approval updated");
+            this.$toast?.success("Status updated.");
             })
             .catch(() => {
-            this.$toast?.error("Failed to update approval");
+            this.$toast?.error("Failed to update.");
             });
         }
     }

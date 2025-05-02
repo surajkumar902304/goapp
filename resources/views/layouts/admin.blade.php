@@ -49,11 +49,11 @@
                             </v-list-item-icon>
                             <v-list-item-title>Dashboard</v-list-item-title>
                         </v-list-item>
-                        {{-- <v-list-item href="{{route('users.list')}}" class="{{ request()->routeIs('users.list') ? 'active' : '' }}">
+                        <v-list-item href="{{route('users.list')}}" class="{{ request()->routeIs('users.list') ? 'active' : '' }}">
                           <v-list-item-icon>
                             <v-icon>mdi-account-edit</v-icon>
                           </v-list-item-icon>
-                          <v-list-item-title>Users</v-list-item-title> --}}
+                          <v-list-item-title>Users</v-list-item-title>
                       </v-list-item>
                         <v-list-item href="{{route('products.list')}}" class="{{ request()->routeIs('products.list') ? 'active' : '' }}">
                             <v-list-item-icon>

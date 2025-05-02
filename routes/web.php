@@ -39,11 +39,6 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::get('/users/vlist',[AdminController::class,'userVlist'])->name('users.vlist');
         Route::post('/users/update-approval', [AdminController::class, 'updateUserApproval']);
 
-        // Products routes
-        Route::get('/products/list',[AdminController::class,'productsList'])->name('products.list');
-        Route::get('/products/vlist',[AdminController::class,'adminProductlist'])->name('products.vlist');
-        Route::get('/product/addview',[AdminController::class,'productAddView'])->name('adminproduct.addview');
-        Route::get('/product/pdata',[AdminController::class,'productAddData'])->name('adminproduct.pdata');
         // Options routes
         Route::get('/moptions/list',[AdminController::class,'moptionsList'])->name('moptions.list');
         Route::get('/moptions/vlist',[AdminController::class,'moptionsVlist'])->name('moptions.vlist');
@@ -54,6 +49,12 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::get('/mbrands/vlist',[AdminController::class,'mbrandVlist'])->name('mbrands.vlist');
         Route::post('/mbrands/add',[AdminController::class,'addBrand'])->name('mbrand.add');
         Route::post('/mbrands/update',[AdminController::class,'editBrand'])->name('mbrand.edit');
+
+        // Products routes
+        Route::get('/products/list',[AdminController::class,'productsList'])->name('products.list');
+        Route::get('/products/vlist',[AdminController::class,'adminProductlist'])->name('products.vlist');
+        Route::get('/product/addview',[AdminController::class,'productAddView'])->name('adminproduct.addview');
+        Route::get('/product/pdata',[AdminController::class,'productAddData'])->name('adminproduct.pdata');
         
         // Product Variations routes
         Route::post('/save-product', [AdminController::class, 'productStoreData'])->name('adminproduct.storedata');
@@ -72,8 +73,11 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::get('/msub-categories/list',[McategoryController::class,'mcatsubList'])->name('msubcats.list');
         Route::get('/msub-categories/vlist',[McategoryController::class,'mcatsubVlist'])->name('msubcats.vlist');
         Route::post('/msub-category/add',[McategoryController::class,'addMsubcat'])->name('msubcat.add');
-        Route::post('/msub-category/update',[McategoryController::class,'editMsubcat'])->name('msubcat.edit');
         Route::get('/msub-category/add',[McategoryController::class,'addViewMsubcat'])->name('mcoll.add');
+        
+        Route::get('/msub-category/{msubcatid}',[McategoryController::class,'msubcatEdit'])->name('msubcat.edit');
+        Route::get('/vsub-category/editdata/{msubcatid}',[McategoryController::class,'msubcatEditData'])->name('msubcat.editdata');
+        Route::post('/msub-category/update', [McategoryController::class, 'updateMsubcaData'])->name('msubcat.update-product');
 
         // Sub-Categories Collection API routes
         Route::get('/mcollproducts/vlist', [McategoryController::class,'productsVlist'])->name('mcollproducts.vlist');

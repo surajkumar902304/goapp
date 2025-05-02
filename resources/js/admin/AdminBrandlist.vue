@@ -45,6 +45,11 @@
                 <v-card-text>
                     <v-text-field v-model="defaultItem.mbrand_name" :rules="mbrandnameRule" label="Brand Name"/>
                     <div class="d-flex flex-column align-center">
+                        <v-card-actions class="pb-0 pt-0">
+                        <span class="body-2 fw-semibold">
+                            {{ isImageSelected ? 'Selected Image' : 'Select Image' }}
+                        </span>
+                        </v-card-actions>
                         <input ref="imageInput" type="file" accept="image/*" style="display:none" @change="handleImageUpload"/>
                         <div class="uploader-box mb-2" @click="triggerFileInput">
                             <v-img v-if="isImageSelected" :src="imagePreview" class="rounded" max-width="150" max-height="150" cover/>
@@ -180,13 +185,24 @@ export default {
     
             if (this.editedIndex !== -1) fd.append('mbrand_id', this.editedIndex);
     
-            const url = this.editedIndex === -1 ? '/admin/mbrands/add' : '/admin/mbrands/update';
+            const isNew = this.editedIndex === -1;
+            const url = isNew ? '/admin/mbrands/add' : '/admin/mbrands/update';
+
     
-            axios
-            .post(url, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
+            axios.post(url, fd, { 
+                headers: { 'Content-Type': 'multipart/form-data' } 
+            })
             .then(() => {
                 this.getAllBrands();
                 this.addSdialog = false;
+
+                this.$toast.success(isNew ? 'Banner added successfully!' : 'Banner updated successfully!');
+            })
+            .catch(() => {
+            this.$toast.error('Something went wrong while saving the brand.');
+            })
+            .finally(() => {
+            this.submitting = false;
             });
         }
     }

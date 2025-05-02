@@ -39,6 +39,7 @@ class BannerController extends Controller
     public function addBrowseBanner(Request $request)
     {
         $request->validate([
+            'mcat_id' => 'required|exists:mcategories,mcat_id',
             'browsebanner_name'  => 'required|string|max:50',
             'browsebanner_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
@@ -53,6 +54,7 @@ class BannerController extends Controller
         }
 
         $browsebanner  = new Browsebanner();
+        $browsebanner->mcat_id    = $request->mcat_id;
         $browsebanner->browsebanner_name    = $request->browsebanner_name;
         $browsebanner->browsebanner_image   = $banner_imgpath;
         $browsebanner->browsebanner_position = Browsebanner::max('browsebanner_position') + 1;
@@ -65,11 +67,13 @@ class BannerController extends Controller
     {
         $request->validate([
             'browsebanner_id'    => 'required|exists:browsebanners,browsebanner_id',
+            'mcat_id'            => 'required|exists:mcategories,mcat_id',
             'browsebanner_name'  => 'required|string|max:255',
             'browsebanner_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $browsebanner = Browsebanner::find($request->browsebanner_id);
+        $browsebanner->mcat_id  = $request->mcat_id;
         $browsebanner->browsebanner_name  = $request->browsebanner_name;
         $banner_imgpath = $browsebanner->browsebanner_image;
 

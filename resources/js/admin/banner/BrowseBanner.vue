@@ -30,7 +30,7 @@
                   <th style="width:30%">Imagedefwsdf</th>
                   <th>Name</th>
                   <th>Actions</th>
-                  <th style="width:40px">Position</th> <!-- drag column -->
+                  <th style="width:40px">Position Drag</th> <!-- drag column -->
                 </tr>
               </thead>
               <draggable tag="tbody" :list="browsebanners" handle=".drag-handle" @end="onDragEnd">
@@ -67,6 +67,14 @@
           </v-card-title>
           <v-form v-model="fsvalid" @submit.prevent="saveBanner">
             <v-card-text>
+              <!-- Category dropdown -->
+              <v-select dense outlined
+                        v-model="defaultItem.mcat_id"
+                        :items="categories"
+                        item-value="mcat_id"
+                        item-text="mcat_name"
+                        :rules="[v=>!!v||'Category is required']"
+                        label="Category *" />
               <v-text-field
                 v-model="defaultItem.browsebanner_name"
                 :rules="bannernameRule"
@@ -118,6 +126,7 @@
         cdn: 'https://cdn.truewebpro.com/',
         ssearch: '',
         browsebanners: [],
+        categories  : [],
         addSdialog: false,
         editedIndex: -1,
         fsvalid: false,
@@ -125,7 +134,8 @@
         defaultItem: {
           browsebanner_id: null,
           browsebanner_name: '',
-          browsebanner_image: ''
+          browsebanner_image: '',
+          mcat_id : null
         },
         imagePreview: null,
         imageName: '',
@@ -135,7 +145,7 @@
           (v) => !this.browsebanners.some(
             (banner) =>
               banner.browsebanner_name === v &&
-              banner.browsebanner_id !== this.defaultItem.browsebanner_id
+              banner.browsebanner_id !== this.defaultItem.browsebanner_id && b.mcat_id === this.defaultItem.mcat_id
           ) || 'Banner already exists'
         ],
         bannerimageRule: [
@@ -145,6 +155,7 @@
     },
     created() {
       this.getAllBanners();
+      this.fetchCategories();
     },
     watch: {
         addSdialog(val) {
@@ -167,8 +178,13 @@
           this.browsebanners = res.data.browsebanner;
         });
       },
+      fetchCategories () {
+        axios.get('/admin/mcategories/vlist').then(res => {
+          this.categories = res.data.mcats;
+        });
+      },
       openDialog() {
-        this.defaultItem = { browsebanner_id: null, browsebanner_name: '', browsebanner_image: '' };
+        this.defaultItem = { mcat_id: null, browsebanner_id: null, browsebanner_name: '', browsebanner_image: '' };
         this.imagePreview = 'https://via.placeholder.com/150';
         this.imageName = '';
         this.editedIndex = -1;
@@ -179,7 +195,8 @@
         this.defaultItem = {
           browsebanner_id: item.browsebanner_id,
           browsebanner_name: item.browsebanner_name,
-          browsebanner_image: ''
+          browsebanner_image: '',
+          mcat_id: item.mcat_id
         };
         this.imagePreview = item.image_url || (this.cdn + item.browsebanner_image);
         this.imageName = item.browsebanner_image ? item.browsebanner_image.split('/').pop() : '';
@@ -200,7 +217,7 @@
       },
       onDialogToggle(open) {
         if (!open) {
-          this.defaultItem = { browsebanner_id: null, browsebanner_name: '', browsebanner_image: '' };
+          this.defaultItem = { mcat_id: null, browsebanner_id: null, browsebanner_name: '', browsebanner_image: '' };
           this.imagePreview = null;
           this.imageName = '';
           this.fsvalid = false;
@@ -211,6 +228,7 @@
       saveBanner() {
         this.submitting = true;
         const fd = new FormData();
+        fd.append('mcat_id', this.defaultItem.mcat_id)
         fd.append('browsebanner_name', this.defaultItem.browsebanner_name);
         if (this.defaultItem.browsebanner_image instanceof File) {
           fd.append('browsebanner_image', this.defaultItem.browsebanner_image);
@@ -218,12 +236,24 @@
         if (this.editedIndex !== -1) {
           fd.append('browsebanner_id', this.editedIndex);
         }
-        const url = this.editedIndex === -1 ? '/admin/browsebanners/add' : '/admin/browsebanners/update';
+        const isNew = this.editedIndex === -1;
+        const url = isNew ? '/admin/browsebanners/add' : '/admin/browsebanners/update';
+
         axios.post(url, fd, {
           headers: { 'Content-Type': 'multipart/form-data' }
-        }).then(() => {
+        })
+        .then(() => {
           this.getAllBanners();
           this.addSdialog = false;
+
+          // ✅ Show toast
+          this.$toast.success(isNew ? 'Banner added successfully!' : 'Banner updated successfully!');
+        })
+        .catch(() => {
+          this.$toast.error('Something went wrong while saving the banner.');
+        })
+        .finally(() => {
+          this.submitting = false;
         });
       },
       onDragEnd() {
