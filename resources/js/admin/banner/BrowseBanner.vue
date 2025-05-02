@@ -75,6 +75,24 @@
                         item-text="mcat_name"
                         :rules="[v=>!!v||'Category is required']"
                         label="Category *" />
+                        <!-- Sub‑Category dropdown -->
+              <v-select dense outlined class="mt-3"
+                        v-if="subcategories.length"
+                        v-model="defaultItem.msubcat_id"
+                        :items="subcategories"
+                        item-value="msubcat_id"
+                        item-text="msubcat_name"
+                        :rules="[v=>!!v||'Sub‑category is required']"
+                        label="Sub‑Category *" />              
+              <!-- Product dropdown -->
+              <v-select dense outlined class="mt-3"
+                        v-if="products.length"
+                        v-model="defaultItem.mproduct_id"
+                        :items="products"
+                        item-value="mproduct_id"
+                        item-text="mproduct_title"
+                        :rules="[v=>!!v||'Product is required']"
+                        label="Product *" />
               <v-text-field
                 v-model="defaultItem.browsebanner_name"
                 :rules="bannernameRule"
@@ -126,7 +144,11 @@
         cdn: 'https://cdn.truewebpro.com/',
         ssearch: '',
         browsebanners: [],
+        categoriesAll: [],
         categories  : [],
+        subcategories : [],
+        products      : [],
+        fillLock : false,
         addSdialog: false,
         editedIndex: -1,
         fsvalid: false,
@@ -135,7 +157,9 @@
           browsebanner_id: null,
           browsebanner_name: '',
           browsebanner_image: '',
-          mcat_id : null
+          mcat_id : null,
+          msubcat_id : null,
+          mproduct_id : null
         },
         imagePreview: null,
         imageName: '',
@@ -145,7 +169,7 @@
           (v) => !this.browsebanners.some(
             (banner) =>
               banner.browsebanner_name === v &&
-              banner.browsebanner_id !== this.defaultItem.browsebanner_id && b.mcat_id === this.defaultItem.mcat_id
+              banner.browsebanner_id !== this.defaultItem.browsebanner_id
           ) || 'Banner already exists'
         ],
         bannerimageRule: [
@@ -155,12 +179,31 @@
     },
     created() {
       this.getAllBanners();
-      this.fetchCategories();
+      this.loadCategories();
     },
     watch: {
         addSdialog(val) {
             if (!val) this.submitting = false;
-        }
+        },
+        /* ==== category change ==== */
+      'defaultItem.mcat_id'(val){
+        if (this.fillLock) return        // 🚫  fill के वक़्त block कर दो
+        if (!this.categoriesAll.length) return
+        const cat = this.categoriesAll.find(c=>c.mcat_id===val)
+        this.subcategories           = cat ? cat.subcategories : []
+        this.products                = []
+        this.defaultItem.msubcat_id  = null
+        this.defaultItem.mproduct_id = null
+      },
+
+      /* ==== sub‑category change ==== */
+      'defaultItem.msubcat_id'(val){
+        if (this.fillLock) return
+        if (!this.subcategories.length) return
+        const sub = this.subcategories.find(s=>s.msubcat_id===val)
+        this.products             = sub ? sub.products : []
+        this.defaultItem.mproduct_id = null
+      }
     },
     computed: {
       isImageSelected() {
@@ -178,32 +221,68 @@
           this.browsebanners = res.data.browsebanner;
         });
       },
-      fetchCategories () {
-        axios.get('/admin/mcategories/vlist').then(res => {
-          this.categories = res.data.mcats;
-        });
+      async loadCategories () {
+        if (this.categoriesAll.length) return          // already cached
+        const { data } = await axios.get('/api/categories')
+        this.categoriesAll = data.categories           // ⬅️ nested lists यहीं रहेंगे
+        this.categories    = data.categories.map(c => ({
+          mcat_id  : c.mcat_id,
+          mcat_name: c.mcat_name
+        }))
       },
+
+      /* 2) ensure helper – promise जिसे editItem await करेगा */
+      ensureCategoriesLoaded () {
+  return this.categoriesAll.length
+    ? Promise.resolve()
+    : this.loadCategories()
+},
       openDialog() {
-        this.defaultItem = { mcat_id: null, browsebanner_id: null, browsebanner_name: '', browsebanner_image: '' };
+        this.defaultItem = { mcat_id:null, msubcat_id:null, mproduct_id:null, browsebanner_id: null, browsebanner_name: '', browsebanner_image: '' };
+        this.subcategories=[]; 
+        this.products=[];
         this.imagePreview = 'https://via.placeholder.com/150';
         this.imageName = '';
         this.editedIndex = -1;
         this.fsvalid = false;
         this.addSdialog = true;
       },
-      editItem(item) {
-        this.defaultItem = {
-          browsebanner_id: item.browsebanner_id,
-          browsebanner_name: item.browsebanner_name,
-          browsebanner_image: '',
-          mcat_id: item.mcat_id
-        };
-        this.imagePreview = item.image_url || (this.cdn + item.browsebanner_image);
-        this.imageName = item.browsebanner_image ? item.browsebanner_image.split('/').pop() : '';
-        this.editedIndex = item.browsebanner_id;
-        this.fsvalid = true;
-        this.addSdialog = true;
-      },
+      /* ------------ editItem ------------- */
+  async editItem(item){
+    await this.ensureCategoriesLoaded()
+
+    /* 1) पहले drop‑downs तैयार करो  */
+    const cat = this.categoriesAll.find(c => c.mcat_id === item.mcat_id)
+    const subs = cat ? cat.subcategories : []
+    const sub  = subs.find(s => s.msubcat_id === item.msubcat_id)
+    const prods  = sub ? sub.products : []
+
+    /* lock watcher → fill everything → unlock */
+    this.fillLock = true
+    this.subcategories = subs
+    this.products      = prods
+
+    this.defaultItem = {
+      browsebanner_id   : item.browsebanner_id,
+      browsebanner_name : item.browsebanner_name,
+      browsebanner_image: '',
+      mcat_id           : item.mcat_id,
+      msubcat_id        : item.msubcat_id,
+      mproduct_id       : item.mproduct_id
+    }
+    this.$nextTick(() => {     // unlock बाद के टिक पर
+      this.fillLock = false
+    })
+
+    this.imagePreview = item.image_url || (this.cdn + item.browsebanner_image)
+    this.imageName    = item.browsebanner_image
+                        ? item.browsebanner_image.split('/').pop()
+                        : ''
+
+    this.editedIndex  = item.browsebanner_id
+    this.fsvalid      = true
+    this.addSdialog   = true
+  },
       triggerFileInput() {
         this.$refs.imageInput.click();
       },
@@ -217,7 +296,9 @@
       },
       onDialogToggle(open) {
         if (!open) {
-          this.defaultItem = { mcat_id: null, browsebanner_id: null, browsebanner_name: '', browsebanner_image: '' };
+          this.defaultItem = { mcat_id:null, msubcat_id:null, mproduct_id:null, browsebanner_id: null, browsebanner_name: '', browsebanner_image: '' };
+          this.subcategories=[]; 
+          this.products=[];
           this.imagePreview = null;
           this.imageName = '';
           this.fsvalid = false;
@@ -228,7 +309,9 @@
       saveBanner() {
         this.submitting = true;
         const fd = new FormData();
-        fd.append('mcat_id', this.defaultItem.mcat_id)
+        fd.append('mcat_id',    this.defaultItem.mcat_id)
+        fd.append('msubcat_id', this.defaultItem.msubcat_id)
+        fd.append('mproduct_id',this.defaultItem.mproduct_id)
         fd.append('browsebanner_name', this.defaultItem.browsebanner_name);
         if (this.defaultItem.browsebanner_image instanceof File) {
           fd.append('browsebanner_image', this.defaultItem.browsebanner_image);

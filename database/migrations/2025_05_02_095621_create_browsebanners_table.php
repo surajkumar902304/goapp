@@ -18,6 +18,22 @@ class CreateBrowsebannersTable extends Migration
             $table->string('browsebanner_name');
             $table->string('browsebanner_image');
             $table->integer('browsebanner_position')->default(0);
+            $table->unsignedBigInteger('mcat_id')->nullable();
+            $table->unsignedBigInteger('msubcat_id')->nullable();
+            $table->unsignedBigInteger('mproduct_id')->nullable();
+
+            $table->foreign('mcat_id')
+                ->references('mcat_id')
+                ->on('mcategories')
+                ->onDelete('cascade');
+                $table->foreign('msubcat_id')
+                ->references('msubcat_id')
+                ->on('msubcategories')
+                ->onDelete('cascade');
+                $table->foreign('mproduct_id')
+                ->references('mproduct_id')
+                ->on('mproducts')
+                ->onDelete('cascade');
             $table->timestamps();
         });
     }

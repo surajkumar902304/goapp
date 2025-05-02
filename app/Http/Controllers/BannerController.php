@@ -16,11 +16,35 @@ class BannerController extends Controller
 
     public function browseBannerVlist()
     {
-        $browsebanner = Browsebanner::orderBy('browsebanner_position')->get();
+        $banners = Browsebanner::with([
+            'category:mcat_id,mcat_name',
+            'subcategory:msubcat_id,msubcat_name',
+            'product:mproduct_id,mproduct_title'
+        ])
+        ->orderBy('browsebanner_position')
+        ->get()
+        ->map(function ($b) {
+            return [
+                'browsebanner_id'      => $b->browsebanner_id,
+                'browsebanner_name'    => $b->browsebanner_name,
+                'browsebanner_image'   => $b->browsebanner_image,
+                'browsebanner_position'=> $b->browsebanner_position,
+
+                /* foreign‑keys */
+                'mcat_id'    => $b->mcat_id,
+                'msubcat_id' => $b->msubcat_id,
+                'mproduct_id'=> $b->mproduct_id,
+
+                /* human‑readable names */
+                'mcat_name'     => optional($b->category)->mcat_name,
+                'msubcat_name'  => optional($b->subcategory)->msubcat_name,
+                'mproduct_title'=> optional($b->product)->mproduct_title,
+            ];
+        });
 
         return response()->json([
-            'status' => true,
-            'browsebanner' => $browsebanner,
+        'status'       => true,
+        'browsebanner' => $banners
         ], 200);
     }
 
@@ -40,6 +64,8 @@ class BannerController extends Controller
     {
         $request->validate([
             'mcat_id' => 'required|exists:mcategories,mcat_id',
+            'msubcat_id' => 'required|exists:msubcategories,msubcat_id',
+            'mproduct_id' => 'required|exists:mproducts,mproduct_id',
             'browsebanner_name'  => 'required|string|max:50',
             'browsebanner_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
@@ -55,6 +81,8 @@ class BannerController extends Controller
 
         $browsebanner  = new Browsebanner();
         $browsebanner->mcat_id    = $request->mcat_id;
+        $browsebanner->msubcat_id    = $request->msubcat_id;
+        $browsebanner->mproduct_id    = $request->mproduct_id;
         $browsebanner->browsebanner_name    = $request->browsebanner_name;
         $browsebanner->browsebanner_image   = $banner_imgpath;
         $browsebanner->browsebanner_position = Browsebanner::max('browsebanner_position') + 1;
@@ -67,13 +95,17 @@ class BannerController extends Controller
     {
         $request->validate([
             'browsebanner_id'    => 'required|exists:browsebanners,browsebanner_id',
-            'mcat_id'            => 'required|exists:mcategories,mcat_id',
+            'mcat_id' => 'required|exists:mcategories,mcat_id',
+            'msubcat_id' => 'required|exists:msubcategories,msubcat_id',
+            'mproduct_id' => 'required|exists:mproducts,mproduct_id',
             'browsebanner_name'  => 'required|string|max:255',
             'browsebanner_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $browsebanner = Browsebanner::find($request->browsebanner_id);
         $browsebanner->mcat_id  = $request->mcat_id;
+        $browsebanner->msubcat_id  = $request->msubcat_id;
+        $browsebanner->mproduct_id  = $request->mproduct_id;
         $browsebanner->browsebanner_name  = $request->browsebanner_name;
         $banner_imgpath = $browsebanner->browsebanner_image;
 
