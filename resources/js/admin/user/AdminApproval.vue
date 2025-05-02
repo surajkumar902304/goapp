@@ -53,7 +53,6 @@ export default {
         updateApproval(user) {
             user.admin_approval = user.admin_approval ? 0 : 1;
 
-            // Send update to the server
             axios.post('/admin/users/update-approval', {
             user_id: user.id,
             admin_approval: user.admin_approval,
