@@ -15,7 +15,7 @@ class BannerController extends Controller
         return response()->json([
             'status' => true,
             'message'     => 'Fetch all Browse Banners Successfully',
-            'cdnURL'     => 'https://cdn.truewebpro.com/',
+            'cdnURL'     => config('cdn.url'),
             'browseBanners' => $browseBanners
         ]);
     }

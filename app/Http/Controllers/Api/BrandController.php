@@ -40,7 +40,7 @@ class BrandController extends Controller
         return response()->json([
             'status' => true,
             'message'     => 'Fetch all Brands Successfully',
-            'cdnURL'     => 'https://cdn.truewebpro.com/',
+            'cdnURL'     => config('cdn.url'),
             'mbrands' => $mbrands
         ]);
     }
