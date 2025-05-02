@@ -201,6 +201,8 @@ class CategoryController extends Controller
         
         return response()->json([
             'status'     => true,
+            'message'     => 'Fetch all Categories Successfully',
+            'cdnURL'     => 'https://cdn.truewebpro.com/',
             'categories' => $cats,
         ]);
     }   
