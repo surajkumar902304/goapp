@@ -63,9 +63,9 @@ class BannerController extends Controller
     public function addBrowseBanner(Request $request)
     {
         $request->validate([
-            'mcat_id' => 'required|exists:mcategories,mcat_id',
-            'msubcat_id' => 'required|exists:msubcategories,msubcat_id',
-            'mproduct_id' => 'required|exists:mproducts,mproduct_id',
+            'mcat_id' => 'nullable|exists:mcategories,mcat_id',
+            'msubcat_id' => 'nullable|exists:msubcategories,msubcat_id',
+            'mproduct_id' => 'nullable|exists:mproducts,mproduct_id',
             'browsebanner_name'  => 'required|string|max:50',
             'browsebanner_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
@@ -95,9 +95,9 @@ class BannerController extends Controller
     {
         $request->validate([
             'browsebanner_id'    => 'required|exists:browsebanners,browsebanner_id',
-            'mcat_id' => 'required|exists:mcategories,mcat_id',
-            'msubcat_id' => 'required|exists:msubcategories,msubcat_id',
-            'mproduct_id' => 'required|exists:mproducts,mproduct_id',
+            'mcat_id' => 'nullable|exists:mcategories,mcat_id',
+            'msubcat_id' => 'nullable|exists:msubcategories,msubcat_id',
+            'mproduct_id' => 'nullable|exists:mproducts,mproduct_id',
             'browsebanner_name'  => 'required|string|max:255',
             'browsebanner_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);

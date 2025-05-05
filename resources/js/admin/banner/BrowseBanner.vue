@@ -73,8 +73,8 @@
                         :items="categories"
                         item-value="mcat_id"
                         item-text="mcat_name"
-                        :rules="[v=>!!v||'Category is required']"
-                        label="Category *" />
+                        label="Category *" 
+                        clearable/>
                         <!-- Sub‑Category dropdown -->
               <v-select dense outlined class="mt-3"
                         v-if="subcategories.length"
@@ -82,8 +82,8 @@
                         :items="subcategories"
                         item-value="msubcat_id"
                         item-text="msubcat_name"
-                        :rules="[v=>!!v||'Sub‑category is required']"
-                        label="Sub‑Category *" />              
+                        label="Sub‑Category *" 
+                        clearable/>              
               <!-- Product dropdown -->
               <v-select dense outlined class="mt-3"
                         v-if="products.length"
@@ -91,8 +91,8 @@
                         :items="products"
                         item-value="mproduct_id"
                         item-text="mproduct_title"
-                        :rules="[v=>!!v||'Product is required']"
-                        label="Product *" />
+                        label="Product *" 
+                        clearable/>
               <v-text-field
                 v-model="defaultItem.browsebanner_name"
                 :rules="bannernameRule"
@@ -309,9 +309,9 @@
       saveBanner() {
         this.submitting = true;
         const fd = new FormData();
-        fd.append('mcat_id',    this.defaultItem.mcat_id)
-        fd.append('msubcat_id', this.defaultItem.msubcat_id)
-        fd.append('mproduct_id',this.defaultItem.mproduct_id)
+        if (this.defaultItem.mcat_id    != null) fd.append('mcat_id',    this.defaultItem.mcat_id)
+        if (this.defaultItem.msubcat_id != null) fd.append('msubcat_id', this.defaultItem.msubcat_id)
+        if (this.defaultItem.mproduct_id!= null) fd.append('mproduct_id',this.defaultItem.mproduct_id)
         fd.append('browsebanner_name', this.defaultItem.browsebanner_name);
         if (this.defaultItem.browsebanner_image instanceof File) {
           fd.append('browsebanner_image', this.defaultItem.browsebanner_image);
