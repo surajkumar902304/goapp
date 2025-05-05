@@ -89,6 +89,7 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::post('/browsebanners/add',[BannerController::class,'addBrowseBanner'])->name('browsebanner.add');
         Route::post('/browsebanners/update',[BannerController::class,'editBrowseBanner'])->name('browsebanner.edit');
         Route::post('/browsebanners/reorder', [BannerController::class, 'reorder']);
+        Route::get('/main/categories', [BannerController::class, 'index']);
     });
 });
 

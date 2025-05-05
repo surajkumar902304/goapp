@@ -36,14 +36,14 @@ Route::middleware(['auth.api'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user-profile', [AuthController::class, 'userProfile']);
 
-    // Add any other protected endpoints here...
+    // Brands API 
+    Route::get('/brands', [BrandController::class, 'index']);
+
+    // Categories API 
+    Route::get('/categories', [CategoryController::class, 'index']);
+
+    // Banner API 
+    Route::get('/browse-banner', [BannerController::class, 'browseBanner']);
 });
 
-// Brands API 
-Route::get('/brands', [BrandController::class, 'index']);
 
-// Categories API 
-Route::get('/categories', [CategoryController::class, 'index']);
-
-// Banner API 
-Route::get('/browse-banner', [BannerController::class, 'browseBanner']);

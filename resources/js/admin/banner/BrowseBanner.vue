@@ -223,7 +223,7 @@
       },
       async loadCategories () {
         if (this.categoriesAll.length) return          // already cached
-        const { data } = await axios.get('/api/categories')
+        const { data } = await axios.get('/admin/main/categories')
         this.categoriesAll = data.categories           // ⬅️ nested lists यहीं रहेंगे
         this.categories    = data.categories.map(c => ({
           mcat_id  : c.mcat_id,

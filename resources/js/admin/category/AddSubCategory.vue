@@ -24,6 +24,7 @@
     </v-row>
 
     <v-row>
+      <!-- Category and Sub-Category -->
       <v-col cols="12" md="9">
         <v-card outlined>
           <v-card-text>
@@ -32,11 +33,12 @@
               label="Select Category" :rules="[v=>!!v||'Required']" @change="resetSubcat"/>
 
             <v-card-subtitle class="black--text">Sub-Category *</v-card-subtitle>
-            <v-text-field dense outlined class="mt-4" v-model="form.subcatname" label="Sub-Category Name" 
+            <v-text-field dense outlined v-model="form.subcatname" label="Sub-Category Name" 
               :rules="msubcatnameRule" @blur="checkDuplicate"/>
           </v-card-text>
         </v-card>
 
+        <!-- Collection Type -->
         <v-card outlined class="my-3">
           <v-card-subtitle>Collection Type</v-card-subtitle>
           <v-card-text>
@@ -47,6 +49,7 @@
           </v-card-text>
         </v-card>
 
+        <!-- Products Browse -->
         <v-card v-if="mcattype==='manual'" outlined class="my-3">
           <v-card-subtitle>Products</v-card-subtitle>
           <v-card-text>
@@ -86,6 +89,7 @@
           </v-card-text>
         </v-card>
 
+        <!-- Conditions All / Any -->
         <v-card v-else outlined class="my-3">
           <v-card-subtitle>Conditions</v-card-subtitle>
           <v-card-text>
@@ -123,6 +127,7 @@
         </v-card>
       </v-col>
 
+      <!-- Publishing -->
       <v-col cols="12" md="3">
         <v-card outlined class="mb-3">
           <v-card-actions><span class="body-2 fw-semibold">Publishing</span></v-card-actions>
@@ -134,6 +139,7 @@
           </v-card-text>
         </v-card>
 
+        <!-- Image -->
         <v-card outlined>
           <v-card-actions><span class="body-2 fw-semibold">Image *</span></v-card-actions>
           <v-card-text>
@@ -142,7 +148,7 @@
                 @change="onImageSelect"/>
             </div>
             <div v-else class="d-flex align-center">
-              <v-img :src="imagePreview" max-width="80" max-height="80" contain/>
+              <v-img :src="imagePreview" max-width="80" max-height="80" contain class="uploader-box"/>
               <v-btn icon small class="ml-2" @click="clearImage">
                 <v-icon color="red">mdi-trash-can</v-icon>
               </v-btn>
@@ -150,6 +156,15 @@
           </v-card-text>
         </v-card>
 
+        <!-- Create offer -->
+        <v-card outlined class="mt-3">
+          <v-card-actions><span class="body-2 fw-semibold">Create Offer</span></v-card-actions>
+          <v-text-field class="px-4 mt-6" v-model="form.offer_name" label="Offer Name" dense outlined :rules="offerNameRules"/>
+          <v-text-field class="px-4 mt-3" v-model="form.start_time" label="Start Time" type="datetime-local" dense outlined :rules="startTimeRules"/>
+          <v-text-field class="px-4 mt-3" v-model="form.end_time" label="End Time" type="datetime-local" dense outlined :rules="endTimeRules"/>
+        </v-card>
+
+        <!-- Sub-Category Tag -->
         <v-card outlined class="mt-3">
           <v-card-actions><span class="body-2 fw-semibold">Sub-Category Tag</span></v-card-actions>
           <v-card-text>
@@ -221,7 +236,10 @@ export default {
         subcatname:'', 
         subcattag:'',
         publish_to:'Online Store', 
-        image:null
+        image:null,
+        offer_name: '',
+        start_time: null,
+        end_time: null,
       },
 
       mcattype:'manual',
@@ -240,20 +258,49 @@ export default {
                   msubcat.msubcat_name === v &&
                   msubcat.msubcat_id !== this.msubcat_id
             ) || "Sub-Category already exists"
-      ]
+      ],
+      existingOffers: [],
+      now: new Date().toISOString().slice(0, 16),
+
+      offerNameRules: [
+        v => (v && v.length >= 3) || 'Name must be at least 3 characters',
+        (v) =>
+              !this.msubcats.some(
+                  (msubcat) =>
+                  msubcat.offer_name === v &&
+                  msubcat.msubcat_id !== this.msubcat_id
+            ) || "Offer name already exists"
+      ],
+      startTimeRules: [
+        v => v >= this.now || 'Start time cannot be in the past'
+      ],
+      endTimeRules: [
+        v => v > this.form.start_time || 'End time must be after start time'
+      ],
     }
   },
 
   computed:{
+    now() {
+      return new Date().toISOString().slice(0, 16);
+    },
     saveDisabled () {
       const base = !this.form.mcat_id ||
         !this.form.subcatname.trim() ||
         !this.form.image ||
-        !!this.nameError
+        !!this.nameError;
+
+      const offerValid = !this.form.offer_name ||
+        !this.existingOffers.includes(this.form.offer_name.trim().toLowerCase());
+
+      const startValid = !this.form.start_time || this.form.start_time >= this.now;
+      const endValid = !this.form.end_time || this.form.end_time > this.form.start_time;
+
       if (this.mcattype === 'smart') {
-        return base || !this.hasValidConditionRow
+        return base || !offerValid || !startValid || !endValid || !this.hasValidConditionRow;
       }
-      return base
+
+      return base || !offerValid || !startValid || !endValid;
     },
 
     hasValidConditionRow () {
@@ -344,6 +391,9 @@ export default {
       this.saveLoading = true;
 
       const fd = new FormData()
+      fd.append('offer_name', this.form.offer_name ?? '');
+      fd.append('start_time', this.form.start_time ?? '');
+      fd.append('end_time', this.form.end_time ?? '');
       Object.entries(this.form).forEach(([k, v]) => fd.append(k, v ?? ''))
       fd.append('mcattype', this.mcattype)
       if (this.mcattype === 'smart') {
@@ -380,3 +430,17 @@ export default {
   }
 }
 </script>
+<style scoped>
+/* unchanged styles */
+.uploader-box {
+  max-width: 200px;
+  max-height: 200px;
+  border: 1px dashed #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+</style>
