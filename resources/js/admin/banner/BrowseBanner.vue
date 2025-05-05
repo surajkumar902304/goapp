@@ -73,7 +73,7 @@
                         :items="categories"
                         item-value="mcat_id"
                         item-text="mcat_name"
-                        label="Category *" 
+                        label="Category" 
                         clearable/>
                         <!-- Sub‑Category dropdown -->
               <v-select dense outlined class="mt-3"
@@ -82,7 +82,7 @@
                         :items="subcategories"
                         item-value="msubcat_id"
                         item-text="msubcat_name"
-                        label="Sub‑Category *" 
+                        label="Sub‑Category" 
                         clearable/>              
               <!-- Product dropdown -->
               <v-select dense outlined class="mt-3"
@@ -91,7 +91,7 @@
                         :items="products"
                         item-value="mproduct_id"
                         item-text="mproduct_title"
-                        label="Product *" 
+                        label="Product" 
                         clearable/>
               <v-text-field
                 v-model="defaultItem.browsebanner_name"
