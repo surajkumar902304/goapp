@@ -422,10 +422,27 @@ export default {
           }, 500); 
     },
     discard () {
-      this.form={mcat_id:null,subcatname:'',subcattag:'',publish_to:'Online Store',image:null}
-      this.imagePreview=null; this.nameError=''; this.mcattype='manual'
-      this.selectedProducts=[]; this.productSelection=[]
-      this.conditions=[{tag:'',condition:'',value:'',relations:[]}]
+      this.form={
+        mcat_id:null,
+        subcatname:'',
+        subcattag:'',
+        publish_to:'Online Store',
+        image:null,
+        offer_name: '',
+        start_time: null,
+        end_time: null,
+      }
+      this.imagePreview=null; 
+      this.nameError=''; 
+      this.mcattype='manual'
+      this.selectedProducts=[]; 
+      this.productSelection=[]
+      this.conditions=[{
+        tag:'',
+        condition:'',
+        value:'',
+        relations:[]}
+      ]
     }
   }
 }

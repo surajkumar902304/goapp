@@ -21,6 +21,9 @@
                     <template #item.msubcat_image="{ item }">
                         <img :src="cdn + item.msubcat_image || 'https://via.placeholder.com/50'" width="50" />
                     </template>
+                    <template v-slot:item.msubcat_name="{ item }">
+                        <a :href="'/admin/msub-category/' + item.msubcat_id" class="link-dark"> {{ item.msubcat_name }} </a>
+                    </template>
                     <template #item.mcat_name="{ item }">
                         {{ item.category?.mcat_name || '—' }}
                     </template>

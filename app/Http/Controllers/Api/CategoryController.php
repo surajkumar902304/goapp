@@ -9,77 +9,124 @@ use App\Models\Mproduct;
 use Illuminate\Http\Request;
 
 /**
- *  Category → Sub‑category → Product tree (searchable)
+ *  /api/categories
+ *  ---------------
+ *  Returns a Category → Sub‑category → Product tree.
+ *  Optional filters:
+ *    • ?mbrand_id=1,3,7   (comma‑list)
+ *    • ?search=keyword    (case‑insensitive)
  */
 class CategoryController extends Controller
 {
-    /* ------------------------------------------------------------------ */
-    /*  GET /api/categories[?search=xxx]                                  */
-    /* ------------------------------------------------------------------ */
+    /* ----------------------------------------------------- */
+    /*  GET /api/categories                                  */
+    /* ----------------------------------------------------- */
     public function index(Request $request)
-    {
-        $needle = mb_strtolower(trim($request->query('search', '')));
+{
+    /* ------------------------------------------------------------- */
+    /*  0) read query‑params                                         */
+    /* ------------------------------------------------------------- */
+    $needle    = mb_strtolower(trim($request->query('search', '')));
+    $brandIds  = $request->query('mbrand_id');
+    $brandIds  = $brandIds ? explode(',', $brandIds) : null;   // null ⇒ no brand filter
 
-        $cats = Mcategory::with(['subcategories' => fn ($q) => $q->select('*')])
-                ->get();
+    /* ------------------------------------------------------------- */
+    /*  1) pull entire taxonomy + attach product lists (brand aware) */
+    /* ------------------------------------------------------------- */
+    $cats = Mcategory::with(['subcategories' => fn ($q) => $q->select('*')])
+        ->get();
 
-        $cats->each(fn ($cat) =>
-            $cat->subcategories->each(fn ($sub) =>
-                $sub->setRelation('products', $this->buildProductsForSub($sub)))
-        );
+    $cats->each(fn ($cat) =>
+        $cat->subcategories->each(fn ($sub) =>
+            $sub->setRelation('products', $this->buildProductsForSub($sub, $brandIds)))
+    );
 
-        if ($needle === '') {
-            return $this->jsonResponse($cats);
-        }
-
-        $filtered = $cats->filter(function ($cat) use ($needle) {
-
-            $categoryHit = str_contains(mb_strtolower($cat->mcat_name), $needle);
-            if ($categoryHit) {
-                return true;   
-            }
-            $subFiltered = $cat->subcategories->filter(function ($sub) use ($needle) {
-
-                $subHit  = str_contains(mb_strtolower($sub->msubcat_name), $needle);
-
-                $matchedProducts = $sub->products->filter(function ($p) use ($needle) {
-                    return str_contains(mb_strtolower($p['mproduct_title']), $needle);
-                });
-
-                if ($subHit) {
-                    return true;
-                }
-
-                if ($matchedProducts->isNotEmpty()) {
-                    $sub->setRelation('products', $matchedProducts->values());
-                    return true;
-                }
-
-                return false;
-            })->values();  
-
-            $cat->setRelation('subcategories', $subFiltered);
-
-            return $categoryHit || $subFiltered->isNotEmpty();
-        })->values();     
-
-        return $this->jsonResponse($filtered);
-
+    /* ------------------------------------------------------------- */
+    /*  2) quick exit – no filters at all                            */
+    /* ------------------------------------------------------------- */
+    if ($needle === '' && !$brandIds) {
+        return $this->jsonResponse($cats);
     }
 
-    /* ------------------------------------------------------------------ */
-    /*  Build product list (flattened variants) for a sub‑category        */
-    /* ------------------------------------------------------------------ */
-    private function buildProductsForSub($sub)
+    /* ------------------------------------------------------------- */
+    /*  3) apply BRAND filter only (no search keyword)               */
+    /* ------------------------------------------------------------- */
+    if ($needle === '' && $brandIds) {
+        $cats = $cats->map(function ($cat) {
+            $subs = $cat->subcategories->filter(fn ($s) => $s->products->isNotEmpty())
+                                       ->values();
+            $cat ->setRelation('subcategories', $subs);
+            return $subs->isNotEmpty() ? $cat : null;
+        })->filter()->values();
+
+        return $this->jsonResponse($cats);
+    }
+
+    /* ------------------------------------------------------------- */
+    /*  4) SEARCH (with brand filter already applied)                */
+    /*      – rules                                                   *
+     *        • category hit  → keep whole subtree                    *
+     *        • sub‑cat hit   → keep that sub‑cat w/ full products    *
+     *        • product hit   → keep ONLY matching product(s)         *
+     *                                                               */
+    /* ------------------------------------------------------------- */
+    $cats = $cats->map(function ($cat) use ($needle) {
+
+        /* CATEGORY name hit? → keep untouched -------------------- */
+        if (str_contains(mb_strtolower($cat->mcat_name), $needle)) {
+            return $cat;
+        }
+
+        /* otherwise drill down into its sub‑categories ----------- */
+        $subs = $cat->subcategories->map(function ($sub) use ($needle) {
+
+            /* SUB‑CATEGORY name hit? → keep full product list ----- */
+            if (str_contains(mb_strtolower($sub->msubcat_name), $needle)) {
+                return $sub;
+            }
+
+            /* check individual products -------------------------- */
+            $matched = $sub->products->filter(fn ($p) =>
+                str_contains(mb_strtolower($p['mproduct_title']), $needle)
+            );
+
+            if ($matched->isNotEmpty()) {
+                /* keep sub‑cat but slice product array to matches  */
+                $sub->setRelation('products', $matched->values());
+                return $sub;
+            }
+
+            /* nothing matched in this sub‑cat → drop it ---------- */
+            return null;
+
+        })->filter()->values();
+
+        $cat->setRelation('subcategories', $subs);
+
+        return $subs->isNotEmpty() ? $cat : null;
+
+    })->filter()->values();
+
+    return $this->jsonResponse($cats);
+}
+
+
+    /* ===================================================== */
+    /*  buildProductsForSub()                                */
+    /*  ---------------------------------------------------  */
+    /*  Returns a flattened collection of variants honouring */
+    /*  an optional brand filter.                            */
+    /* ===================================================== */
+    private function buildProductsForSub($sub, ?array $brandIds = null)
     {
-        /* MANUAL sub‑categories ---------------------------------------- */
+        /* ---------- MANUAL list ---------- */
         if ($sub->msubcat_type === 'manual') {
-            $products = Mproduct::with([
+            $query = Mproduct::with([
                 'type:mproduct_type_id,mproduct_type_name',
                 'brand:mbrand_id,mbrand_name',
                 'mvariantsApi' => function ($q) {
-                    $q->join('mvariant_details', 'mvariant_details.mvariant_id', '=', 'mvariants.mvariant_id')
-                      ->join('mstocks',          'mstocks.mvariant_id',          '=', 'mvariants.mvariant_id')
+                    $q->join('mvariant_details','mvariant_details.mvariant_id','=','mvariants.mvariant_id')
+                      ->join('mstocks','mstocks.mvariant_id','=','mvariants.mvariant_id')
                       ->select(
                           'mvariants.mvariant_id','mvariants.sku','mvariants.mvariant_image',
                           'mvariants.price','mvariants.compare_price','mvariants.cost_price',
@@ -89,15 +136,21 @@ class CategoryController extends Controller
                       );
                 }
             ])
-            ->whereIn('mproduct_id', $sub->product_ids ?? [])
-            ->where('status', 'Active')
-            ->get();
+            ->whereIn('mproduct_id',$sub->product_ids ?? [])
+            ->where('status','Active');
 
-        /* SMART sub‑categories ---------------------------------------- */
+            if ($brandIds) {
+                $query->whereIn('mbrand_id',$brandIds);
+            }
+
+            $products = $query->get();
+
+        /* ---------- SMART list ---------- */
         } else {
-            $products = $this->getSmartCollectionProducts($sub);
+            $products = $this->getSmartCollectionProducts($sub,$brandIds);
         }
 
+        /* ---------- flatten variants ---------- */
         $flat = collect();
         foreach ($products as $p) {
             foreach ($p->mvariants as $v) {
@@ -131,34 +184,38 @@ class CategoryController extends Controller
         return $flat->values();
     }
 
-    /* ------------------------------------------------------------------ */
-    /*  SMART‑collection builder (same logic you already had)             */
-    /* ------------------------------------------------------------------ */
-    private function getSmartCollectionProducts($sub)
+    /* ===================================================== */
+    /*  SMART‑collection helper (unchanged except brandIds)  */
+    /* ===================================================== */
+    private function getSmartCollectionProducts($sub, ?array $brandIds = null)
     {
         $rules = Mcollection_auto::query()
-            ->where('msubcat_id', $sub->msubcat_id)
-            ->join('fields',  'fields.field_id',  '=', 'mcollection_autos.field_id')
-            ->join('queries', 'queries.query_id', '=', 'mcollection_autos.query_id')
+            ->where('msubcat_id',$sub->msubcat_id)
+            ->join('fields','fields.field_id','=','mcollection_autos.field_id')
+            ->join('queries','queries.query_id','=','mcollection_autos.query_id')
             ->select('fields.field_name','queries.query_name','mcollection_autos.value')
             ->get();
 
-        $query = Mproduct::where('status', 'Active');
+        $query = Mproduct::where('status','Active');
 
         foreach ($rules as $r) {
             [$field,$op,$val] = [$r->field_name,$r->query_name,$r->value];
             switch ($field) {
                 case 'Title':
-                    $query = $this->applyTextRule($query, 'mproduct_title', $op, $val); break;
+                    $query = $this->applyTextRule($query,'mproduct_title',$op,$val);           break;
                 case 'Brand':
-                    $query->whereHas('brand', fn ($q) => $this->applyTextRule($q,'mbrand_name',$op,$val)); break;
+                    $query->whereHas('brand',fn($q)=>$this->applyTextRule($q,'mbrand_name',$op,$val)); break;
                 case 'Type':
-                    $query->whereHas('type',  fn ($q) => $this->applyTextRule($q,'mproduct_type_name',$op,$val)); break;
+                    $query->whereHas('type', fn($q)=>$this->applyTextRule($q,'mproduct_type_name',$op,$val)); break;
                 case 'Price':
-                    $query->whereHas('mvariants', fn ($q) => $this->applyNumericRule($q,'price',$op,$val)); break;
+                    $query->whereHas('mvariants',fn($q)=>$this->applyNumericRule($q,'price',$op,$val));       break;
                 case 'Inventory stock':
-                    $query->whereHas('mvariants', fn ($q) => $this->applyNumericRule($q,'quantity',$op,$val)); break;
+                    $query->whereHas('mvariants',fn($q)=>$this->applyNumericRule($q,'quantity',$op,$val));    break;
             }
+        }
+
+        if ($brandIds) {
+            $query->whereIn('mbrand_id',$brandIds);
         }
 
         return $query->with([
@@ -178,36 +235,30 @@ class CategoryController extends Controller
         ])->get();
     }
 
-    /* ------------------------------------------------------------------ */
-    /*  tiny helpers for rule building                                    */
-    /* ------------------------------------------------------------------ */
-    private function applyTextRule($q, string $col, string $op, string $val)
+    /* ---------- rule helpers ---------- */
+    private function applyTextRule($q,string $col,string $op,string $val)
     {
-        return match ($op) {
-            'is equal to'        => $q->where($col, $val),
-            'is not equal to'    => $q->where($col, '!=', $val),
-            'contains'           => $q->where($col, 'like', "%$val%"),
-            'does not contains'  => $q->where($col, 'not like', "%$val%"),
-            'starts with'        => $q->where($col, 'like', "$val%"),
-            'ends with'          => $q->where($col, 'like', "%$val"),
+        return match($op){
+            'is equal to'        => $q->where($col,$val),
+            'is not equal to'    => $q->where($col,'!=',$val),
+            'contains'           => $q->where($col,'like',"%$val%"),
+            'does not contains'  => $q->where($col,'not like',"%$val%"),
+            'starts with'        => $q->where($col,'like',"$val%"),
+            'ends with'          => $q->where($col,'like',"%$val"),
             default              => $q,
         };
     }
-
-    private function applyNumericRule($q, string $col, string $op, $val)
+    private function applyNumericRule($q,string $col,string $op,$val)
     {
-        return match ($op) {
-            'is equal to'     => $q->where($col, $val),
-            'is not equal to' => $q->where($col, '!=', $val),
-            'greater than'    => $q->where($col, '>',  $val),
-            'less than'       => $q->where($col, '<',  $val),
+        return match($op){
+            'is equal to'     => $q->where($col,$val),
+            'is not equal to' => $q->where($col,'!=',$val),
+            'greater than'    => $q->where($col,'>',$val),
+            'less than'       => $q->where($col,'<',$val),
             default           => $q,
         };
     }
 
-    /* ------------------------------------------------------------------ */
-    /*  common JSON formatter                                             */
-    /* ------------------------------------------------------------------ */
     private function jsonResponse($payload)
     {
         return response()->json([

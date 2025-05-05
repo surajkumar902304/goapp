@@ -9,5 +9,6 @@ class Moption extends Model
 {
     use HasFactory;
     protected $primaryKey = 'moption_id';
+    protected $table = 'moptions';
     protected $fillable = ['moption_name'];
 }

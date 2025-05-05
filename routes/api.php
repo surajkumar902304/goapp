@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -44,6 +45,10 @@ Route::middleware(['auth.api'])->group(function () {
 
     // Banner API 
     Route::get('/browse-banner', [BannerController::class, 'browseBanner']);
-});
 
+    // Wishlist API 
+    Route::get  ('/wishlist',      [WishlistController::class, 'index']);
+    Route::post ('/wishlist/add',[WishlistController::class, 'store']);
+
+});
 

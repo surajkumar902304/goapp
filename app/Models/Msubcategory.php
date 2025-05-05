@@ -11,7 +11,9 @@ class Msubcategory extends Model
     protected $primaryKey = 'msubcat_id';
     protected $table = 'msubcategories';
 
-    protected $fillable = ['mcat_id', 'msubcat_name', 'msubcat_slug', 'msubcat_image', 'msubcat_tag', 'msubcat_publish', 'msubcat_type', 'product_ids'];
+    protected $fillable = ['mcat_id', 'msubcat_name', 'msubcat_slug', 'msubcat_image', 'msubcat_tag', 'msubcat_publish', 
+        'offer_name', 'start_time', 'end_time', 'msubcat_type', 'product_ids'
+    ];
 
     protected $casts = [
         'product_ids' => 'array',

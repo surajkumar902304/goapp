@@ -30,12 +30,7 @@ class BrandController extends Controller
         // })
         // ->get();
 
-        $mbrands = Mbrand::with('mproducts')
-        ->whereNotNull('mbrand_image')
-        ->whereIn('mbrand_id', function($query) {
-            $query->select('mbrand_id')->from('mproducts');
-        })
-        ->get();
+        $mbrands = Mbrand::get();
 
         return response()->json([
             'status' => true,
