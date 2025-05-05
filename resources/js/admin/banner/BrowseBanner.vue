@@ -74,7 +74,7 @@
                         item-value="mcat_id"
                         item-text="mcat_name"
                         label="Category" 
-                        clearable/>
+                        clearable/> 
                         <!-- Sub‑Category dropdown -->
               <v-select dense outlined class="mt-3"
                         v-if="subcategories.length"
