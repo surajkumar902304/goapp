@@ -20,7 +20,9 @@ class Mproduct extends Model
         'mproduct_type_id',
         'mbrand_id',
         'mtags',
-        'mproduct_desc'
+        'mproduct_desc',
+        'product_deal_tag',
+        'product_offer'
     ];
 
     protected $casts = [
@@ -28,9 +30,9 @@ class Mproduct extends Model
     ];
 
     public function mvariantsApi()
-{
-    return $this->hasMany(Mvariant::class, 'mproduct_id', 'mproduct_id');
-}
+    {
+        return $this->hasMany(Mvariant::class, 'mproduct_id', 'mproduct_id');
+    }
     public function mvariants()
     {
         return $this->hasMany(Mvariant::class, 'mproduct_id', 'mproduct_id')

@@ -313,6 +313,8 @@ class AdminController extends Controller
                 'mproduct_desc'    => $request->pdesc ?? "",
                 'status'           => $request->pstatus ?? 'Draft',
                 'saleschannel'     => $request->pchannel ?? 'Online Store',
+                'product_deal_tag' => $request->product_deal_tag ?? '',
+                'product_offer'    => $request->product_offer ?? '',
                 'mproduct_type_id' => $request->ptype ?? null,
                 'mbrand_id'        => $request->pbrand ?? null,
                 'mtags'            => json_decode($request->ptags, true) ?? [],
@@ -390,7 +392,7 @@ class AdminController extends Controller
                 );
 
                 Mstock::create([
-                    'quantity'     => $request->stock ?? 0,
+                    'quantity'     => $request->pstock ?? 0,
                     'mlocation_id' => $mlocation->mlocation_id,
                     'mvariant_id'  => $mvariant->mvariant_id,
                 ]);
@@ -467,6 +469,8 @@ class AdminController extends Controller
                 'mproduct_desc'    => $request->pdesc ?? "",
                 'status'           => $request->pstatus ?? 'Draft',
                 'saleschannel'     => $request->pchannel ?? 'Online Store',
+                'product_deal_tag' => $request->product_deal_tag ?? '',
+                'product_offer'    => $request->product_offer ?? '',
                 'mproduct_type_id' => $request->ptype ?? null,
                 'mbrand_id'        => $request->pbrand ?? null,
                 'mtags'            => json_decode($request->ptags, true) ?? [],

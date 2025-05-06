@@ -123,7 +123,7 @@ export default {
     },
     computed: {
         isImageSelected () {
-            return this.imagePreview && this.imagePreview !== 'https://via.placeholder.com/150';
+            return !!this.imageName;
         }
     },
     methods: {

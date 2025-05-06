@@ -236,6 +236,11 @@
                             </v-row>
                         </v-card-text>
                     </v-card>
+                    <v-card outlined class="mt-3">
+                        <v-card-title>Create Offer</v-card-title>
+                        <v-text-field class="px-4 mt-3" v-model="pro.product_deal_tag" label="Product Deal Tag" dense outlined/>
+                        <v-text-field class="px-4" v-model="pro.product_offer" label="Product Offer" dense outlined/>
+                    </v-card>
                 </v-col>
             </v-row>
         </v-form>
@@ -277,6 +282,8 @@ export default {
             pro:{
                 selectedSalesChannel: "Online Store",
                 pstatus:'Draft',
+                product_deal_tag:'',
+                product_offer:'',
                 ptype: null,
                 brand: null,
                 tags:[]
@@ -630,6 +637,8 @@ export default {
             pdata.append("ptags", JSON.stringify(this.pro.tags ?? [])); // Convert tags to JSON
             pdata.append("pstatus", this.pro.pstatus ?? "Draft");
             pdata.append("pchannel", this.pro.selectedSalesChannel ?? "Online Store");
+            pdata.append("product_deal_tag", this.pro.product_deal_tag ?? "");
+            pdata.append("product_offer", this.pro.product_offer ?? "");
             pdata.append("ptitle", this.productname ?? "");
             pdata.append("pdesc", this.productdesc ?? "");
             

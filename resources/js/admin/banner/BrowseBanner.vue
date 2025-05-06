@@ -207,7 +207,7 @@
     },
     computed: {
       isImageSelected() {
-        return this.imagePreview && this.imagePreview !== 'https://via.placeholder.com/150';
+        return !!this.imageName;
       },
       filteredBanners() {
         return this.browsebanners.filter(b =>

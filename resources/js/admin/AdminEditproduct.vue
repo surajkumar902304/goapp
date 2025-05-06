@@ -220,6 +220,11 @@
                             </v-row>
                         </v-card-text>
                     </v-card>
+                    <v-card outlined class="mt-3">
+                        <v-card-title>Create Offer</v-card-title>
+                        <v-text-field class="px-4 mt-3" v-model="pro.product_deal_tag" label="Product Deal Tag" dense outlined/>
+                        <v-text-field class="px-4" v-model="pro.product_offer" label="Product Offer" dense outlined/>
+                    </v-card>
                 </v-col>
             </v-row>
         </v-form>
@@ -280,11 +285,13 @@
             { text: "Barcode", value: "barcode" }
             ],
             pro: {
-            selectedSalesChannel: "Online Store",
-            pstatus: "Draft",
-            ptype: "",
-            brand: "",
-            tags: []
+                selectedSalesChannel: "Online Store",
+                pstatus: "Draft",
+                product_deal_tag:'',
+                product_offer:'',
+                ptype: "",
+                brand: "",
+                tags: []
             },
             mptypes: [],
             typedText: "",
@@ -367,6 +374,8 @@
             }
             this.pro.pstatus = prod.status || "Draft";
             this.pro.selectedSalesChannel = prod.saleschannel || "Online Store";
+            this.pro.product_deal_tag = prod.product_deal_tag || "";
+            this.pro.product_offer = prod.product_offer || "";
             this.pro.ptype = prod.mproduct_type_id || "";
             this.pro.brand = prod.mbrand_id || "";
             this.pro.tags = prod.mtags || [];
@@ -738,6 +747,8 @@
             pdata.append("ptags", JSON.stringify(this.pro.tags ?? []));
             pdata.append("pstatus", this.pro.pstatus ?? "Draft");
             pdata.append("pchannel", this.pro.selectedSalesChannel ?? "online Store");
+            pdata.append("product_deal_tag", this.pro.product_deal_tag ?? "");
+            pdata.append("product_offer", this.pro.product_offer ?? "");
             pdata.append("ptitle", this.productname ?? "");
             pdata.append("pdesc", this.productdesc ?? "");
 

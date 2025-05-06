@@ -15,6 +15,8 @@ class AddColumnsToMproductsTable extends Migration
     {
         Schema::table('mproducts', function (Blueprint $table) {
             $table->enum('saleschannel',['Online Store', 'Other'])->default('Online Store')->after('mtags');
+            $table->string('product_deal_tag')->nullable()->after('saleschannel');
+            $table->string('product_offer')->nullable()->after('product_deal_tag');
         });
     }
 
