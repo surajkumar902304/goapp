@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Mcategory;
+use App\Models\Wishlist;
 use App\Models\Mcollection_auto;
 use App\Models\Mproduct;
 use Illuminate\Http\Request;
@@ -18,165 +19,125 @@ use Illuminate\Http\Request;
  */
 class CategoryController extends Controller
 {
-    /* ----------------------------------------------------- */
-    /*  GET /api/categories                                  */
-    /* ----------------------------------------------------- */
     public function index(Request $request)
-{
-    /* ------------------------------------------------------------- */
-    /*  0) read query‑params                                         */
-    /* ------------------------------------------------------------- */
-    $needle    = mb_strtolower(trim($request->query('search', '')));
-    $brandIds  = $request->query('mbrand_id');
-    $brandIds  = $brandIds ? explode(',', $brandIds) : null;   // null ⇒ no brand filter
+    {
+        $user = $request->user();
+        $wishlistProductIds = $user
+            ? Wishlist::where('user_id', $user->id)
+                      ->pluck('mproduct_id')
+                      ->toArray()
+            : [];
 
-    /* ------------------------------------------------------------- */
-    /*  1) pull entire taxonomy + attach product lists (brand aware) */
-    /* ------------------------------------------------------------- */
-    $cats = Mcategory::with(['subcategories' => fn ($q) => $q->select('*')])
-        ->get();
+        $needle   = mb_strtolower(trim($request->query('search', '')));
+        $brandIds = $request->query('mbrand_id');
+        $brandIds = $brandIds ? explode(',', $brandIds) : null;
 
-    $cats->each(fn ($cat) =>
-        $cat->subcategories->each(fn ($sub) =>
-            $sub->setRelation('products', $this->buildProductsForSub($sub, $brandIds)))
-    );
+        $cats = Mcategory::with(['subcategories' => fn($q) => $q->select('*')])
+                         ->get();
 
-    /* ------------------------------------------------------------- */
-    /*  2) quick exit – no filters at all                            */
-    /* ------------------------------------------------------------- */
-    if ($needle === '' && !$brandIds) {
-        return $this->jsonResponse($cats);
-    }
+        $cats->each(fn($cat) =>
+            $cat->subcategories->each(fn($sub) =>
+                $sub->setRelation('products', $this->buildProductsForSub($sub, $brandIds, $wishlistProductIds)))
+        );
 
-    /* ------------------------------------------------------------- */
-    /*  3) apply BRAND filter only (no search keyword)               */
-    /* ------------------------------------------------------------- */
-    if ($needle === '' && $brandIds) {
-        $cats = $cats->map(function ($cat) {
-            $subs = $cat->subcategories->filter(fn ($s) => $s->products->isNotEmpty())
-                                       ->values();
-            $cat ->setRelation('subcategories', $subs);
+        if ($needle === '' && !$brandIds) {
+            return $this->jsonResponse($cats);
+        }
+
+        if ($needle === '' && $brandIds) {
+            $cats = $cats->map(function($cat) {
+                $subs = $cat->subcategories
+                            ->filter(fn($s) => $s->products->isNotEmpty())
+                            ->values();
+                $cat->setRelation('subcategories', $subs);
+                return $subs->isNotEmpty() ? $cat : null;
+            })->filter()->values();
+
+            return $this->jsonResponse($cats);
+        }
+
+        $cats = $cats->map(function($cat) use ($needle) {
+            if (str_contains(mb_strtolower($cat->mcat_name), $needle)) {
+                return $cat;
+            }
+
+            $subs = $cat->subcategories->map(function($sub) use ($needle) {
+                if (str_contains(mb_strtolower($sub->msubcat_name), $needle)) {
+                    return $sub;
+                }
+                $matched = $sub->products->filter(fn($p) =>
+                    str_contains(mb_strtolower($p['mproduct_title']), $needle)
+                );
+                if ($matched->isNotEmpty()) {
+                    $sub->setRelation('products', $matched->values());
+                    return $sub;
+                }
+                return null;
+            })->filter()->values();
+
+            $cat->setRelation('subcategories', $subs);
             return $subs->isNotEmpty() ? $cat : null;
         })->filter()->values();
 
         return $this->jsonResponse($cats);
     }
 
-    /* ------------------------------------------------------------- */
-    /*  4) SEARCH (with brand filter already applied)                */
-    /*      – rules                                                   *
-     *        • category hit  → keep whole subtree                    *
-     *        • sub‑cat hit   → keep that sub‑cat w/ full products    *
-     *        • product hit   → keep ONLY matching product(s)         *
-     *                                                               */
-    /* ------------------------------------------------------------- */
-    $cats = $cats->map(function ($cat) use ($needle) {
-
-        /* CATEGORY name hit? → keep untouched -------------------- */
-        if (str_contains(mb_strtolower($cat->mcat_name), $needle)) {
-            return $cat;
-        }
-
-        /* otherwise drill down into its sub‑categories ----------- */
-        $subs = $cat->subcategories->map(function ($sub) use ($needle) {
-
-            /* SUB‑CATEGORY name hit? → keep full product list ----- */
-            if (str_contains(mb_strtolower($sub->msubcat_name), $needle)) {
-                return $sub;
-            }
-
-            /* check individual products -------------------------- */
-            $matched = $sub->products->filter(fn ($p) =>
-                str_contains(mb_strtolower($p['mproduct_title']), $needle)
-            );
-
-            if ($matched->isNotEmpty()) {
-                /* keep sub‑cat but slice product array to matches  */
-                $sub->setRelation('products', $matched->values());
-                return $sub;
-            }
-
-            /* nothing matched in this sub‑cat → drop it ---------- */
-            return null;
-
-        })->filter()->values();
-
-        $cat->setRelation('subcategories', $subs);
-
-        return $subs->isNotEmpty() ? $cat : null;
-
-    })->filter()->values();
-
-    return $this->jsonResponse($cats);
-}
-
-
-    /* ===================================================== */
-    /*  buildProductsForSub()                                */
-    /*  ---------------------------------------------------  */
-    /*  Returns a flattened collection of variants honouring */
-    /*  an optional brand filter.                            */
-    /* ===================================================== */
-    private function buildProductsForSub($sub, ?array $brandIds = null)
+    private function buildProductsForSub($sub, ?array $brandIds = null, array $wishlistProductIds = [])
     {
-        /* ---------- MANUAL list ---------- */
         if ($sub->msubcat_type === 'manual') {
             $query = Mproduct::with([
-                'type:mproduct_type_id,mproduct_type_name',
-                'brand:mbrand_id,mbrand_name',
-                'mvariantsApi' => function ($q) {
-                    $q->join('mvariant_details','mvariant_details.mvariant_id','=','mvariants.mvariant_id')
-                      ->join('mstocks','mstocks.mvariant_id','=','mvariants.mvariant_id')
-                      ->select(
-                          'mvariants.mvariant_id','mvariants.sku','mvariants.mvariant_image',
-                          'mvariants.price','mvariants.compare_price','mvariants.cost_price',
-                          'mvariants.taxable','mvariants.barcode',
-                          'mvariant_details.options','mvariant_details.option_value',
-                          'mstocks.quantity','mstocks.mlocation_id'
-                      );
-                }
-            ])
-            ->whereIn('mproduct_id',$sub->product_ids ?? [])
-            ->where('status','Active');
+                        'type:mproduct_type_id,mproduct_type_name',
+                        'brand:mbrand_id,mbrand_name',
+                        'mvariantsApi' => fn($q) => $q
+                            ->join('mvariant_details','mvariant_details.mvariant_id','=','mvariants.mvariant_id')
+                            ->join('mstocks','mstocks.mvariant_id','=','mvariants.mvariant_id')
+                            ->select(
+                                'mvariants.mvariant_id','mvariants.sku','mvariants.mvariant_image',
+                                'mvariants.price','mvariants.compare_price','mvariants.cost_price',
+                                'mvariants.taxable','mvariants.barcode',
+                                'mvariant_details.options','mvariant_details.option_value',
+                                'mstocks.quantity','mstocks.mlocation_id'
+                            )
+                    ])
+                    ->whereIn('mproduct_id',$sub->product_ids ?? [])
+                    ->where('status','Active');
 
             if ($brandIds) {
                 $query->whereIn('mbrand_id',$brandIds);
             }
 
             $products = $query->get();
-
-        /* ---------- SMART list ---------- */
         } else {
-            $products = $this->getSmartCollectionProducts($sub,$brandIds);
+            $products = $this->getSmartCollectionProducts($sub, $brandIds);
         }
 
-        /* ---------- flatten variants ---------- */
         $flat = collect();
         foreach ($products as $p) {
+            $inWishlist = in_array($p->mproduct_id, $wishlistProductIds, true);
             foreach ($p->mvariants as $v) {
                 $flat->push([
-                    'mproduct_id'    => $p->mproduct_id,
-                    'mproduct_title' => $p->mproduct_title,
-                    'mproduct_image' => $p->mproduct_image,
-                    'mproduct_slug'  => $p->mproduct_slug,
-                    'mproduct_desc'  => $p->mproduct_desc,
-                    'status'         => $p->status,
-                    'saleschannel'   => $p->saleschannel,
-                    'product_type'   => optional($p->type)->mproduct_type_name,
-                    'brand_name'     => optional($p->brand)->mbrand_name,
-
-                    'mvariant_id'   => $v->mvariant_id,
-                    'sku'           => $v->sku,
-                    'image'         => $v->mvariant_image,
-                    'price'         => $v->price,
-                    'compare_price' => $v->compare_price,
-                    'cost_price'    => $v->cost_price,
-                    'taxable'       => $v->taxable,
-                    'barcode'       => $v->barcode,
-                    'options'       => $v->options,
-                    'option_value'  => $v->option_value,
-                    'quantity'      => $v->quantity,
-                    'mlocation_id'  => $v->mlocation_id,
+                    'mproduct_id'           => $p->mproduct_id,
+                    'mproduct_title'        => $p->mproduct_title,
+                    'mproduct_image'        => $p->mproduct_image,
+                    'mproduct_slug'         => $p->mproduct_slug,
+                    'mproduct_desc'         => $p->mproduct_desc,
+                    'status'                => $p->status,
+                    'saleschannel'          => $p->saleschannel,
+                    'product_type'          => optional($p->type)->mproduct_type_name,
+                    'brand_name'            => optional($p->brand)->mbrand_name,
+                    'mvariant_id'           => $v->mvariant_id,
+                    'sku'                   => $v->sku,
+                    'image'                 => $v->mvariant_image,
+                    'price'                 => $v->price,
+                    'compare_price'         => $v->compare_price,
+                    'cost_price'            => $v->cost_price,
+                    'taxable'               => $v->taxable,
+                    'barcode'               => $v->barcode,
+                    'options'               => $v->options,
+                    'option_value'          => $v->option_value,
+                    'quantity'              => $v->quantity,
+                    'mlocation_id'          => $v->mlocation_id,
+                    'user_info_wishlist'    => $inWishlist,
                 ]);
             }
         }
@@ -184,9 +145,6 @@ class CategoryController extends Controller
         return $flat->values();
     }
 
-    /* ===================================================== */
-    /*  SMART‑collection helper (unchanged except brandIds)  */
-    /* ===================================================== */
     private function getSmartCollectionProducts($sub, ?array $brandIds = null)
     {
         $rules = Mcollection_auto::query()
@@ -235,7 +193,6 @@ class CategoryController extends Controller
         ])->get();
     }
 
-    /* ---------- rule helpers ---------- */
     private function applyTextRule($q,string $col,string $op,string $val)
     {
         return match($op){
@@ -264,7 +221,7 @@ class CategoryController extends Controller
         return response()->json([
             'status'     => true,
             'message'    => 'Fetch all Categories Successfully',
-            'cdnURL'     => config('cdn.url'),   // reads AWS_CDN_URL from .env
+            'cdnURL'     => config('cdn.url'),
             'categories' => $payload,
         ]);
     }
