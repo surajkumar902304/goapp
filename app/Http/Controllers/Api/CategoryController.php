@@ -123,6 +123,8 @@ class CategoryController extends Controller
                     'mproduct_desc'         => $p->mproduct_desc,
                     'status'                => $p->status,
                     'saleschannel'          => $p->saleschannel,
+                    'product_deal_tag'      => $p->product_deal_tag,
+                    'product_offer'         => $p->product_offer,
                     'product_type'          => optional($p->type)->mproduct_type_name,
                     'brand_name'            => optional($p->brand)->mbrand_name,
                     'mvariant_id'           => $v->mvariant_id,
