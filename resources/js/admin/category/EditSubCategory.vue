@@ -453,10 +453,8 @@ methods:{
         }))
       ))
     }else{
-      fd.append(
-        'product_ids',
-        JSON.stringify(this.selectedProducts.map(p=>p.mproduct_id))
-      )
+      const ids = this.selectedProducts.map(p => p.mproduct_id)
+        fd.append('product_ids', JSON.stringify(ids))
     }
     if(this.form.image instanceof File) fd.append('image', this.form.image)
 

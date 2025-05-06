@@ -288,7 +288,7 @@ public function updateMsubcatData(Request $request)
     /* ---- manual vs smart ---- */
     if ($validated['mcattype'] === 'manual') {
         // ✱ manual → product_ids भरें, auto-table साफ़
-        $sub->product_ids = $validated['product_ids'] ?? '[]';
+        $sub->product_ids = json_decode($validated['product_ids'] ?? '[]', true);
         Mcollection_auto::where('msubcat_id', $sub->msubcat_id)->delete();
     } else {
         // ✱ smart  → auto-table में rows, product_ids null
