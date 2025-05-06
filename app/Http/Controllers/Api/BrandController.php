@@ -16,9 +16,19 @@ class BrandController extends Controller
      */
     public function index(Request $request)
     {
-        $data = $request->validate([
+        try {
+            $data = $request->validate([
                 'user_id' => ['required','integer','exists:users,id'],
             ]);
+        } catch (ValidationException $e) {
+            $errors = $e->validator->errors();
+
+            return response()->json([
+                'status' => false,
+                'message' => $errors->first(),
+            ], 422);
+        }
+        
         
         $items = Wishlist::where('user_id', $data['user_id'])
             ->get();
