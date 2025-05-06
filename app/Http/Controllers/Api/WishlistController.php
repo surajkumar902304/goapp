@@ -25,7 +25,7 @@ class WishlistController extends Controller
         return response()->json([
             'status'   => true,
             'wishlist' => $items,
-        ]);
+        ],200);
     }
 
     /**
@@ -50,7 +50,7 @@ class WishlistController extends Controller
             return response()->json([
                 'status'  => true,
                 'message' => 'Removed from wishlist',
-            ]);
+            ],200);
         }
 
         $new = Wishlist::create($data);
@@ -59,6 +59,6 @@ class WishlistController extends Controller
             'status'  => true,
             'message' => 'Added to wishlist',
             'item'    => $new,
-        ], 201);
+        ], 200);
     }
 }
