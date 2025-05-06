@@ -295,7 +295,7 @@
             availableOptions: [],
             nameRules: [
             v => !!v || "Product name is required",
-            v => (v && v.length <= 50) || "Product name must be less than 50 characters"
+            v => (v && v.length <= 255) || "Product name must be less than 50 characters"
             ],
             priceRules: [
             v => v === "" || (!isNaN(v) && v >= 0) || "Price must be a positive number",
