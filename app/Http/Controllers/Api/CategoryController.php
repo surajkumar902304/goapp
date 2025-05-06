@@ -56,28 +56,33 @@ class CategoryController extends Controller
             return $this->jsonResponse($cats);
         }
 
-        $cats = $cats->map(function($cat) use ($needle) {
-            if (str_contains(mb_strtolower($cat->mcat_name), $needle)) {
-                return $cat;
-            }
-
-            $subs = $cat->subcategories->map(function($sub) use ($needle) {
+        $cats = $cats->map(function ($cat) use ($needle) {
+            $subs = $cat->subcategories->map(function ($sub) use ($needle) {
                 if (str_contains(mb_strtolower($sub->msubcat_name), $needle)) {
-                    return $sub;
+                    return $sub->products->isNotEmpty() ? $sub : null;
                 }
-                $matched = $sub->products->filter(fn($p) =>
-                    str_contains(mb_strtolower($p['mproduct_title']), $needle)
-                );
+        
+                $matched = $sub->products->filter(function ($p) use ($needle) {
+                    return str_contains(mb_strtolower($p['mproduct_title']), $needle);
+                });
+        
                 if ($matched->isNotEmpty()) {
                     $sub->setRelation('products', $matched->values());
                     return $sub;
                 }
+        
                 return null;
             })->filter()->values();
-
+        
+            // ✅ NEW: If category name matches, keep it — only if it has at least 1 product inside
+            if (str_contains(mb_strtolower($cat->mcat_name), $needle)) {
+                $subs = $cat->subcategories->filter(fn($s) => $s->products->isNotEmpty())->values();
+            }
+        
             $cat->setRelation('subcategories', $subs);
             return $subs->isNotEmpty() ? $cat : null;
         })->filter()->values();
+              
 
         return $this->jsonResponse($cats);
     }
