@@ -77,7 +77,7 @@ Route::group(['prefix'=> 'admin'], function (){
         
         Route::get('/msub-category/{msubcatid}',[McategoryController::class,'msubcatEdit'])->name('msubcat.edit');
         Route::get('/vsub-category/editdata/{msubcatid}',[McategoryController::class,'msubcatEditData'])->name('msubcat.editdata');
-        Route::post('/msub-category/update', [McategoryController::class, 'updateMsubcaData'])->name('msubcat.update-product');
+        Route::post('/msub-category/{msubcatid}/update', [McategoryController::class, 'updateMsubcatData'])->name('msubcat.update-product');
 
         // Sub-Categories Collection API routes
         Route::get('/mcollproducts/vlist', [McategoryController::class,'productsVlist'])->name('mcollproducts.vlist');

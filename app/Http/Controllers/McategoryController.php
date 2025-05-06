@@ -107,8 +107,8 @@ class McategoryController extends Controller
     {
         $validated = $request->validate([
             'mcat_id'    => ['required', 'integer', 'exists:mcategories,mcat_id'],
-            'subcatname' => ['required', 'string', 'max:120',],
-            'subcattag'  => ['nullable', 'string', 'max:120'],
+            'subcatname' => ['required', 'string', 'max:255',],
+            'subcattag'  => ['nullable', 'string', 'max:255'],
             'publish_to' => ['required'],
             'mcattype'   => ['required'],
             'image'      => ['required', 'image', 'max:2048'],
@@ -238,26 +238,34 @@ class McategoryController extends Controller
 
 
 
-public function updateMsubcaData(Request $request)
+public function updateMsubcatData(Request $request)
 {
     $validated = $request->validate([
         'msubcat_id'  => 'required|exists:msubcategories,msubcat_id',
         'mcat_id'     => 'required|integer|exists:mcategories,mcat_id',
-        'subcatname'  => 'required|string|max:120',
-        'subcattag'   => 'nullable|string|max:120',
+        'subcatname'  => 'required|string|max:255',
+        'subcattag'   => 'nullable|string|max:255',
         'publish_to'  => 'required|in:Online Store,App Store',
         'mcattype'    => 'required|in:manual,smart',
         'image'       => 'nullable|image|max:2048',
 
         'product_ids'      => 'nullable|string',
         'condition_logic'  => 'nullable|in:all,any',
-        'conditions'       => 'nullable|string'
+        'conditions'       => 'nullable|string',
+        'offer_name'  => 'nullable', 'string', 'max:255', 'unique:msubcategories,offer_name',
+            'start_time'  => 'nullable', 'date', 'after_or_equal:now',
+            'end_time'    => 'nullable', 'date', 'after:start_time',
     ]);
 
     $sub = Msubcategory::find($validated['msubcat_id']);
 
-    /* ---- image replace (optional) ---- */
+    $pimagepath = $sub->msubcat_image;
+
     if ($request->hasFile('image')) {
+        // Delete the old image if it exists in S3
+        if (!empty($pimagepath) && Storage::disk('s3')->exists($pimagepath)) {
+            Storage::disk('s3')->delete($pimagepath);
+        }
         $image    = $request->file('image');
         $filename = 'msubcat_' . uniqid() . '.png';
         $img      = Image::make($image->getRealPath())
@@ -273,6 +281,9 @@ public function updateMsubcaData(Request $request)
     $sub->msubcat_tag     = $validated['subcattag'] ?? null;
     $sub->msubcat_publish = $validated['publish_to'];
     $sub->msubcat_type    = $validated['mcattype'];
+    $sub->offer_name     = $validated['offer_name'] ?? null;
+    $sub->start_time = $validated['start_time'] ?? null;
+    $sub->end_time    = $validated['end_time'] ?? null;
 
     /* ---- manual vs smart ---- */
     if ($validated['mcattype'] === 'manual') {
@@ -305,7 +316,10 @@ public function updateMsubcaData(Request $request)
 
     $sub->save();
 
-    return response()->json(['status' => true, 'message' => 'Updated']);
+    return response()->json(
+        [
+            'status' => true, 
+    ],201);
 }
 
 

@@ -159,7 +159,7 @@
         <!-- Create offer -->
         <v-card outlined class="mt-3">
           <v-card-actions><span class="body-2 fw-semibold">Create Offer</span></v-card-actions>
-          <v-text-field class="px-4 mt-6" v-model="form.offer_name" label="Offer Name" dense outlined :rules="offerNameRules"/>
+          <v-text-field class="px-4 mt-6" v-model="form.offer_name" label="Offer Name" dense outlined/>
           <v-text-field class="px-4 mt-3" v-model="form.start_time" label="Start Time" type="datetime-local" dense outlined :rules="startTimeRules"/>
           <v-text-field class="px-4 mt-3" v-model="form.end_time" label="End Time" type="datetime-local" dense outlined :rules="endTimeRules"/>
         </v-card>
@@ -255,22 +255,11 @@ export default {
           (v) =>
               !this.msubcats.some(
                   (msubcat) =>
-                  msubcat.msubcat_name === v &&
+                  msubcat.msubcat_name.toLowerCase().trim() === v.toLowerCase().trim() &&
                   msubcat.msubcat_id !== this.msubcat_id
             ) || "Sub-Category already exists"
       ],
       existingOffers: [],
-      now: new Date().toISOString().slice(0, 16),
-
-      offerNameRules: [
-        v => (v && v.length >= 3) || 'Name must be at least 3 characters',
-        (v) =>
-              !this.msubcats.some(
-                  (msubcat) =>
-                  msubcat.offer_name === v &&
-                  msubcat.msubcat_id !== this.msubcat_id
-            ) || "Offer name already exists"
-      ],
       startTimeRules: [
         v => v >= this.now || 'Start time cannot be in the past'
       ],
@@ -290,17 +279,14 @@ export default {
         !this.form.image ||
         !!this.nameError;
 
-      const offerValid = !this.form.offer_name ||
-        !this.existingOffers.includes(this.form.offer_name.trim().toLowerCase());
-
       const startValid = !this.form.start_time || this.form.start_time >= this.now;
       const endValid = !this.form.end_time || this.form.end_time > this.form.start_time;
 
       if (this.mcattype === 'smart') {
-        return base || !offerValid || !startValid || !endValid || !this.hasValidConditionRow;
+        return base || !startValid || !endValid || !this.hasValidConditionRow;
       }
 
-      return base || !offerValid || !startValid || !endValid;
+      return base || !startValid || !endValid;
     },
 
     hasValidConditionRow () {
