@@ -236,94 +236,82 @@ class McategoryController extends Controller
     }
 
 
+    public function updateMsubcatData(Request $request)
+    {
+        $validated = $request->validate([
+            'msubcat_id'  => 'required|exists:msubcategories,msubcat_id',
+            'mcat_id'     => 'required|integer|exists:mcategories,mcat_id',
+            'subcatname'  => 'required|string|max:255',
+            'subcattag'   => 'nullable|string|max:255',
+            'publish_to'  => 'required|in:Online Store,App Store',
+            'mcattype'    => 'required|in:manual,smart',
+            'image'       => 'nullable|image|max:2048',
 
-
-public function updateMsubcatData(Request $request)
-{
-    $validated = $request->validate([
-        'msubcat_id'  => 'required|exists:msubcategories,msubcat_id',
-        'mcat_id'     => 'required|integer|exists:mcategories,mcat_id',
-        'subcatname'  => 'required|string|max:255',
-        'subcattag'   => 'nullable|string|max:255',
-        'publish_to'  => 'required|in:Online Store,App Store',
-        'mcattype'    => 'required|in:manual,smart',
-        'image'       => 'nullable|image|max:2048',
-
-        'product_ids'      => 'nullable|string',
-        'condition_logic'  => 'nullable|in:all,any',
-        'conditions'       => 'nullable|string',
-        'offer_name'  => 'nullable', 'string', 'max:255', 'unique:msubcategories,offer_name',
+            'product_ids'      => 'nullable|string',
+            'condition_logic'  => 'nullable|in:all,any',
+            'conditions'       => 'nullable|string',
+            'offer_name'  => 'nullable', 'string', 'max:255', 'unique:msubcategories,offer_name',
             'start_time'  => 'nullable', 'date', 'after_or_equal:now',
             'end_time'    => 'nullable', 'date', 'after:start_time',
-    ]);
+        ]);
 
-    $sub = Msubcategory::find($validated['msubcat_id']);
+        $sub = Msubcategory::find($validated['msubcat_id']);
 
-    $pimagepath = $sub->msubcat_image;
+        $pimagepath = $sub->msubcat_image;
 
-    if ($request->hasFile('image')) {
-        // Delete the old image if it exists in S3
-        if (!empty($pimagepath) && Storage::disk('s3')->exists($pimagepath)) {
-            Storage::disk('s3')->delete($pimagepath);
-        }
-        $image    = $request->file('image');
-        $filename = 'msubcat_' . uniqid() . '.png';
-        $img      = Image::make($image->getRealPath())
-                         ->resize(600, 800, function($c){ $c->aspectRatio(); });
-        $path     = 'goapp/images/msub-categories/' . $filename;
-        Storage::disk('s3')->put($path, (string) $img->encode());
-        $sub->msubcat_image = $path;
-    }
-
-    /* ---- basic fields ---- */
-    $sub->mcat_id         = $validated['mcat_id'];
-    $sub->msubcat_name    = $validated['subcatname'];
-    $sub->msubcat_tag     = $validated['subcattag'] ?? null;
-    $sub->msubcat_publish = $validated['publish_to'];
-    $sub->msubcat_type    = $validated['mcattype'];
-    $sub->offer_name     = $validated['offer_name'] ?? null;
-    $sub->start_time = $validated['start_time'] ?? null;
-    $sub->end_time    = $validated['end_time'] ?? null;
-
-    /* ---- manual vs smart ---- */
-    if ($validated['mcattype'] === 'manual') {
-        // ✱ manual → product_ids भरें, auto-table साफ़
-        $sub->product_ids = json_decode($validated['product_ids'] ?? '[]', true);
-        Mcollection_auto::where('msubcat_id', $sub->msubcat_id)->delete();
-    } else {
-        // ✱ smart  → auto-table में rows, product_ids null
-        $sub->product_ids = null;
-
-        // पुरानी शर्तें हटाएँ
-        Mcollection_auto::where('msubcat_id', $sub->msubcat_id)->delete();
-
-        $rows  = json_decode($validated['conditions'] ?? '[]', true);
-        $logic = $validated['condition_logic'] ?? 'all';
-
-        foreach ($rows as $row) {
-            if (empty($row['field_id']) || empty($row['query_id'])) {
-                continue;
+        if ($request->hasFile('image')) {
+            if (!empty($pimagepath) && Storage::disk('s3')->exists($pimagepath)) {
+                Storage::disk('s3')->delete($pimagepath);
             }
-            Mcollection_auto::create([
-                'msubcat_id'      => $sub->msubcat_id,
-                'field_id'        => $row['field_id'],
-                'query_id'        => $row['query_id'],
-                'value'           => $row['value'] ?? null,
-                'logical_operator'=> $logic,
-            ]);
+            $image    = $request->file('image');
+            $filename = 'msubcat_' . uniqid() . '.png';
+            $img      = Image::make($image->getRealPath())
+                            ->resize(600, 800, function($c){ $c->aspectRatio(); });
+            $path     = 'goapp/images/msub-categories/' . $filename;
+            Storage::disk('s3')->put($path, (string) $img->encode());
+            $sub->msubcat_image = $path;
         }
+
+        $sub->mcat_id         = $validated['mcat_id'];
+        $sub->msubcat_name    = $validated['subcatname'];
+        $sub->msubcat_tag     = $validated['subcattag'] ?? null;
+        $sub->msubcat_publish = $validated['publish_to'];
+        $sub->msubcat_type    = $validated['mcattype'];
+        $sub->offer_name      = $validated['offer_name'] ?? null;
+        $sub->start_time      = $validated['start_time'] ?? null;
+        $sub->end_time        = $validated['end_time'] ?? null;
+
+        if ($validated['mcattype'] === 'manual') {
+            $sub->product_ids = json_decode($validated['product_ids'] ?? '[]', true);
+            Mcollection_auto::where('msubcat_id', $sub->msubcat_id)->delete();
+        } else {
+            $sub->product_ids = [];
+
+            Mcollection_auto::where('msubcat_id', $sub->msubcat_id)->delete();
+
+            $rows  = json_decode($validated['conditions'] ?? '[]', true);
+            $logic = $validated['condition_logic'] ?? 'all';
+
+            foreach ($rows as $row) {
+                if (empty($row['field_id']) || empty($row['query_id'])) {
+                    continue;
+                }
+                Mcollection_auto::create([
+                    'msubcat_id'      => $sub->msubcat_id,
+                    'field_id'        => $row['field_id'],
+                    'query_id'        => $row['query_id'],
+                    'value'           => $row['value'] ?? null,
+                    'logical_operator'=> $logic,
+                ]);
+            }
+        }
+
+        $sub->save();
+
+        return response()->json(
+            [
+                'status' => true, 
+        ],201);
     }
-
-    $sub->save();
-
-    return response()->json(
-        [
-            'status' => true, 
-    ],201);
-}
-
-
-    
-
 
 }

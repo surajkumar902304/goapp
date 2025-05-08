@@ -1,10 +1,7 @@
 <template>
     <div>
         <v-row>
-            <v-col cols="12" md="6">
-                <h2 class="text-h6 fw-semibold">Users</h2>
-            </v-col>
-            <v-col cols="12" md="6" class="text-end">
+            <v-col cols="12">
                 <v-text-field v-model="ssearch" dense hide-details outlined prepend-inner-icon="mdi-magnify" 
                     placeholder="Search name"/>
             </v-col>

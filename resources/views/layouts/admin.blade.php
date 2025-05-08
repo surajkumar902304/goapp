@@ -54,13 +54,19 @@
                             <v-icon>mdi-account-edit</v-icon>
                           </v-list-item-icon>
                           <v-list-item-title>Users</v-list-item-title>
-                      </v-list-item>
+                        </v-list-item>
                         <v-list-item href="{{route('products.list')}}" class="{{ request()->routeIs('products.list') ? 'active' : '' }}">
                             <v-list-item-icon>
                               <v-icon>mdi-format-list-text</v-icon>
                             </v-list-item-icon>
                             <v-list-item-title>Products</v-list-item-title>
                         </v-list-item>
+                        {{-- <v-list-item href="{{route('productoffers.list')}}" class="{{ request()->routeIs('productoffers.list') ? 'active' : '' }}">
+                          <v-list-item-icon>
+                            <v-icon>mdi-offer</v-icon>
+                          </v-list-item-icon>
+                          <v-list-item-title>Product Offers</v-list-item-title>
+                        </v-list-item> --}}
                         <v-list-item href="{{route('mcats.list')}}" class="{{ request()->routeIs('mcats.list') ? 'active' : '' }}">
                             <v-list-item-icon>
                               <v-icon>mdi-storefront</v-icon>
@@ -77,7 +83,7 @@
                             <v-list-item-icon>
                               <v-icon>mdi-filter-variant</v-icon>
                             </v-list-item-icon>
-                            <v-list-item-title>Option Name</v-list-item-title>
+                            <v-list-item-title>Options</v-list-item-title>
                         </v-list-item>
                         <v-list-item href="{{ route('mbrands.list') }}" class="{{ request()->routeIs('mbrands.list') ? 'active' : '' }}">
                             <v-list-item-icon>

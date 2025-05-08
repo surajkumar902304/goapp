@@ -11,6 +11,7 @@ use App\Models\Mstock;
 use App\Models\Mtag;
 use App\Models\Mvariant;
 use App\Models\Mvariant_detail;
+use App\Models\Product_Offer;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -202,6 +203,24 @@ class AdminController extends Controller
         return response()->json(['status' => true]);
     }
 
+    public function productofferlist()
+    {
+       return view('admin.product.product_offer');
+    }
+
+    public function productofferVlist()
+    {
+        $productoffer = Product_Offer::get();
+        $product = Mproduct::with('mvariants')
+        ->orderBy('mproduct_id', 'desc')
+        ->get();
+
+        return response()->json([
+            'status' => true,
+            'productoffers' => $productoffer,
+            'products' => $product,
+        ],200);
+    }
 
     public function adminProductlist()
     {
@@ -312,9 +331,7 @@ class AdminController extends Controller
                 'mproduct_image'   => $pimagepath,
                 'mproduct_desc'    => $request->pdesc ?? "",
                 'status'           => $request->pstatus ?? 'Draft',
-                'saleschannel'     => $request->pchannel ?? 'Online Store',
-                'product_deal_tag' => $request->product_deal_tag ?? '',
-                'product_offer'    => $request->product_offer ?? '',
+                'saleschannel'     => json_decode($request->pchannel, true) ?? [],
                 'mproduct_type_id' => $request->ptype ?? null,
                 'mbrand_id'        => $request->pbrand ?? null,
                 'mtags'            => json_decode($request->ptags, true) ?? [],
@@ -442,13 +459,10 @@ class AdminController extends Controller
     public function updateProductData(Request $request)
     {
         try {
-            // 1) Locate the existing product
             $mproduct = Mproduct::findOrFail($request->mproduct_id);
 
-            // 2) Process product image if a new file is uploaded
             $pimagepath = $mproduct->mproduct_image;
             if ($request->hasFile('pimage')) {
-                // Delete the old image if it exists in S3
                 if (!empty($pimagepath) && Storage::disk('s3')->exists($pimagepath)) {
                     Storage::disk('s3')->delete($pimagepath);
                 }
@@ -461,27 +475,22 @@ class AdminController extends Controller
                 Storage::disk('s3')->put($pimagepath, (string)$img->encode());
             }
 
-            // 3) Update main product fields
             $mproduct->update([
                 'mproduct_title'   => $request->ptitle,
                 'mproduct_slug'    => Str::slug(strtolower($request->ptitle), '-') . "-" . uniqid(),
                 'mproduct_image'   => $pimagepath,
                 'mproduct_desc'    => $request->pdesc ?? "",
                 'status'           => $request->pstatus ?? 'Draft',
-                'saleschannel'     => $request->pchannel ?? 'Online Store',
-                'product_deal_tag' => $request->product_deal_tag ?? '',
-                'product_offer'    => $request->product_offer ?? '',
+                'saleschannel'     => json_decode($request->pchannel, true) ?? [],
                 'mproduct_type_id' => $request->ptype ?? null,
                 'mbrand_id'        => $request->pbrand ?? null,
                 'mtags'            => json_decode($request->ptags, true) ?? [],
             ]);
 
-            // 4) Process variants only if provided and optname is non-empty
             if ($request->has('variants') && !empty(json_decode($request->variants[0]['optname'], true))) {
-                $incomingVariantIds = []; // To store variant IDs from request
+                $incomingVariantIds = [];
 
                 foreach ($request->variants as $index => $variantData) {
-                    // If mvariant_id exists, update the variant
                     if (!empty($variantData['mvariant_id'])) {
                         $incomingId = (int)$variantData['mvariant_id'];
                         $incomingVariantIds[] = $incomingId;
@@ -490,7 +499,6 @@ class AdminController extends Controller
                         if ($mvariant) {
                             $vimagepath = $mvariant->mvariant_image;
                             if ($request->hasFile("variants.$index.variantImage")) {
-                                // Delete the old image if it exists in S3
                                 if (!empty($vimagepath) && Storage::disk('s3')->exists($vimagepath)) {
                                     Storage::disk('s3')->delete($vimagepath);
                                 }
@@ -515,7 +523,6 @@ class AdminController extends Controller
                                 'isvalidatedetails' => 1,
                             ]);
 
-                            // Update variant details
                             $mvariantDetail = Mvariant_detail::where('mvariant_id', $mvariant->mvariant_id)->first();
                             $options = json_decode($variantData['optname'], true);
                             $optionValue = json_decode($variantData['optvalue'], true);
@@ -532,7 +539,6 @@ class AdminController extends Controller
                                 ]);
                             }
 
-                            // Update stock record
                             $mlocation = Mlocation::firstOrCreate(
                                 ['name' => "default", 'is_default' => true],
                                 ['adresss' => "default location"]
@@ -552,7 +558,6 @@ class AdminController extends Controller
                             }
                         }
                     }
-                    // Otherwise, create a new variant
                     else {
                         $vimagepath = null;
                         if ($request->hasFile("variants.$index.variantImage")) {
@@ -578,7 +583,6 @@ class AdminController extends Controller
                             'isvalidatedetails' => 1,
                         ]);
 
-                        // Add newly created variant id to the incoming array
                         $incomingVariantIds[] = $mvariant->mvariant_id;
 
                         Mvariant_detail::create([
@@ -598,23 +602,18 @@ class AdminController extends Controller
                     }
                 }
 
-                // 5) Delete any existing variant records that are NOT in the incomingVariantIds
                 $allExistingVariants = Mvariant::where('mproduct_id', $mproduct->mproduct_id)->get();
                 foreach ($allExistingVariants as $oldVariant) {
                     if (!in_array($oldVariant->mvariant_id, $incomingVariantIds)) {
-                        // Delete the variant image from S3 if it exists
                         if (!empty($oldVariant->mvariant_image) && Storage::disk('s3')->exists($oldVariant->mvariant_image)) {
                             Storage::disk('s3')->delete($oldVariant->mvariant_image);
                         }
-                        // Delete associated variant detail and stock before deleting the variant record
                         Mvariant_detail::where('mvariant_id', $oldVariant->mvariant_id)->delete();
                         Mstock::where('mvariant_id', $oldVariant->mvariant_id)->delete();
-                        // Delete the variant record from the database
                         $oldVariant->delete();
                     }
                 }
             }
-            // 6) Fallback: If no valid variants are provided, update the single main variant if it exists
             else {
                 $mvariant = Mvariant::where('mproduct_id', $mproduct->mproduct_id)->first();
                 if ($mvariant) {

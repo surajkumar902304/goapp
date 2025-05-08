@@ -1,10 +1,7 @@
 <template>
     <div>
       <v-row>
-        <v-col cols="12" md="6">
-          <h2 class="text-h6 fw-semibold">Browse Banner</h2>
-        </v-col>
-        <v-col cols="12" md="5" class="text-end">
+        <v-col cols="12" md="10">
           <v-text-field
             v-model="ssearch"
             dense
@@ -14,7 +11,7 @@
             placeholder="Search name"
           />
         </v-col>
-        <v-col cols="12" md="1" class="text-end">
+        <v-col cols="12" md="2" class="text-end">
           <v-btn color="secondary" small class="text-none font-weight-bold" @click="openDialog">
             Add Banner
           </v-btn>
@@ -28,9 +25,9 @@
               <thead>
                 <tr>
                   <th style="width:30%">Imagedefwsdf</th>
-                  <th>Name</th>
-                  <th>Actions</th>
-                  <th style="width:40px">Position Drag</th> <!-- drag column -->
+                  <th style="width:40%">Name</th>
+                  <th style="width:20%">Actions</th>
+                  <th style="width:10%">Position Drag</th> <!-- drag column -->
                 </tr>
               </thead>
               <draggable tag="tbody" :list="browsebanners" handle=".drag-handle" @end="onDragEnd">

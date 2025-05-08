@@ -27,6 +27,7 @@ class Mproduct extends Model
 
     protected $casts = [
         'mtags'=> 'array',
+        'saleschannel'=> 'array',
     ];
 
     public function mvariantsApi()

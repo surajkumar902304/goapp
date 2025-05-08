@@ -1,10 +1,7 @@
 <template>
     <div>
         <v-row>
-            <v-col cols="12" md="5">
-              <h2 class="text-h6 fw-semibold">Categories</h2>
-            </v-col>
-            <v-col cols="12" md="5" class="text-end">
+            <v-col cols="12" md="10">
                 <v-text-field v-model="ssearch" dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Category name"/>
             </v-col>
             <v-col cols="12" md="2" class="text-end">
@@ -65,7 +62,7 @@
                 mcatsHeaders: [
                 { text: 'ID', value: 'mcat_id' },
                 { text: 'Category Name', value: 'mcat_name' },
-                { text: 'Actions', value: 'actions' }
+                { text: 'Actions', value: 'actions', sortable: false }
                 ],
                 addSdialog: false,
                 editedIndex: -1,

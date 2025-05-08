@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Wishlist;
+use App\Models\Mcategory;
+use App\Models\Mcollection_auto;
+use App\Models\Mproduct;
 
 class WishlistController extends Controller
 {
@@ -18,13 +21,26 @@ class WishlistController extends Controller
             'user_id' => ['required','integer','exists:users,id'],
         ]);
 
-        $items = Wishlist::with('product')
-            ->where('user_id', $data['user_id'])
+        $items = Wishlist::where('user_id', $data['user_id'])
             ->get();
+
+            $brands = $items
+            ->pluck('product.brand')
+            ->filter()                   
+            ->unique('mbrand_id')       
+            ->values()                  
+            ->map(fn($brand) => [      
+                'mbrand_id'   => $brand->mbrand_id,
+                'mbrand_name' => $brand->mbrand_name,
+                'mbrand_image' => $brand->mbrand_image,
+            ]);
 
         return response()->json([
             'status'   => true,
+            'message'    => 'Fetch all Wishlist Successfully',
+            'cdnURL'     => config('cdn.url'),
             'wishlist' => $items,
+            'brand'    => $brands,
         ],200);
     }
 
@@ -61,4 +77,5 @@ class WishlistController extends Controller
             'item'    => $new,
         ], 200);
     }
+    
 }

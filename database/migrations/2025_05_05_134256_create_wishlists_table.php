@@ -22,7 +22,7 @@ class CreateWishlistsTable extends Migration
                 ->references('id')
                 ->on('users')
                 ->onDelete('cascade');
-                $table->foreign('mproduct_id')
+            $table->foreign('mproduct_id')
                 ->references('mproduct_id')
                 ->on('mproducts')
                 ->onDelete('cascade');

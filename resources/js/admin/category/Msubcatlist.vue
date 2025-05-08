@@ -50,10 +50,10 @@ export default {
       typeFilter: null,
 
       msubcatsHeaders: [
-        { text: 'Image',             value: 'msubcat_image' },
+        { text: 'Image',             value: 'msubcat_image', sortable: false },
         { text: 'Sub-Category Name', value: 'msubcat_name' },
         { text: 'Sub-Category Tag',  value: 'msubcat_tag' },
-        { text: 'Category Name',     value: 'mcat_name' },
+        { text: 'Category Name',     value: 'mcat_name', sortable: false },
       ],
     };
   },

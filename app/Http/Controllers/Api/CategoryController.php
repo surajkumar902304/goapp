@@ -74,7 +74,6 @@ class CategoryController extends Controller
                 return null;
             })->filter()->values();
         
-            // ✅ NEW: If category name matches, keep it — only if it has at least 1 product inside
             if (str_contains(mb_strtolower($cat->mcat_name), $needle)) {
                 $subs = $cat->subcategories->filter(fn($s) => $s->products->isNotEmpty())->values();
             }
@@ -105,7 +104,8 @@ class CategoryController extends Controller
                             )
                     ])
                     ->whereIn('mproduct_id',$sub->product_ids ?? [])
-                    ->where('status','Active');
+                    ->where('status','Active')
+                    ->whereJsonContains('saleschannel', 'Online Store');
 
             if ($brandIds) {
                 $query->whereIn('mbrand_id',$brandIds);
@@ -128,8 +128,6 @@ class CategoryController extends Controller
                     'mproduct_desc'         => $p->mproduct_desc,
                     'status'                => $p->status,
                     'saleschannel'          => $p->saleschannel,
-                    'product_deal_tag'      => $p->product_deal_tag,
-                    'product_offer'         => $p->product_offer,
                     'product_type'          => optional($p->type)->mproduct_type_name,
                     'brand_name'            => optional($p->brand)->mbrand_name,
                     'mvariant_id'           => $v->mvariant_id,
@@ -161,7 +159,8 @@ class CategoryController extends Controller
             ->select('fields.field_name','queries.query_name','mcollection_autos.value')
             ->get();
 
-        $query = Mproduct::where('status','Active');
+        // $query = Mproduct::where('status','Active');
+        $query = Mproduct::where('status','Active')->whereJsonContains('saleschannel', 'Online Store');
 
         foreach ($rules as $r) {
             [$field,$op,$val] = [$r->field_name,$r->query_name,$r->value];

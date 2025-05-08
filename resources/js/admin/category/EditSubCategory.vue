@@ -78,6 +78,7 @@
               </v-col>
             </v-row>
 
+            <!-- Manual Products dispaly in table -->
             <v-divider class="my-2"/>
             <div v-if="selectedProducts.length" class="px-4 pb-4">
               <h4 class="mb-2">Selected Products</h4>
@@ -98,6 +99,28 @@
                 </v-list-item>
               </v-list>
             </div>
+
+            <!-- Smart Products dispaly in table -->
+            <!-- <v-divider class="my-2"/>
+            <div v-if="smartprodisplay.length" class="px-4 pb-4">
+              <h4 class="mb-2">Selected Products</h4>
+              <v-list dense>
+                <v-list-item v-for="p in smartprodisplay" :key="p.mproduct_id">
+                  <v-list-item-avatar>
+                    <img :src="p.mproduct_image ? cdn+p.mproduct_image
+                                                : '/images/no-image-available.png'"/>
+                  </v-list-item-avatar>
+                  <v-list-item-content>
+                    <v-list-item-title>{{ p.mproduct_title }}</v-list-item-title>
+                  </v-list-item-content>
+                  <v-list-item-action>
+                    <v-btn icon @click="removeProduct(p.mproduct_id)">
+                      <v-icon>mdi-close</v-icon>
+                    </v-btn>
+                  </v-list-item-action>
+                </v-list-item>
+              </v-list>
+            </div> -->
           </v-card-text>
         </v-card>
 
@@ -249,6 +272,7 @@ data () {
     productSearch:'', 
     productSelection:[],
     selectedProducts:[], 
+    smartprodisplay:[], 
     sortMethod:null,
     sorts:['Product Title A-Z','Product Title Z-A'],
 
@@ -382,6 +406,10 @@ methods:{
       },{})
     }catch(e){ console.error(e) }
   },
+  getRelations(field_id) {
+  const queryIds = this.fieldQueryMap[field_id] || [];
+  return this.allQueries.filter(q => queryIds.includes(q.query_id));
+},
   updateRelations(idx){
     const allowed=this.fieldQueryMap[this.conditions[idx].tag]||[]
     this.conditions[idx].relations=this.allQueries.filter(q=>allowed.includes(q.query_id))
@@ -422,19 +450,24 @@ methods:{
           .map(id => this.allProducts.find(p=>p.mproduct_id===id))
           .filter(Boolean)
         this.productSelection = [...this.selectedProducts]
-      }else{
-        this.conditions = (s.conditions||[]).map(c => ({
-          tag       : c.field_id,
-          condition : c.query_id,
-          value     : c.value,
-          relations : []
-        }))
-        if(!this.conditions.length)
-          this.conditions = [{tag:'',condition:'',value:'',relations:[]}]
-        this.acondition = s.condition_logic || 'all'
+      }else {
+      this.conditions = (s.conditions || []).map(c => ({
+        tag       : c.field_id,
+        condition : c.query_id,
+        value     : c.value,
+        relations : this.getRelations(c.field_id) // ✅ the fix
+      }));
+
+      if (!this.conditions.length) {
+        this.conditions = [{ tag: '', condition: '', value: '', relations: [] }];
       }
-    }catch(e){ console.error(e) }
-  },
+
+      this.acondition = s.condition_logic || 'all';
+    }
+  } catch (e) {
+    console.error(e);
+  }
+},
 
   updateSubCategory(){
     this.saveLoading=true

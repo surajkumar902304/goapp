@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\BrandController;
+use App\Http\Controllers\Api\CartitemController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Http\Request;
@@ -37,18 +38,22 @@ Route::middleware(['auth.api'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user-profile', [AuthController::class, 'userProfile']);
 
-    // Brands API 
+    // Brands
     Route::get('/brands', [BrandController::class, 'index']);
 
-    // Categories API 
+    // Categories
     Route::get('/categories', [CategoryController::class, 'index']);
 
-    // Banner API 
+    // Browse Banner
     Route::get('/browse-banner', [BannerController::class, 'browseBanner']);
 
-    // Wishlist API 
+    // Wishlist
     Route::get  ('/wishlist',      [WishlistController::class, 'index']);
     Route::post ('/wishlist/add',[WishlistController::class, 'store']);
+
+    // Cart Item
+    Route::get('/cart-item', [CartitemController::class, 'index']);
+    Route::post('/cart-item/update', [CartitemController::class, 'store']);
 
 });
 
