@@ -2,7 +2,7 @@
     <div>
         <v-row>
             <v-col cols="12" md="6">
-                <v-text-field v-model="msearch" dense outlined prepend-inner-icon="mdi-magnify" placeholder="Search all products" hide-details></v-text-field>
+                <v-text-field v-model="msearch" clearable dense outlined prepend-inner-icon="mdi-magnify" placeholder="Search all products" hide-details></v-text-field>
             </v-col>
             <v-col cols="12" md="2">
                 <v-autocomplete v-model="selectedType" :items="mptypes" item-text="mproduct_type_name" item-value="mproduct_type_id" 

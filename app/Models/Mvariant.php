@@ -33,7 +33,13 @@ class Mvariant extends Model
     public function mstock()
     {
         return $this->hasMany(Mstock::class, 'mvariant_id', 'mvariant_id')
-        ->select(['mstock_id', 'quantity', 'mlocation_id', 'mvariant_id']);;
+        ->select(['mstock_id', 'quantity', 'mlocation_id', 'mvariant_id']);
     }
+
+    public function productoffer() 
+{ 
+    return $this->hasOne(Product_Offer::class, 'mvariant_id', 'mvariant_id')
+        ->select(['product_offer_id', 'mvariant_id', 'product_deal_tag', 'product_offer']);
+}
 
 }

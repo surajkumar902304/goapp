@@ -170,10 +170,10 @@
         <v-card outlined class="mb-3">
           <v-card-actions><span class="body-2 fw-semibold">Publishing</span></v-card-actions>
           <v-card-text>
-            <v-radio-group v-model="form.publish_to" column dense>
-              <v-radio label="Online Store" value="Online Store"/>
-              <v-radio label="App Store"   value="App Store"/>
-            </v-radio-group>
+            <v-row>                    
+              <v-checkbox v-model="msubcat_publish" label="Online Store" value="Online Store" />
+              <v-checkbox v-model="msubcat_publish" label="Other" value="Other" />
+            </v-row>
           </v-card-text>
         </v-card>
 
@@ -199,7 +199,7 @@
         <v-card outlined class="mt-3">
           <v-card-actions><span class="body-2 fw-semibold">Create Offer</span></v-card-actions>
           <v-text-field class="px-4 mt-6" v-model="form.offer_name" label="Offer Name" dense outlined/>
-          <v-text-field class="px-4 mt-3" v-model="form.start_time" label="Start Time" type="datetime-local" dense outlined :rules="startTimeRules"/>
+          <v-text-field class="px-4 mt-3" v-model="form.start_time" label="Start Time" type="datetime-local" dense outlined/>
           <v-text-field class="px-4 mt-3" v-model="form.end_time" label="End Time" type="datetime-local" dense outlined :rules="endTimeRules"/>
         </v-card>
 
@@ -284,13 +284,12 @@ data () {
       {tag:'',condition:'',value:'',relations:[]}
     ],
     acondition:'all',
-
+    msubcat_publish: [],
     /* form basics */
     form:{
       mcat_id:null, 
       subcatname:'', 
       subcattag:'',
-      publish_to:'Online Store', 
       image:null,
       offer_name: '',
       start_time: null,
@@ -299,10 +298,6 @@ data () {
 
     existingOffers: [],
     now: new Date().toISOString().slice(0, 16),
-
-    startTimeRules: [
-      v => v >= this.now || 'Start time cannot be in the past'
-    ],
     endTimeRules: [
       v => v > this.form.start_time || 'End time must be after start time'
     ],
@@ -438,11 +433,11 @@ methods:{
       this.form.mcat_id    = s.mcat_id
       this.form.subcatname = s.msubcat_name
       this.form.subcattag  = s.msubcat_tag
-      this.form.publish_to = s.msubcat_publish
       this.form.offer_name = s.offer_name
       this.form.start_time = s.start_time
       this.form.end_time = s.end_time
       this.mcattype        = s.msubcat_type
+      this.msubcat_publish = s.msubcat_publish
       if(s.msubcat_image) this.imagePreview=this.cdn+s.msubcat_image
 
       if(this.mcattype==='manual'){
@@ -472,6 +467,7 @@ methods:{
   updateSubCategory(){
     this.saveLoading=true
     const fd=new FormData()
+    fd.append("msubcat_publish", JSON.stringify(this.msubcat_publish ?? []));
     fd.append('msubcat_id', this.msubcatid);
     Object.entries(this.form).forEach(([k,v])=>fd.append(k,v??''))
     fd.append('mcattype', this.mcattype)
@@ -509,11 +505,11 @@ methods:{
       this.form.mcat_id    = s.mcat_id
       this.form.subcatname = s.msubcat_name
       this.form.subcattag  = s.msubcat_tag
-      this.form.publish_to = s.msubcat_publish
       this.form.offer_name = s.offer_name
       this.form.start_time = s.start_time
       this.form.end_time = s.end_time
       this.mcattype        = s.msubcat_type
+      this.msubcat_publish = s.msubcat_publish
       if(s.msubcat_image) this.imagePreview=this.cdn+s.msubcat_image
 
       if(this.mcattype==='manual'){

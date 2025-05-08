@@ -43,13 +43,13 @@
                         <v-card-text>
                             <v-row>
                                 <v-col cols="12" md="4" class="pb-0">
-                                    <v-text-field v-model.number="price" placeholder="Enter price" dense outlined label="Price" :rules="priceRules" />
+                                    <v-text-field v-model.number="price" placeholder="Enter price" type="number" dense outlined label="Price" :rules="priceRules" />
                                 </v-col>
                                 <v-col cols="12" md="4" class="pb-0">
-                                    <v-text-field v-model.number="compareprice" placeholder="Enter compare price" dense outlined label="Compare Price" :rules="comparepriceRules" />
+                                    <v-text-field v-model.number="compareprice" type="number" placeholder="Enter compare price" dense outlined label="Compare Price" :rules="comparepriceRules" />
                                 </v-col>
                                 <v-col cols="12" md="4" class="pb-0">
-                                    <v-text-field v-model.number="costprice" placeholder="Enter cost price" dense outlined label="Cost Price" :rules="costpriceRules" />
+                                    <v-text-field v-model.number="costprice" type="number" placeholder="Enter cost price" dense outlined label="Cost Price" :rules="costpriceRules" />
                                 </v-col>
                                 <v-col cols="12" md="4" class="py-0">
                                     <v-checkbox v-model="taxable" label="Charge tax on this product" />
@@ -201,13 +201,16 @@
                                         </template>
                                     </v-autocomplete>
                                     <v-autocomplete v-model="pro.brand" :items="mbrands" item-text="mbrand_name" item-value="mbrand_id" label="Brand" 
+                                         outlined dense clearable>
+                                    </v-autocomplete>
+                                    <!-- <v-autocomplete v-model="pro.brand" :items="mbrands" item-text="mbrand_name" item-value="mbrand_id" label="Brand" 
                                         :filter="brandFilter" outlined dense clearable>
                                         <template v-slot:no-data>
                                             <v-btn @click="addNewBrand" :disabled="!typedBrand" >
                                                 Add "{{ typedBrand }}"
                                             </v-btn>
                                         </template>
-                                    </v-autocomplete>
+                                    </v-autocomplete> -->
                                     <v-autocomplete ref="tagsAutocomplete" multiple v-model="pro.tags" :items="mtags" item-text="mtag_name" 
                                         item-value="mtag_id" label="Tags" :filter="tagFilter" outlined dense small-chips deletable-chips>
                                         <template v-slot:no-data>
@@ -311,7 +314,11 @@
             ],
             skuRules: [v => !!v || "SKU is required"],
             barcodeRules: [v => !v || v.length >= 10 || "Barcode must be at least 10 characters"],
-            stockRules: [v => !v || v >= 0 || "Stock must be a positive number"],
+            stockRules: [
+                (v) => v === null || v === '' || /^\d+$/.test(v) || "Stock must be a whole number",
+                (v) => v === null || v === '' || v >= 0 || "Stock must be a positive number",
+            ],
+
             weightRules: [
             v => v >= 0 || "Weight must be greater than 0",
             v => v === "" || /^\d+(\.\d{1,3})?$/.test(v) || "Weight up to 3 decimal places"

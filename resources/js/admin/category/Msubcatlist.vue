@@ -2,7 +2,7 @@
 <div>
     <v-row>
         <v-col cols="12" md="8">
-            <v-text-field v-model="ssearch" dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Sub-Categories name"
+            <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Sub-Categories name"
             />
         </v-col>
         <v-col cols="12" md="2">

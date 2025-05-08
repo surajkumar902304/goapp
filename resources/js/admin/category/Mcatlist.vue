@@ -2,7 +2,7 @@
     <div>
         <v-row>
             <v-col cols="12" md="10">
-                <v-text-field v-model="ssearch" dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Category name"/>
+                <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Category name"/>
             </v-col>
             <v-col cols="12" md="2" class="text-end">
                 <v-btn color="secondary" small class="text-none font-weight-bold" @click="openDialog">

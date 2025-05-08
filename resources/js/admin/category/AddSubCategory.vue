@@ -132,10 +132,10 @@
         <v-card outlined class="mb-3">
           <v-card-actions><span class="body-2 fw-semibold">Publishing</span></v-card-actions>
           <v-card-text>
-            <v-radio-group v-model="form.publish_to" column dense>
-              <v-radio label="Online Store" value="Online Store"/>
-              <v-radio label="App Store"   value="App Store"/>
-            </v-radio-group>
+            <v-row>
+                <v-checkbox v-model="msubcat_publish" label="Online Store" value="Online Store" />
+                <v-checkbox v-model="msubcat_publish" label="Other" value="Other" />
+            </v-row>
           </v-card-text>
         </v-card>
 
@@ -230,12 +230,11 @@ export default {
         { tag:'', condition:'', value:'', relations:[] }
       ],
       acondition:'all',
-
+      msubcat_publish: [],
       form:{
         mcat_id:null, 
         subcatname:'', 
-        subcattag:'',
-        publish_to:'Online Store', 
+        subcattag:'', 
         image:null,
         offer_name: '',
         start_time: null,
@@ -377,6 +376,7 @@ export default {
       this.saveLoading = true;
 
       const fd = new FormData()
+      fd.append("msubcat_publish", JSON.stringify(this.msubcat_publish ?? []));
       fd.append('offer_name', this.form.offer_name ?? '');
       fd.append('start_time', this.form.start_time ?? '');
       fd.append('end_time', this.form.end_time ?? '');
@@ -412,12 +412,12 @@ export default {
         mcat_id:null,
         subcatname:'',
         subcattag:'',
-        publish_to:'Online Store',
         image:null,
         offer_name: '',
         start_time: null,
         end_time: null,
       }
+      msubcat_publish:[],
       this.imagePreview=null; 
       this.nameError=''; 
       this.mcattype='manual'

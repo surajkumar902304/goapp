@@ -109,7 +109,7 @@ class McategoryController extends Controller
             'mcat_id'    => ['required', 'integer', 'exists:mcategories,mcat_id'],
             'subcatname' => ['required', 'string', 'max:255',],
             'subcattag'  => ['nullable', 'string', 'max:255'],
-            'publish_to' => ['required'],
+            'msubcat_publish' => ['nullable'],
             'mcattype'   => ['required'],
             'image'      => ['required', 'image', 'max:2048'],
 
@@ -145,7 +145,7 @@ class McategoryController extends Controller
             'msubcat_name'   => $validated['subcatname'],
             'msubcat_slug'   => Str::slug(strtolower($validated['subcatname'])).'-'.uniqid(),
             'msubcat_tag'    => $validated['subcattag'] ?? null,
-            'msubcat_publish'=> $validated['publish_to'],
+            'msubcat_publish'=> json_decode($validated['msubcat_publish'], true) ?? [],
             'msubcat_image'  => $subcatimagepath,
             'msubcat_type'   => $validated['mcattype'],
             'product_ids'   => $ids,
@@ -243,7 +243,7 @@ class McategoryController extends Controller
             'mcat_id'     => 'required|integer|exists:mcategories,mcat_id',
             'subcatname'  => 'required|string|max:255',
             'subcattag'   => 'nullable|string|max:255',
-            'publish_to'  => 'required|in:Online Store,App Store',
+            'msubcat_publish'  => 'nullable',
             'mcattype'    => 'required|in:manual,smart',
             'image'       => 'nullable|image|max:2048',
 
@@ -275,7 +275,7 @@ class McategoryController extends Controller
         $sub->mcat_id         = $validated['mcat_id'];
         $sub->msubcat_name    = $validated['subcatname'];
         $sub->msubcat_tag     = $validated['subcattag'] ?? null;
-        $sub->msubcat_publish = $validated['publish_to'];
+        $sub->msubcat_publish = json_decode($validated['msubcat_publish'], true) ?? [];
         $sub->msubcat_type    = $validated['mcattype'];
         $sub->offer_name      = $validated['offer_name'] ?? null;
         $sub->start_time      = $validated['start_time'] ?? null;

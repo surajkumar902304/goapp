@@ -46,13 +46,13 @@
                         <v-card-text>
                             <v-row>
                                 <v-col cols="12" md="4" class="pb-0">
-                                    <v-text-field v-model.number="price" placeholder="Enter price" dense outlined label="Price" :rules="priceRules"></v-text-field>
+                                    <v-text-field v-model.number="price" placeholder="Enter price" type="number" dense outlined label="Price" :rules="priceRules"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" md="4" class="pb-0">
-                                    <v-text-field v-model.number="compareprice" placeholder="Enter compare price" dense outlined label="Compare Price" :rules="comparepriceRules"></v-text-field>
+                                    <v-text-field v-model.number="compareprice" placeholder="Enter compare price" type="number" dense outlined label="Compare Price" :rules="comparepriceRules"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" md="4" class="pb-0">
-                                    <v-text-field v-model.number="costprice" placeholder="Enter cost price" dense outlined label="Cost Price" :rules="costpriceRules"></v-text-field>
+                                    <v-text-field v-model.number="costprice" placeholder="Enter cost price" type="number" dense outlined label="Cost Price" :rules="costpriceRules"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" md="4" class="py-0">
                                     <v-checkbox v-model="taxable" label="Charge tax on this product"></v-checkbox>
@@ -71,7 +71,7 @@
                                     <v-text-field v-model="sku" dense outlined label="SKU" append-icon="mdi-plus-circle-outline" :rules="skuRules" @click:append="regenerateSKU"></v-text-field>
                                 </v-col>
                                 <v-col cols="12" md="4">
-                                    <v-text-field v-model.number="stockQuantity" type="number" placeholder="Stock" dense outlined label="Stock Quantity" :rules="stockRules"></v-text-field>
+                                    <v-text-field v-model.number="stockQuantity" placeholder="Stock" type="number" dense outlined label="Stock Quantity" :rules="stockRules"></v-text-field>
                                 </v-col>
                             </v-row>
                         </v-card-text>
@@ -217,13 +217,16 @@
                                         </template>
                                     </v-autocomplete>
                                     <v-autocomplete v-model="pro.brand" :items="mbrands" item-text="mbrand_name" item-value="mbrand_id" label="Brand" 
+                                         outlined dense clearable>
+                                    </v-autocomplete>
+                                    <!-- <v-autocomplete v-model="pro.brand" :items="mbrands" item-text="mbrand_name" item-value="mbrand_id" label="Brand" 
                                         :filter="brandFilter" outlined dense clearable :search-input.sync="typedBrand">
                                         <template v-slot:no-data>
                                             <v-btn @click="addNewBrand" :disabled="!typedBrand?.trim()" >
                                                 Add "{{ typedBrand }}"
                                             </v-btn>
                                         </template>
-                                    </v-autocomplete>
+                                    </v-autocomplete> -->
                                     <v-autocomplete ref="tagsAutocomplete" multiple v-model="pro.tags" :items="mtags" item-text="mtag_name" 
                                         item-value="mtag_id" label="Tags" :filter="tagFilter" outlined dense small-chips deletable-chips :search-input.sync="typedTag">
                                         <template v-slot:no-data>
@@ -306,7 +309,10 @@ export default {
             ],
             skuRules: [(v) => !!v || "SKU is required"],
             barcodeRules: [(v) => !v || v.length >= 10 || "Barcode must be at least 10 characters"],
-            stockRules: [(v) => !v || v >= 0 || "Stock must be a positive number"],
+            stockRules: [
+                (v) => v === null || v === '' || /^\d+$/.test(v) || "Stock must be a whole number",
+                (v) => v === null || v === '' || v >= 0 || "Stock must be a positive number",
+            ],
             weightRules: [
                 (v) => v >= 0 || "Weight must be greater than 0",
                 v => v === "" || /^\d+(\.\d{1,3})?$/.test(v) || "Weight up to 3 decimal places"

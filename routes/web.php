@@ -70,6 +70,7 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::get('/product-offers/vlist',[AdminController::class,'productofferVlist'])->name('productoffers.vlist');
         Route::post('/product-offers/add',[AdminController::class,'addProductoffer'])->name('productoffer.add');
         Route::post('/product-offers/update',[AdminController::class,'editProductoffer'])->name('productoffer.edit');
+        Route::post('/product-offers/delete',[AdminController::class,'deleteProductoffer'])->name('productoffer.delete');
 
         // Categories routes
         Route::get('/mcategories/list',[McategoryController::class,'index'])->name('mcats.list');

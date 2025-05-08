@@ -1,241 +1,363 @@
 <template>
-    <div>
-      <v-row>
-        <v-col cols="12" md="10">
-          <v-text-field
-            v-model="ssearch"
-            dense
-            hide-details
-            outlined
-            prepend-inner-icon="mdi-magnify"
-            placeholder="Search name"
-          />
-        </v-col>
-        <v-col cols="12" md="2" class="text-end">
-          <v-btn color="secondary" small class="text-none font-weight-bold" @click="openDialog">
-            Create Offer
-          </v-btn>
+  <div>
+    <v-row>
+      <v-col cols="12" md="10">
+        <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" 
+                    placeholder="Search name"/>
+      </v-col>
+      <v-col cols="12" md="2" class="text-end">
+        <v-btn color="secondary" small class="text-none font-weight-bold"
+               @click="openAddDialog">
+          Create Offer
+        </v-btn>
+      </v-col>
+    </v-row>
+
+    <!-- table -->
+    <v-row>
+        <v-col cols="12">
+            <v-card outlined>
+              <v-data-table :items="productOffers" :headers="offerheaders" :search="ssearch">
+                <template #item.actions="{ item }">
+                  <v-icon small class="mr-2" color="primary" @click="openEditDialog(item)">
+                    mdi-pencil
+                  </v-icon>
+
+                  <v-icon small color="red" @click="confirmDelete(item)">
+                    mdi-delete
+                  </v-icon>
+                </template>
+              </v-data-table>
+            </v-card>
         </v-col>
       </v-row>
-  
-      <!-- dialog part unchanged -->
-      <v-dialog v-model="addSdialog" max-width="400" @update:model-value="onDialogToggle">
-        <v-card>
-          <v-card-title>
-            <span>{{ editedIndex === -1 ? 'Add Banner' : 'Edit Banner' }}</span>
-            <v-spacer></v-spacer>
-            <v-icon @click="addSdialog = false">mdi-close</v-icon>
-          </v-card-title>
-          <v-form v-model="fsvalid" @submit.prevent="saveBanner">
-            <v-card-text>
-              <!-- Category dropdown -->
-              <v-select dense outlined
-                        v-model="defaultItem.mcat_id"
-                        :items="categories"
-                        item-value="mcat_id"
-                        item-text="mcat_name"
-                        label="Category" 
-                        clearable/> 
-                        <!-- Sub‑Category dropdown -->
-              <v-select dense outlined class="mt-3"
-                        v-if="subcategories.length"
-                        v-model="defaultItem.msubcat_id"
-                        :items="subcategories"
-                        item-value="msubcat_id"
-                        item-text="msubcat_name"
-                        label="Sub‑Category" 
-                        clearable/>              
-              <!-- Product dropdown -->
-              <v-select dense outlined class="mt-3"
-                        v-if="products.length"
-                        v-model="defaultItem.mproduct_id"
-                        :items="products"
-                        item-value="mproduct_id"
-                        item-text="mproduct_title"
-                        label="Product" 
-                        clearable/>
-              <v-text-field
-                v-model="defaultItem.browsebanner_name"
-                :rules="bannernameRule"
-                label="Banner Name"
-              />
-              <div class="d-flex flex-column align-center">
-                <v-card-actions class="pb-0 pt-0">
-                  <span class="body-2 fw-semibold">
-                    {{ isImageSelected ? 'Selected Image' : 'Select Image' }}
-                  </span>
-                </v-card-actions>
-                <input ref="imageInput" type="file" accept="image/*" style="display:none" @change="handleImageUpload" />
-                <div class="uploader-box mb-2" @click="triggerFileInput">
-                  <v-img
-                    v-if="isImageSelected"
-                    :src="imagePreview"
-                    class="rounded"
-                    max-width="150"
-                    max-height="150"
-                    cover
-                  />
-                  <v-icon v-else size="48" class="grey--text text--lighten-1">mdi-image-area</v-icon>
-                </div>
-                <div v-if="imageName" class="text-caption">{{ imageName }}</div>
-              </div>
-            </v-card-text>
-            <v-card-actions>
-              <template v-if="editedIndex !== -1 || isImageSelected">
-                <v-btn type="submit" color="success" small :disabled="!fsvalid || submitting">
-                  {{ editedIndex === -1 ? 'Add' : 'Update' }}
-                </v-btn>
-              </template>
-            </v-card-actions>
-          </v-form>
-        </v-card>
-      </v-dialog>
-    </div>
-  </template>
-  
-  <script>
-  import axios from 'axios';
-  import draggable from 'vuedraggable';
-  
-  export default {
-    name: 'BrowseBanner',
-    components: { draggable },
-    data() {
-      return {
-        cdn: 'https://cdn.truewebpro.com/',
-        ssearch: '',
-        productoffers      : [],
-        products      : [],
-        fillLock : false,
-        addSdialog: false,
-        editedIndex: -1,
-        fsvalid: false,
-        submitting: false,
-        defaultItem: {
-          browsebanner_id: null,
-          browsebanner_name: '',
-          browsebanner_image: '',
-          mcat_id : null,
-          msubcat_id : null,
-          mproduct_id : null
-        },
-      };
-    },
-    created() {
-      this.getAllProductOffers();
-      this.loadCategories();
-    },
+    <!-- ADD dialog -->
+    <v-dialog v-model="addDialog" max-width="420" @update:model-value="resetAdd">
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <span>Add Offer</span>
+          <v-spacer></v-spacer>
+          <v-icon @click="addDialog=false">mdi-close</v-icon>
+        </v-card-title>
+        <v-form v-model="addValid" @submit.prevent="saveAdd">
+          <v-card-text>
+            <v-autocomplete v-model="addForm.product_id"
+                            :items="products"
+                            item-text="mproduct_title"
+                            item-value="mproduct_id"
+                            label="Product"
+                            @change="loadAddVariants"
+                            :rules="[required]"/>
+                            <v-autocomplete
+                              v-model="addForm.variant_ids"
+                              :items="addVariants"
+                              item-text="sku"
+                              item-value="mvariant_id"
+                              label="Variants"
+                              :rules="[required]"
+                              multiple
+                              chips
+                              clearable
+                            />
 
-    methods: {
-        getAllProductOffers() {
-        axios.get('/admin/product-offers/vlist').then(res => {
-          this.productoffers = res.data.productoffers;
-          this.products = res.data.products;
-        });
+            <v-text-field v-model="addForm.product_deal_tag"
+                          label="Product Deal Tag"/>
+            <v-text-field v-model="addForm.product_offer"
+                          label="Product Offer"/>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn type="submit" color="success" :disabled="!addValid || saving">
+              Add Offer
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
+
+    <!-- EDIT dialog -->
+    <v-dialog v-model="editDialog" max-width="420" @update:model-value="resetEdit">
+      <v-card>
+        <v-card-title class="d-flex align-center">
+          <span>Edit Offer</span>
+          <v-spacer></v-spacer>
+          <v-icon @click="editDialog=false">mdi-close</v-icon>
+        </v-card-title>
+        <v-form v-model="editValid" @submit.prevent="saveEdit">
+          <v-card-text>
+            <v-autocomplete v-model="editForm.product_id"
+                            :items="products"
+                            item-text="mproduct_title"
+                            item-value="mproduct_id"
+                            label="Product"
+                            @change="loadEditVariants"
+                            :rules="[required]"/>
+            <v-autocomplete v-model="editForm.variant_id"
+                            :items="editVariants"
+                            item-text="sku"
+                            item-value="mvariant_id"
+                            label="Variant"
+                            :rules="[required]"/>
+            <v-text-field v-model="editForm.product_deal_tag"
+                          label="Product Deal Tag"/>
+            <v-text-field v-model="editForm.product_offer"
+                          label="Product Offer"/>
+          </v-card-text>
+          <v-card-actions>
+            <v-btn type="submit" color="success" :disabled="!editValid || saving">
+              Update Offer
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
+
+    <!-- Delete dialog -->
+    <v-dialog v-model="deleteDialog" max-width="400">
+      <v-card>
+        <v-card-title class="text-h6">
+          Confirm Delete
+        </v-card-title>
+        <v-card-text>
+          Are you sure you want to delete this offer?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn text color="grey" @click="deleteDialog = false">Cancel</v-btn>
+          <v-btn text color="red" @click="performDelete">Delete</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+
+export default {
+  name: "ProductCreateOffer",
+
+  data() {
+    return {
+      /* table */
+      ssearch: '',
+      offerheaders: [
+        { text: "ID", value: "product_offer_id" },        
+        { text: "Product Name", value: "mproduct_title" },
+        { text: "Product Offer", value: "product_offer" },
+        { text: "Product Deal Tag", value: "product_deal_tag" },
+        { text: "Actions", value: "actions", sortable: false },
+      ],
+      products: [],    
+      productOffers: [], 
+
+      addDialog: false,
+      addValid: false,
+      addVariants: [],
+      addForm: {
+        product_id: null,
+        variant_ids: [],
+        product_deal_tag: "",
+        product_offer: "",
       },
-      openDialog() {
-        this.defaultItem = { product_offer_id:null, mvariant_id:null, product_deal_tag: '', product_offer: '' };
-        this.productoffers=[]; 
-        this.products=[];
-        this.editedIndex = -1;
-        this.fsvalid = false;
-        this.addSdialog = true;
+
+      editDialog: false,
+      editValid: false,
+      editVariants: [],
+      editForm: {
+        product_offer_id: null,
+        product_id: null,
+        variant_id: null,
+        product_deal_tag: "",
+        product_offer: "",
       },
-      /* ------------ editItem ------------- */
-  async editItem(item){
-    await this.ensureCategoriesLoaded()
 
-    /* 1) पहले drop‑downs तैयार करो  */
-    const cat = this.products.find(c => c.mproduct_id === item.mproduct_id)
-    const subs = cat ? cat.products : []
-    const sub  = subs.find(s => s.mvariant_id === item.mvariant_id)
-    const prods  = sub ? sub.productoffers : []
-
-    /* lock watcher → fill everything → unlock */
-    this.fillLock = true
-    this.products = subs
-    this.productoffers      = prods
-
-    this.defaultItem = {
-        product_offer_id   : item.product_offer_id,
-        mvariant_id : item.mvariant_id,
-        product_deal_tag: '',
-        product_offer: '',
-    }
-    this.$nextTick(() => {     // unlock बाद के टिक पर
-      this.fillLock = false
-    })
-
-    this.editedIndex  = item.product_offer_id
-    this.fsvalid      = true
-    this.addSdialog   = true
+      deleteDialog: false,
+      offerToDelete: null,
+      saving: false,   
+      required: (v) => !!v || "Required",
+    };
   },
-      onDialogToggle(open) {
-        if (!open) {
-          this.defaultItem = { product_offer_id:null, mvariant_id:null, product_deal_tag: '', product_offer: '' };
-          this.productoffers=[]; 
-          this.products=[];
-          this.fsvalid = false;
-          this.submitting = false;
-          this.editedIndex = -1;
-        }
-      },
-      saveBanner() {
-        this.submitting = true;
-        const fd = new FormData();
-        if (this.defaultItem.mvariant_id    != null) fd.append('mvariant_id',    this.defaultItem.mvariant_id)
 
-        fd.append('product_deal_tag', this.defaultItem.browsebanner_name);
-        fd.append('product_offer', this.defaultItem.browsebanner_name);
-        if (this.editedIndex !== -1) {
-          fd.append('product_offer_id', this.editedIndex);
-        }
-        const isNew = this.editedIndex === -1;
-        const url = isNew ? '/admin/browsebanners/add' : '/admin/browsebanners/update';
+  created() {
+    this.loadAll();
+  },
 
-        axios.post(url, fd, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-        .then(() => {
-          this.getAllBanners();
-          this.addSdialog = false;
+  methods: {
+    async loadAll() {
+  const { data } = await axios.get("/admin/product-offers/vlist");
 
-          // ✅ Show toast
-          this.$toast.success(isNew ? 'Banner added successfully!' : 'Banner updated successfully!');
-        })
-        .catch(() => {
-          this.$toast.error('Something went wrong while saving the banner.');
-        })
-        .finally(() => {
-          this.submitting = false;
-        });
-      },
-      onDragEnd() {
-        const payload = this.browsebanners.map((item, index) => ({
-          id: item.browsebanner_id,
-          position: index + 1
-        }));
-        axios.post('/admin/browsebanners/reorder', payload).then(() => {
-          this.$toast?.success('Order updated!');
-        }).catch(() => {
-          this.$toast?.error('Failed to update order');
-        });
-      }
-    }
-  };
-  </script>
-  
-  <style scoped>
-  .uploader-box {
-    max-width: 200px;
-    max-height: 200px;
-    border: 1px dashed #ccc;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+  this.products = data.products;
+
+  this.productOffers = data.productoffers.map(offer => {
+    const product = this.products.find(p =>
+      p.mvariants.some(v => v.mvariant_id === offer.mvariant_id)
+    );
+    return {
+      ...offer,
+      mproduct_title: product ? product.mproduct_title : ''
+    };
+  });
+},
+    openAddDialog() {
+      this.resetAdd(false);
+      this.addDialog = true;
+    },
+    loadAddVariants() {
+  const selectedProduct = this.products.find(
+    (p) => p.mproduct_id === this.addForm.product_id
+  );
+
+  if (!selectedProduct) {
+    this.addVariants = [];
+    return;
   }
-  </style>
-  
+
+  const usedVariantIds = this.productOffers.map((offer) => offer.mvariant_id);
+
+  this.addVariants = selectedProduct.mvariants.filter(
+    (variant) => !usedVariantIds.includes(variant.mvariant_id)
+  );
+
+  if (
+    this.addForm.variant_id &&
+    !this.addVariants.some((v) => v.mvariant_id === this.addForm.variant_id)
+  ) {
+    this.addForm.variant_id = null;
+  }
+},
+    resetAdd(close = true) {
+      this.addForm = {
+        product_id: null,
+        variant_id: null,
+        product_deal_tag: "",
+        product_offer: "",
+      };
+      this.addVariants = [];
+      this.addValid = false;
+      if (close) this.addDialog = false;
+    },
+    async saveAdd() {
+  if (!this.addValid || this.saving) return;
+  this.saving = true;
+
+  try {
+    await axios.post("/admin/product-offers/add", {
+      product_id: this.addForm.product_id,
+      variant_ids: this.addForm.variant_ids,
+      product_deal_tag: this.addForm.product_deal_tag,
+      product_offer: this.addForm.product_offer,
+    });
+    this.$toast.success("Offers added successfully!");
+    this.addDialog = false;
+    this.loadAll();
+  } catch (err) {
+    this.$toast.error("Failed to add offers.");
+  } finally {
+    this.saving = false;
+  }
+},
+
+    openEditDialog(item) {
+      this.editForm = {
+        product_offer_id: item.product_offer_id,
+        product_id: this.findProductIdByVariant(item.mvariant_id),
+        variant_id: item.mvariant_id,
+        product_deal_tag: item.product_deal_tag,
+        product_offer: item.product_offer,
+      };
+      this.loadEditVariants();
+      this.editDialog = true;
+    },
+    loadEditVariants() {
+  const selectedProduct = this.products.find(
+    (p) => p.mproduct_id === this.editForm.product_id
+  );
+
+  if (!selectedProduct) {
+    this.editVariants = [];
+    return;
+  }
+
+  const usedVariantIds = this.productOffers
+    .filter(o => o.product_offer_id !== this.editForm.product_offer_id)
+    .map(o => o.mvariant_id);
+
+  this.editVariants = selectedProduct.mvariants.filter(
+    (v) => !usedVariantIds.includes(v.mvariant_id) ||
+           v.mvariant_id === this.editForm.variant_id 
+  );
+
+  if (
+    this.editForm.variant_id &&
+    !this.editVariants.some((v) => v.mvariant_id === this.editForm.variant_id)
+  ) {
+    this.editForm.variant_id = null;
+  }
+},
+    resetEdit(close = true) {
+      this.editForm = {
+        product_offer_id: null,
+        product_id: null,
+        variant_id: null,
+        product_deal_tag: "",
+        product_offer: "",
+      };
+      this.editVariants = [];
+      this.editValid = false;
+      if (close) this.editDialog = false;
+    },
+    async saveEdit() {
+      if (!this.editValid || this.saving) return;
+      this.saving = true;
+      try {
+        await axios.post("/admin/product-offers/update", {
+          product_offer_id: this.editForm.product_offer_id,
+          mvariant_id: this.editForm.variant_id,
+          product_deal_tag: this.editForm.product_deal_tag,
+          product_offer: this.editForm.product_offer,
+        });
+        this.$toast?.success('Offer Updated successfully!');
+        await this.loadAll();
+        this.resetEdit();
+      } finally {
+        this.saving = false;
+      }
+    },
+
+    findProductIdByVariant(variantId) {
+      const prod = this.products.find((p) =>
+        p.mvariants.some((v) => v.mvariant_id === variantId)
+      );
+      return prod ? prod.mproduct_id : null;
+    },
+    confirmDelete(item) {
+      this.offerToDelete = item;
+      this.deleteDialog = true;
+      },
+      async performDelete(id) {
+        if (!this.offerToDelete) return;
+
+        try {
+          await axios.post('/admin/product-offers/delete', {
+            product_offer_id: this.offerToDelete.product_offer_id
+          });
+
+          this.$toast?.success('Offer deleted successfully!');
+          this.loadAll();
+        } catch (err) {
+          this.$toast?.error('Failed to delete offer');
+        } finally {
+          this.deleteDialog = false;
+          this.offerToDelete = null;
+        }
+      }
+
+  },
+};
+
+</script>
+
+<style scoped>
+
+</style>

@@ -211,7 +211,7 @@ class AdminController extends Controller
     public function productofferVlist()
     {
         $productoffer = Product_Offer::get();
-        $product = Mproduct::with('mvariants')
+        $product = Mproduct::where('status','active')->with('mvariants')
         ->orderBy('mproduct_id', 'desc')
         ->get();
 
@@ -220,6 +220,63 @@ class AdminController extends Controller
             'productoffers' => $productoffer,
             'products' => $product,
         ],200);
+    }
+
+    public function addProductoffer(Request $request)
+    {
+        $request->validate([
+            'product_id'        => 'required|exists:mproducts,mproduct_id',
+            'variant_ids'       => 'required|array',
+            'variant_ids.*'     => 'exists:mvariants,mvariant_id',
+            'product_deal_tag'  => 'nullable|string|max:255',
+            'product_offer'     => 'nullable|string|max:255',
+        ]);
+
+        foreach ($request->variant_ids as $variantId) {
+            Product_Offer::updateOrCreate(
+                ['mvariant_id' => $variantId],
+                [
+                    'product_offer'     => $request->product_offer,
+                    'product_deal_tag'  => $request->product_deal_tag,
+                ]
+            );
+        }
+
+        return response()->json(['status' => true, 'message' => 'Offers added successfully']);
+    }
+
+    public function editProductoffer(Request $request)
+    {
+        $data = $request->validate([
+            'product_offer_id'  => ['required', 'integer', 'exists:product__offers,product_offer_id'],
+            'mvariant_id'       => ['required', 'integer', 'exists:mvariants,mvariant_id'],
+            'product_deal_tag'  => ['nullable', 'string', 'max:255'],
+            'product_offer'     => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $offer = Product_Offer::find($data['product_offer_id']);
+        
+        $offer->update([
+            'mvariant_id'      => $data['mvariant_id'],
+            'product_deal_tag' => $data['product_deal_tag'],
+            'product_offer'    => $data['product_offer'],
+        ]);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Offer updated',
+        ], 200);
+    }
+
+    public function deleteProductoffer(Request $request)
+    {
+        $request->validate([
+            'product_offer_id' => 'required|exists:product__offers,product_offer_id',
+        ]);
+    
+        Product_Offer::where('product_offer_id', $request->product_offer_id)->delete();
+    
+        return response()->json(['status' => true, 'message' => 'Offer deleted']);
     }
 
     public function adminProductlist()

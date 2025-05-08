@@ -4,6 +4,7 @@
         <v-col cols="12" md="10">
           <v-text-field
             v-model="ssearch"
+            clearable
             dense
             hide-details
             outlined
@@ -207,10 +208,12 @@
         return !!this.imageName;
       },
       filteredBanners() {
-        return this.browsebanners.filter(b =>
-          b.browsebanner_name.toLowerCase().includes(this.ssearch.toLowerCase())
-        );
-      }
+  const term = (this.ssearch || '').toLowerCase();
+
+  return this.browsebanners.filter(b =>
+    (b.browsebanner_name || '').toLowerCase().includes(term)
+  );
+}
     },
     methods: {
       getAllBanners() {

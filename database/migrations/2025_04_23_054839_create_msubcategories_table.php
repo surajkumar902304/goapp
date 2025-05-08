@@ -20,7 +20,7 @@ class CreateMsubcategoriesTable extends Migration
             $table->string('msubcat_slug')->unique();
             $table->string('msubcat_tag')->nullable();
             $table->string('msubcat_image');
-            $table->enum('msubcat_publish', ['Online Store', 'App Store'])->default('Online Store');
+            $table->json('msubcat_publish')->nullable();
             $table->enum('msubcat_type', ['manual', 'smart'])->default('manual');
             $table->timestamps();
         });

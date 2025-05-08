@@ -61,12 +61,12 @@
                             </v-list-item-icon>
                             <v-list-item-title>Products</v-list-item-title>
                         </v-list-item>
-                        {{-- <v-list-item href="{{route('productoffers.list')}}" class="{{ request()->routeIs('productoffers.list') ? 'active' : '' }}">
+                        <v-list-item href="{{route('productoffers.list')}}" class="{{ request()->routeIs('productoffers.list') ? 'active' : '' }}">
                           <v-list-item-icon>
                             <v-icon>mdi-offer</v-icon>
                           </v-list-item-icon>
                           <v-list-item-title>Product Offers</v-list-item-title>
-                        </v-list-item> --}}
+                        </v-list-item>
                         <v-list-item href="{{route('mcats.list')}}" class="{{ request()->routeIs('mcats.list') ? 'active' : '' }}">
                             <v-list-item-icon>
                               <v-icon>mdi-storefront</v-icon>

@@ -16,6 +16,7 @@ class Msubcategory extends Model
     ];
 
     protected $casts = [
+        'msubcat_publish' => 'array',
         'product_ids' => 'array',
     ];
     // sub-category list

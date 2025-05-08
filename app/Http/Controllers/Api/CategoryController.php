@@ -32,8 +32,12 @@ class CategoryController extends Controller
         $brandIds = $request->query('mbrand_id');
         $brandIds = $brandIds ? explode(',', $brandIds) : null;
 
-        $cats = Mcategory::with(['subcategories' => fn($q) => $q->select('*')])
-                         ->get();
+        $cats = Mcategory::with([
+            'subcategories' => fn($q) =>
+                $q->whereJsonContains('msubcat_publish', 'Online Store')
+                  ->select('*')
+        ])->get();
+        
 
         $cats->each(fn($cat) =>
             $cat->subcategories->each(fn($sub) =>
@@ -90,22 +94,16 @@ class CategoryController extends Controller
     {
         if ($sub->msubcat_type === 'manual') {
             $query = Mproduct::with([
-                        'type:mproduct_type_id,mproduct_type_name',
-                        'brand:mbrand_id,mbrand_name',
-                        'mvariantsApi' => fn($q) => $q
-                            ->join('mvariant_details','mvariant_details.mvariant_id','=','mvariants.mvariant_id')
-                            ->join('mstocks','mstocks.mvariant_id','=','mvariants.mvariant_id')
-                            ->select(
-                                'mvariants.mvariant_id','mvariants.sku','mvariants.mvariant_image',
-                                'mvariants.price','mvariants.compare_price','mvariants.cost_price',
-                                'mvariants.taxable','mvariants.barcode',
-                                'mvariant_details.options','mvariant_details.option_value',
-                                'mstocks.quantity','mstocks.mlocation_id'
-                            )
-                    ])
-                    ->whereIn('mproduct_id',$sub->product_ids ?? [])
-                    ->where('status','Active')
-                    ->whereJsonContains('saleschannel', 'Online Store');
+                'type:mproduct_type_id,mproduct_type_name',
+                'brand:mbrand_id,mbrand_name',
+                'mvariantsApi.mvariantDetail',
+                'mvariantsApi.mstock',
+                'mvariantsApi.productoffer', 
+            ])
+            ->whereIn('mproduct_id', $sub->product_ids ?? [])
+            ->where('status', 'Active')
+            ->whereJsonContains('saleschannel', 'Online Store');
+            
 
             if ($brandIds) {
                 $query->whereIn('mbrand_id',$brandIds);
@@ -121,31 +119,38 @@ class CategoryController extends Controller
             $inWishlist = in_array($p->mproduct_id, $wishlistProductIds, true);
             foreach ($p->mvariants as $v) {
                 $flat->push([
-                    'mproduct_id'           => $p->mproduct_id,
-                    'mproduct_title'        => $p->mproduct_title,
-                    'mproduct_image'        => $p->mproduct_image,
-                    'mproduct_slug'         => $p->mproduct_slug,
-                    'mproduct_desc'         => $p->mproduct_desc,
-                    'status'                => $p->status,
-                    'saleschannel'          => $p->saleschannel,
-                    'product_type'          => optional($p->type)->mproduct_type_name,
-                    'brand_name'            => optional($p->brand)->mbrand_name,
-                    'mvariant_id'           => $v->mvariant_id,
-                    'sku'                   => $v->sku,
-                    'image'                 => $v->mvariant_image,
-                    'price'                 => $v->price,
-                    'compare_price'         => $v->compare_price,
-                    'cost_price'            => $v->cost_price,
-                    'taxable'               => $v->taxable,
-                    'barcode'               => $v->barcode,
-                    'options'               => $v->options,
-                    'option_value'          => $v->option_value,
-                    'quantity'              => $v->quantity,
-                    'mlocation_id'          => $v->mlocation_id,
-                    'user_info_wishlist'    => $inWishlist,
+                    'mproduct_id'        => $p->mproduct_id,
+                    'mproduct_title'     => $p->mproduct_title,
+                    'mproduct_image'     => $p->mproduct_image,
+                    'mproduct_slug'      => $p->mproduct_slug,
+                    'mproduct_desc'      => $p->mproduct_desc,
+                    'status'             => $p->status,
+                    'saleschannel'       => $p->saleschannel,
+                    'product_type'       => optional($p->type)->mproduct_type_name,
+                    'brand_name'         => optional($p->brand)->mbrand_name,
+        
+                    'mvariant_id'        => $v->mvariant_id,
+                    'sku'                => $v->sku,
+                    'image'              => $v->mvariant_image,
+                    'price'              => $v->price,
+                    'compare_price'      => $v->compare_price,
+                    'cost_price'         => $v->cost_price,
+                    'taxable'            => $v->taxable,
+                    'barcode'            => $v->barcode,
+        
+                    'options'            => optional($v->mvariantDetail)->options,
+                    'option_value'       => optional($v->mvariantDetail)->option_value,
+                    'quantity'           => optional($v->mstock->first())->quantity,    
+                    'mlocation_id'       => optional($v->mstock->first())->mlocation_id,
+        
+                    'product_deal_tag'   => optional($v->productoffer)->product_deal_tag,
+                    'product_offer'      => optional($v->productoffer)->product_offer,
+        
+                    'user_info_wishlist' => $inWishlist,
                 ]);
             }
         }
+        
 
         return $flat->values();
     }
@@ -160,7 +165,8 @@ class CategoryController extends Controller
             ->get();
 
         // $query = Mproduct::where('status','Active');
-        $query = Mproduct::where('status','Active')->whereJsonContains('saleschannel', 'Online Store');
+        $query = Mproduct::where('status','Active')
+                ->whereJsonContains('saleschannel', 'Online Store');
 
         foreach ($rules as $r) {
             [$field,$op,$val] = [$r->field_name,$r->query_name,$r->value];
@@ -185,17 +191,9 @@ class CategoryController extends Controller
         return $query->with([
             'type:mproduct_type_id,mproduct_type_name',
             'brand:mbrand_id,mbrand_name',
-            'mvariantsApi' => function ($q) {
-                $q->join('mvariant_details','mvariant_details.mvariant_id','=','mvariants.mvariant_id')
-                  ->join('mstocks','mstocks.mvariant_id','=','mvariants.mvariant_id')
-                  ->select(
-                      'mvariants.mvariant_id','mvariants.sku','mvariants.mvariant_image',
-                      'mvariants.price','mvariants.compare_price','mvariants.cost_price',
-                      'mvariants.taxable','mvariants.barcode',
-                      'mvariant_details.options','mvariant_details.option_value',
-                      'mstocks.quantity','mstocks.mlocation_id'
-                  );
-            }
+            'mvariantsApi.mvariantDetail',
+            'mvariantsApi.mstock',
+            'mvariantsApi.productoffer',
         ])->get();
     }
 
