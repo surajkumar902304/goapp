@@ -139,8 +139,11 @@ class BannerController extends Controller
     {
         $needle = mb_strtolower(trim($request->query('search', '')));
 
-        $cats = Mcategory::with(['subcategories' => fn ($q) => $q->select('*')])
-                ->get();
+        $cats = Mcategory::with([
+            'subcategories' => fn($q) =>
+                $q->whereJsonContains('msubcat_publish', 'Online Store')
+                  ->select('*')
+        ])->get();
 
         $cats->each(fn ($cat) =>
             $cat->subcategories->each(fn ($sub) =>
@@ -210,6 +213,7 @@ class BannerController extends Controller
             ])
             ->whereIn('mproduct_id', $sub->product_ids ?? [])
             ->where('status', 'Active')
+            ->whereJsonContains('saleschannel', 'Online Store')
             ->get();
 
         /* SMART sub‑categories ---------------------------------------- */
@@ -262,7 +266,8 @@ class BannerController extends Controller
             ->select('fields.field_name','queries.query_name','mcollection_autos.value')
             ->get();
 
-        $query = Mproduct::where('status', 'Active');
+        $query = Mproduct::where('status', 'Active')
+                ->whereJsonContains('saleschannel', 'Online Store');
 
         foreach ($rules as $r) {
             [$field,$op,$val] = [$r->field_name,$r->query_name,$r->value];

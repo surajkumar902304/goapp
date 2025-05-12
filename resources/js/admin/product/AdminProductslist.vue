@@ -1,7 +1,7 @@
 <template>
     <div>
         <v-row>
-            <v-col cols="12" md="6">
+            <v-col cols="12" md="5">
                 <v-text-field v-model="msearch" clearable dense outlined prepend-inner-icon="mdi-magnify" placeholder="Search all products" hide-details></v-text-field>
             </v-col>
             <v-col cols="12" md="2">
@@ -18,6 +18,11 @@
                 <v-autocomplete v-model="selectedTags" :items="mtags" item-text="mtag_name" item-value="mtag_id" dense hide-details outlined label="Tags" 
                     clearable multiple small-chips deletable-chips>
                 </v-autocomplete>
+            </v-col>
+            <v-col cols="12" md="1" class="text-end mt-1">
+                <v-btn color="secondary" small href="/admin/product/addview" class="text-none font-weight-bold">
+                    Add Product
+                </v-btn>
             </v-col>
             <v-col cols="12">
                 <v-card outlined>

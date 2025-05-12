@@ -50,7 +50,6 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'admin_approval' => 'boolean',
     ];
     
     public function getJWTIdentifier()

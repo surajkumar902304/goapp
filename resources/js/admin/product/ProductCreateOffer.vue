@@ -5,7 +5,7 @@
         <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" 
                     placeholder="Search name"/>
       </v-col>
-      <v-col cols="12" md="2" class="text-end">
+      <v-col cols="12" md="2" class="text-end mt-1">
         <v-btn color="secondary" small class="text-none font-weight-bold"
                @click="openAddDialog">
           Create Offer

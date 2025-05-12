@@ -36,7 +36,13 @@ Vue.component('admin-addsubcat',require('./admin/category/AddSubCategory.vue').d
 Vue.component('admin-msubcatlist',require('./admin/category/Msubcatlist.vue').default);
 Vue.component('admin-editmsubcat', require('./admin/category/EditSubCategory.vue').default);
 
-// Banner
+// Home Banner
+Vue.component('admin-homelargebanner',require('./admin/banner/HomeLargeBanner.vue').default);
+Vue.component('admin-homesmallbanner',require('./admin/banner/HomeSmallBanner.vue').default);
+Vue.component('admin-homeexploredealbanner',require('./admin/banner/HomeExploreDealBanner.vue').default);
+Vue.component('admin-homefruitbanner',require('./admin/banner/HomeFruitBanner.vue').default);
+
+// Browse Banner
 Vue.component('admin-browsebanner',require('./admin/banner/BrowseBanner.vue').default);
 
 // User

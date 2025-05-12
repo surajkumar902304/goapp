@@ -291,6 +291,7 @@ class McategoryController extends Controller
 
             $rows  = json_decode($validated['conditions'] ?? '[]', true);
             $logic = $validated['condition_logic'] ?? 'all';
+        
 
             foreach ($rows as $row) {
                 if (empty($row['field_id']) || empty($row['query_id'])) {
@@ -300,7 +301,7 @@ class McategoryController extends Controller
                     'msubcat_id'      => $sub->msubcat_id,
                     'field_id'        => $row['field_id'],
                     'query_id'        => $row['query_id'],
-                    'value'           => $row['value'] ?? null,
+                    'value'           => $row['value'],
                     'logical_operator'=> $logic,
                 ]);
             }

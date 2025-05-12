@@ -1,18 +1,23 @@
 <template>
 <div>
     <v-row>
-        <v-col cols="12" md="8">
+        <v-col cols="12" md="6">
             <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Sub-Categories name"
             />
         </v-col>
         <v-col cols="12" md="2">
-                <v-autocomplete v-model="publishFilter" :items="[ { text: 'All', value: null }, { text: 'Online Store', value: 'Online Store' }, { text: 'App Store', value: 'App Store' } ]" 
-                    item-text="text" item-value="value" outlined dense label="Publishing" hide-details @change="publishByStatus"></v-autocomplete>
-            </v-col>
-            <v-col cols="12" md="2">
-                <v-autocomplete v-model="typeFilter" :items="[ { text: 'All', value: null }, { text: 'Smart', value: 'smart' }, { text: 'Manual', value: 'manual' } ]" 
-                    item-text="text" item-value="value" outlined dense label="Type" hide-details @change="typeByStatus"></v-autocomplete>
-            </v-col>
+            <v-autocomplete v-model="publishFilter" :items="[ { text: 'All', value: null }, { text: 'Online Store', value: 'Online Store' }, { text: 'App Store', value: 'App Store' } ]" 
+                item-text="text" item-value="value" outlined dense label="Publishing" hide-details @change="publishByStatus"></v-autocomplete>
+        </v-col>
+        <v-col cols="12" md="2">
+            <v-autocomplete v-model="typeFilter" :items="[ { text: 'All', value: null }, { text: 'Smart', value: 'smart' }, { text: 'Manual', value: 'manual' } ]" 
+                item-text="text" item-value="value" outlined dense label="Type" hide-details @change="typeByStatus"></v-autocomplete>
+        </v-col>
+        <v-col cols="12" md="2" class="text-end mt-1">
+            <v-btn color="secondary" small href="/admin/msub-category/add" class="text-none font-weight-bold">
+                Add Sub-Category
+            </v-btn>
+        </v-col>
     </v-row>
     <v-row>
         <v-col cols="12">

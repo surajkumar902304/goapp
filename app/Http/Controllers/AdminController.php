@@ -71,7 +71,7 @@ class AdminController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'admin_approval' => 'required|boolean'
+            'admin_approval' => 'required|in:Pending,Approved,Declined',
         ]);
 
         $user = User::find($request->user_id);

@@ -12,7 +12,7 @@
             placeholder="Search name"
           />
         </v-col>
-        <v-col cols="12" md="2" class="text-end">
+        <v-col cols="12" md="2" class="text-end mt-1">
           <v-btn color="secondary" small class="text-none font-weight-bold" @click="openDialog">
             Add Banner
           </v-btn>
