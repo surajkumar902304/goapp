@@ -14,7 +14,7 @@ class AddColumnsToUsersTable extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->boolean('admin_approval')->default(false)->after('rep_code');
+            $table->enum('admin_approval',['Pending', 'Approved', 'Declined'])->default('Pending')->after('rep_code');
         });
     }
 
