@@ -78,7 +78,9 @@ class McategoryController extends Controller
 
     public function productsVlist()
     {
-        $products = Mproduct::where('status','=','Active')->select('mproduct_id','mproduct_title','mproduct_image')->get();
+        $products = Mproduct::where('status','=','Active')
+                    ->whereJsonContains('saleschannel', 'Online Store')
+                    ->select('mproduct_id','mproduct_title','mproduct_image')->get();
         return response()->json([
             'status' => true,
             'products'=>$products,

@@ -6,7 +6,7 @@
             />
         </v-col>
         <v-col cols="12" md="2">
-            <v-autocomplete v-model="publishFilter" :items="[ { text: 'All', value: null }, { text: 'Online Store', value: 'Online Store' }, { text: 'App Store', value: 'App Store' } ]" 
+            <v-autocomplete v-model="publishFilter" :items="[ { text: 'All', value: null }, { text: 'Online Store', value: 'Online Store' }, { text: 'Other', value: 'Other' } ]" 
                 item-text="text" item-value="value" outlined dense label="Publishing" hide-details @change="publishByStatus"></v-autocomplete>
         </v-col>
         <v-col cols="12" md="2">
@@ -59,6 +59,7 @@ export default {
         { text: 'Sub-Category Name', value: 'msubcat_name' },
         { text: 'Sub-Category Tag',  value: 'msubcat_tag' },
         { text: 'Category Name',     value: 'mcat_name', sortable: false },
+        { text: 'Collection Type',   value: 'msubcat_type' },
       ],
     };
   },
@@ -83,9 +84,12 @@ export default {
     publishByStatus(){
       if (this.publishFilter === null) {
             this.subcats = this.msubcats;
-            } else {
-            this.subcats = this.msubcats.filter(subcat => subcat.msubcat_publish === this.publishFilter);
-            }
+      } else {
+            this.subcats = this.msubcats.filter(subcat =>
+            Array.isArray(subcat.msubcat_publish) &&
+            subcat.msubcat_publish.includes(this.publishFilter)
+          );
+        }
     },
     typeByStatus(){
       if (this.typeFilter === null) {

@@ -24,6 +24,8 @@
                     Add Product
                 </v-btn>
             </v-col>
+        </v-row>
+        <v-row>
             <v-col cols="12">
                 <v-card outlined>
                     <v-tabs v-model="activeTab" class="mb-2" active-class="grey lighten-3" height="30">

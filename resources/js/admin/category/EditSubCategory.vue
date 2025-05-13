@@ -328,9 +328,6 @@ computed:{
     let base = !this.form.mcat_id ||
                !this.form.subcatname.trim() ||
                !!this.nameError;
-
-      const startValid = !this.form.start_time || this.form.start_time >= this.now;
-      const endValid = !this.form.end_time || this.form.end_time > this.form.start_time;
       
     if (isNew) {
       base = base || !this.form.image
@@ -339,8 +336,6 @@ computed:{
     if (this.mcattype === 'smart') {
       return base || !this.hasValidConditionRow
     }
-
-    return base || !startValid || !endValid;
     
   }
 },
