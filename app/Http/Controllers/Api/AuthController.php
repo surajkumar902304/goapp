@@ -20,18 +20,18 @@ class AuthController extends Controller
     {
         try {
             $request->validate([
-                'first_name'    => 'required|string|max:50',
-                'last_name'     => 'required|string|max:50',
-                'email'         => 'required|string|email|max:50|unique:users,email',
+                'first_name'    => 'required|string|max:255',
+                'last_name'     => 'required|string|max:255',
+                'email'         => 'required|string|email|max:255|unique:users,email',
                 'password'      => 'required|string|min:6',
                 'mobile'        => 'required|string|max:15|unique:users,mobile',
-                'rep_code'      => 'nullable|string|max:50',
-                'company_name'  => 'required|string|max:50',
+                'rep_code'      => 'nullable|string|max:255',
+                'company_name'  => 'required|string|max:255',
                 'address1'      => 'required|string|max:255',
-                'address2'      => 'nullable|string|max:50',
-                'city'          => 'required|string|max:50',
-                'country'       => 'required|string|max:50',
-                'postcode'      => 'required|string|max:50',
+                'address2'      => 'nullable|string|max:255',
+                'city'          => 'required|string|max:255',
+                'country'       => 'required|string|max:255',
+                'postcode'      => 'required|string|max:255',
             ]);
         } catch (ValidationException $e) {
             $errors = $e->validator->errors();
@@ -104,7 +104,7 @@ class AuthController extends Controller
             ], 500);
         }
 
-        if ($user->admin_approval == false) {
+        if ($user->admin_approval === 'Pending') {
             return response()->json([
                 'status'     => true,
                 'message'    => 'Your account is awaiting admin approval.',
@@ -113,6 +113,13 @@ class AuthController extends Controller
                 'user'       => $user,
                 'expires_in' => auth('api')->factory()->getTTL() * 21900
             ], 200);
+        }
+
+        if ($user->admin_approval === 'Declined') {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Your account has been declined by the admin.',
+            ], 403);
         }
 
         return response()->json([
