@@ -20,9 +20,7 @@ class Mproduct extends Model
         'mproduct_type_id',
         'mbrand_id',
         'mtags',
-        'mproduct_desc',
-        'product_deal_tag',
-        'product_offer'
+        'mproduct_desc'
     ];
 
     protected $casts = [

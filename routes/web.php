@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BannerController;
+use App\Http\Controllers\HomebannerController;
 use App\Http\Controllers\McategoryController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -55,6 +56,7 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::get('/products/vlist',[AdminController::class,'adminProductlist'])->name('products.vlist');
         Route::get('/product/addview',[AdminController::class,'productAddView'])->name('adminproduct.addview');
         Route::get('/product/pdata',[AdminController::class,'productAddData'])->name('adminproduct.pdata');
+        Route::post('/product-duplicate', [AdminController::class, 'productDuplicate'])->name('mproduct.duplicate');
         
         // Product Variations routes
         Route::post('/save-product', [AdminController::class, 'productStoreData'])->name('adminproduct.storedata');
@@ -99,6 +101,8 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::post('/browsebanners/update',[BannerController::class,'editBrowseBanner'])->name('browsebanner.edit');
         Route::post('/browsebanners/reorder', [BannerController::class, 'reorder']);
         Route::get('/main/categories', [BannerController::class, 'index']);
+
+        
     });
 });
 

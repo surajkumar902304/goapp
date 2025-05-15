@@ -12,6 +12,7 @@
                     </v-btn>
                 </div>
                 <div class="col-md-6 text-right">
+                    <v-btn color="secondary" @click="openDuplicateDialog">Duplicate</v-btn>
                     <v-btn type="submit" color="success" :disabled="!fvalid || isSubmitting" :loading="isSubmitting">Update</v-btn>
                 </div>
             </div>
@@ -226,6 +227,17 @@
                 </v-col>
             </v-row>
         </v-form>
+        <v-dialog v-model="duplicateDialog" max-width="400">
+            <v-card>
+                <v-card-title class="text-h6">Confirm Product Duplicate</v-card-title>
+                <v-card-text>Are you sure you want to Duplicate this Product?</v-card-text>
+                <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn text color="grey" @click="duplicateDialog = false">Cancel</v-btn>
+                <v-btn text color="red" @click="performDuplicate">Duplicate</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
   </template>
   
@@ -296,6 +308,8 @@
             mtags: [],
             typedTag: "",
             availableOptions: [],
+            duplicateDialog: false,
+            duplicateProductId: null,
             nameRules: [
             v => !!v || "Product name is required",
             v => (v && v.length <= 255) || "Product name must be less than 50 characters"
@@ -409,6 +423,33 @@
             }).catch(err => {
             console.error("Error fetching product data:", err);
             });
+        },
+        openDuplicateDialog() {
+            this.duplicateProductId = this.mproid;
+            this.duplicateDialog = true;
+        },
+
+        async performDuplicate() {
+            if (!this.duplicateProductId) {
+            this.$toast?.error('No product selected to duplicate');
+            return;
+            }
+
+            try {
+            await axios.post('/admin/product-duplicate', {
+                mproduct_id: this.duplicateProductId
+            });
+
+            this.$toast?.success('Product duplicated successfully!');
+            window.location.href = '/admin/products/list';
+            this.getProductData();
+            } catch (err) {
+            console.error(err);
+            this.$toast?.error('Failed to duplicate product');
+            } finally {
+            this.duplicateDialog = false;
+            this.duplicateProductId = null;
+            }
         },
         parseVariant(variantString) {
             if (!variantString) return [];

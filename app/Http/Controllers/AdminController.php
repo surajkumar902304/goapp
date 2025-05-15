@@ -722,4 +722,89 @@ class AdminController extends Controller
         }
     }
 
+
+    public function productDuplicate(Request $request)
+    {
+        $mproduct_id = $request->mproduct_id;
+
+        $originalMproduct = Mproduct::with(['mvariants.mvariantDetail', 'mvariants.mstock'])->findOrFail($mproduct_id);
+
+        $newMproduct = Mproduct::create([
+            'mproduct_title'     => $originalMproduct->mproduct_title,
+            'mproduct_image'     => $originalMproduct->mproduct_image,
+            'mproduct_slug'      => Str::slug(strtolower($originalMproduct->mproduct_title), '-') . '-' . uniqid(),
+            'status'             => $originalMproduct->status,
+            'saleschannel'       => $originalMproduct->saleschannel,
+            'mproduct_type_id'   => $originalMproduct->mproduct_type_id,
+            'mbrand_id'          => $originalMproduct->mbrand_id,
+            'mtags'              => $originalMproduct->mtags,
+            'mproduct_desc'      => $originalMproduct->mproduct_desc,
+        ]);
+
+        $variants = $originalMproduct->mvariants;
+        $baseSku = $this->generateBaseSku();
+
+        foreach ($variants as $i => $variant) {
+            $newSku = $this->generateUniqueSku($baseSku, $i);
+
+            $newVariant = Mvariant::create([
+                'mproduct_id'     => $newMproduct->mproduct_id,
+                'sku'             => $newSku,
+                'mvariant_image'  => $variant->mvariant_image,
+                'price'           => $variant->price,
+                'compare_price'   => $variant->compare_price,
+                'cost_price'      => $variant->cost_price,
+                'barcode'         => $variant->barcode,
+                'weight'          => $variant->weight,
+                'weightunit'      => $variant->weightunit,
+                'taxable'         => $variant->taxable,
+                'isvalidatedetails' => $variant->isvalidatedetails,
+            ]);
+
+            // Copy variant detail
+            $detail = optional($variant->mvariantDetail);
+            Mvariant_detail::create([
+                'mvariant_id'  => $newVariant->mvariant_id,
+                'options'      => $detail->options ?? [],
+                'option_value' => $detail->option_value ?? [],
+            ]);
+
+            // Copy stock
+            $stockQty = optional($variant->mstock->first())->quantity ?? 0;
+            $mlocation = Mlocation::firstOrCreate(
+                ['name' => 'default', 'is_default' => true],
+                ['adresss' => 'default location']
+            );
+
+            Mstock::create([
+                'quantity'     => $stockQty,
+                'mlocation_id' => $mlocation->mlocation_id,
+                'mvariant_id'  => $newVariant->mvariant_id,
+            ]);
+        }
+
+        return response()->json(['status' => true, 'message' => 'Product duplicated successfully']);
+    }
+
+    private function generateBaseSku(): string
+    {
+        do {
+            $base = strtoupper(Str::random(5));
+        } while (Mvariant::where('sku', $base)->exists());
+
+        return $base;
+    }
+
+    private function generateUniqueSku(string $baseSku, int $index): string
+    {
+        $sku = $index === 0 ? $baseSku : "{$baseSku}-{$index}";
+
+        while (Mvariant::where('sku', $sku)->exists()) {
+            $index++;
+            $sku = "{$baseSku}-{$index}";
+        }
+
+        return $sku;
+    }
+
 }
