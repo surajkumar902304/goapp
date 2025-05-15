@@ -24,9 +24,15 @@
 
     <!-- FontAwesome (Optional) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+    [v-cloak] {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
-    <div id="app">
+    <div id="app" v-cloak>
         <v-app app>
             <v-navigation-drawer permanent expand-on-hover fixed class="grey lighten-3" elevation="16">
                 <v-list class="border border-bottom">
@@ -91,6 +97,30 @@
                             </v-list-item-icon>
                             <v-list-item-title>Brands</v-list-item-title>
                         </v-list-item>
+                        {{-- <v-list-item href="{{ route('largebanners.list') }}" class="{{ request()->routeIs('largebanners.list') ? 'active' : '' }}">
+                            <v-list-item-icon>
+                              <v-icon>mdi-size-xxs</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>Home Large Banners</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item href="{{ route('smallbanners.list') }}" class="{{ request()->routeIs('smallbanners.list') ? 'active' : '' }}">
+                            <v-list-item-icon>
+                              <v-icon>mdi-size-s</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>Home Small Banners</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item href="{{ route('exploredealbanners.list') }}" class="{{ request()->routeIs('exploredealbanners.list') ? 'active' : '' }}">
+                            <v-list-item-icon>
+                              <v-icon>mdi-sale</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>Home Deal Banners</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item href="{{ route('fruitbanners.list') }}" class="{{ request()->routeIs('fruitbanners.list') ? 'active' : '' }}">
+                            <v-list-item-icon>
+                              <v-icon>mdi-fruit-cherries</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>Home Fruit Banners</v-list-item-title>
+                        </v-list-item> --}}
                         <v-list-item href="{{ route('browsebanners.list') }}" class="{{ request()->routeIs('browsebanners.list') ? 'active' : '' }}">
                             <v-list-item-icon>
                               <v-icon>mdi-simple-icons</v-icon>

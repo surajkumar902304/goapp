@@ -12,7 +12,7 @@ class Msubcategory extends Model
     protected $table = 'msubcategories';
 
     protected $fillable = ['mcat_id', 'msubcat_name', 'msubcat_slug', 'msubcat_image', 'msubcat_tag', 'msubcat_publish', 
-        'offer_name', 'start_time', 'end_time', 'msubcat_type', 'product_ids'
+        'offer_name', 'start_time', 'end_time', 'msubcat_type', 'product_ids', 'logical_operator'
     ];
 
     protected $casts = [

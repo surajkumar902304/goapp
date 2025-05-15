@@ -193,7 +193,7 @@
                             <v-row>
                                 <v-col cols="12" md="12">
                                     <v-autocomplete v-model="pro.ptype" :items="mptypes" item-text="mproduct_type_name" item-value="mproduct_type_id" 
-                                        :filter="ptypeFilter" label="Product Type" outlined dense clearable>
+                                        :filter="ptypeFilter" label="Type" outlined dense clearable>
                                         <template v-slot:no-data>
                                             <v-btn @click="addNewProductType" :disabled="!typedText" >
                                                 Add "{{ typedText }}"
@@ -496,7 +496,7 @@
                 return {
                     ...newCombo,
                     price: lastRow?.price || "",
-                    stock: lastRow?.stock || "",
+                    stock: 0,
                     barcode: "",
                     variantImage: null,
                     sku: `${baseSKU}-${skuCount++}`,
@@ -508,7 +508,7 @@
                 return {
                 ...newCombo,
                 price: lastRow?.price || "",
-                stock: lastRow?.stock || "",
+                stock: 0,
                 barcode: "",
                 variantImage: null,
                 sku: `${baseSKU}-${skuCount++}`,
@@ -779,11 +779,12 @@
             })
             .then(resp => {
                 console.log(resp.data);
-                window.location.href = "/admin/products/list";
+                this.$toast.success('Product updated successfully!');
             })
             .catch ((err) => {
                 console.error(err);
             })
+            .finally(()=>this.isSubmitting=false)
         }
     }
   };

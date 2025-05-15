@@ -209,7 +209,7 @@
                             <v-row>
                                 <v-col cols="12" md="12">
                                     <v-autocomplete v-model="pro.ptype" :items="mptypes" item-text="mproduct_type_name" item-value="mproduct_type_id" 
-                                        :filter="ptypeFilter" label="Product Type" outlined dense clearable :search-input.sync="typedText">
+                                        :filter="ptypeFilter" label="Type" outlined dense clearable :search-input.sync="typedText">
                                         <template v-slot:no-data>
                                             <v-btn @click="addNewProductType" :disabled="!typedText?.trim()" >
                                                 Add "{{ typedText }}"
@@ -293,7 +293,7 @@ export default {
             featuredImage: null,
             nameRules: [
                 (v) => !!v || "Product name is required",
-                (v) => (v && v.length <= 255) || "Product name must be less than 50 characters",
+                (v) => (v && v.length <= 255) || "Product name must be less than 255 characters",
             ],
             priceRules: [
                 (v) => v === "" || (!isNaN(v) && v >= 0) || "Price must be a positive number",
@@ -343,7 +343,7 @@ export default {
                         variantImage: null,
                         variant: optionKeys.map((key, i) => `${key}: ${prefix[i]}`).join(" / "),
                         price: `${vprice}`,
-                        stock: `${vstockQuantity}`,
+                        stock: variantCount === 0 && Number(vstockQuantity) > 0 ? `${vstockQuantity}` : 0,
                         sku: `${baseSKU}${skuSuffix}`,
                         barcode: `${vbarcode}`,
                         optname: optionKeys,
@@ -670,6 +670,7 @@ export default {
             .then((resp)=>{
                 console.log(resp.data);
                 window.location.href = '/admin/products/list';
+                this.$toast.success('Product added successfully!');
             })
             .catch((err)=>{
                 console.log(err)

@@ -39,7 +39,7 @@
         </v-card>
 
         <!-- Collection Type -->
-        <v-card outlined class="my-3">
+        <!-- <v-card outlined class="my-3">
           <v-card-subtitle>Collection Type</v-card-subtitle>
           <v-card-text>
             <v-radio-group v-model="mcattype" column dense>
@@ -47,10 +47,10 @@
               <v-radio label="Smart"  value="smart"/>
             </v-radio-group>
           </v-card-text>
-        </v-card>
+        </v-card> -->
 
         <!-- Products Browse -->
-        <v-card v-if="mcattype==='manual'" outlined class="my-3">
+        <!-- <v-card v-if="mcattype==='manual'" outlined class="my-3">
           <v-card-subtitle>Products</v-card-subtitle>
           <v-card-text>
             <v-row>
@@ -87,10 +87,10 @@
               </v-list>
             </div>
           </v-card-text>
-        </v-card>
+        </v-card> -->
 
         <!-- Conditions All / Any -->
-        <v-card v-else outlined class="my-3">
+        <v-card outlined class="my-3">
           <v-card-subtitle>Conditions</v-card-subtitle>
           <v-card-text>
             <div class="d-flex align-items-end mb-3">
@@ -101,24 +101,114 @@
               </v-radio-group>
             </div>
 
-            <div v-for="(row,idx) in conditions" :key="idx" class="row mb-2">
+            <div v-for="(row, idx) in conditions" :key="idx" class="row mb-2">
               <div class="col-md-4">
-                <v-autocomplete dense outlined v-model="row.tag" :items="ruleColumns" item-text="field_name" 
-                  item-value="field_id" label="Field" @change="updateRelations(idx)"/>
+                <v-autocomplete
+                  dense
+                  outlined
+                  v-model="row.tag"
+                  :items="ruleColumns"
+                  item-text="field_name"
+                  item-value="field_id"
+                  label="Field"
+                  @change="updateRelations(idx)"
+                />
               </div>
 
               <div class="col-md-4">
-                <v-autocomplete dense outlined v-model="row.condition" :items="row.relations" item-text="query_name" 
-                  item-value="query_id" label="Condition"/>
+                <v-autocomplete
+                  dense
+                  outlined
+                  v-model="row.condition"
+                  :items="row.relations"
+                  item-text="query_name"
+                  item-value="query_id"
+                  label="Condition"
+                />
               </div>
 
               <div class="col-md-4 d-flex">
-                <v-combobox dense outlined v-model="row.value" label="Value" class="flex-grow-1"/>
-                <v-btn icon v-if="conditions.length>1" @click="removeCondition(idx)">
+                <div v-if="['Inventory stock'].includes(getFieldNameById(row.tag))">
+                  <v-text-field
+                    dense
+                    outlined
+                    v-model="row.value"
+                    label="Value"
+                    type="number"
+                    class="flex-grow-1"
+                    :rules="[(v) => v === '' || /^\d+$/.test(v) || 'Must be a whole number']"
+                  />
+                </div>
+
+                <div v-else-if="['Title'].includes(getFieldNameById(row.tag))">
+                  <v-text-field
+                    dense
+                    outlined
+                    v-model="row.value"
+                    label="Value"
+                    type="text"
+                    class="flex-grow-1"
+                  />
+                </div>
+
+                <div v-else-if="['Price'].includes(getFieldNameById(row.tag))">
+                  <v-text-field
+                    dense
+                    outlined
+                    v-model="row.value"
+                    label="Value"
+                    type="number"
+                    class="flex-grow-1"
+                    :rules="[(v) => v === '' || !isNaN(v) || 'Must be a number']"
+                  />
+                </div>
+                <div v-else-if="['Type'].includes(getFieldNameById(row.tag))">
+                  <v-combobox
+                    dense
+                    outlined
+                    v-model="row.value"
+                    label="Value"
+                    class="flex-grow-1"
+                    :items="getDynamicSuggestions(row.tag)"
+                    item-text="mproduct_type_name"
+                    item-value="mproduct_type_id"
+                    :return-object="true"
+                  />
+                </div>
+                <div v-else-if="['Brand'].includes(getFieldNameById(row.tag))">
+                  <v-combobox
+                    dense
+                    outlined
+                    v-model="row.value"
+                    label="Value"
+                    class="flex-grow-1"
+                    :items="getDynamicSuggestions(row.tag)"
+                    item-text="mbrand_name"
+                    item-value="mbrand_id"
+                    :return-object="true"
+                  />
+                </div>
+                <!-- Default → combobox with dynamic items -->
+                <div v-else>
+                  <v-combobox
+                    dense
+                    outlined
+                    v-model="row.value"
+                    label="Value"
+                    class="flex-grow-1"
+                    :items="getDynamicSuggestions(row.tag)"
+                    item-text="mtag_name"
+                    item-value="mtag_id"
+                    :return-object="true"
+                  />
+                </div>
+
+                <v-btn icon v-if="conditions.length > 1" @click="removeCondition(idx)">
                   <v-icon color="red">mdi-trash-can</v-icon>
                 </v-btn>
               </div>
             </div>
+
 
             <v-btn outlined small @click="addCondition">
               <v-icon small>mdi-plus</v-icon> Add another condition
@@ -174,7 +264,7 @@
       </v-col>
     </v-row>
 
-    <v-dialog v-model="productDialog" max-width="650">
+    <!-- <v-dialog v-model="productDialog" max-width="650">
       <v-card>
         <v-card-title>
           <span class="text-h6">Select Products</span>
@@ -197,7 +287,7 @@
           <v-spacer/><v-btn color="primary" @click="confirmProducts">Done</v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
   </v-container>
 </template>
 
@@ -213,8 +303,14 @@ export default {
 
       mcats : [],
       msubcats: [],
-      allProducts: [], productSearch:'', productSelection:[],
-      selectedProducts:[], sortMethod:null,
+      allProducts: [], 
+      allTypes: [], 
+      allTags: [], 
+      allBrands: [], 
+      productSearch:'', 
+      productSelection:[],
+      selectedProducts:[], 
+      sortMethod:null,
       productHeaders:[
         { text:'Image', value:'mproduct_image' },
         { text:'Name',  value:'mproduct_title' }
@@ -241,7 +337,7 @@ export default {
         end_time: null,
       },
 
-      mcattype:'manual',
+      mcattype:'smart',
       imagePreview:null, 
       nameError:'',
 
@@ -314,6 +410,24 @@ export default {
       this.form.subcatname=''
       this.nameError=''
     },
+    getFieldNameById(fieldId) {
+      const field = this.ruleColumns.find(f => f.field_id === fieldId);
+      return field ? field.field_name : '';
+    },
+    getDynamicSuggestions(fieldId) {
+      const name = this.getFieldNameById(fieldId);
+
+      switch (name) {
+        case 'Type':
+          return this.allTypes ?? [];
+        case 'Brand':
+          return this.allBrands ?? [];
+        case 'Tag':
+          return this.allTags ?? [];
+        default:
+          return [];
+      }
+    },
     checkDuplicate () {
       if(!this.form.mcat_id||!this.form.subcatname.trim()) return
       axios.get('/admin/msub-categories/vlist')
@@ -328,6 +442,9 @@ export default {
     async fetchProducts () {
       const { data } = await axios.get('/admin/mcollproducts/vlist')
       this.allProducts = data.products
+      this.allTypes  = data.types;
+      this.allBrands = data.brands;
+      this.allTags   = data.tags;
     },
     confirmProducts () {
       this.selectedProducts=[...this.productSelection]
@@ -383,13 +500,23 @@ export default {
       Object.entries(this.form).forEach(([k, v]) => fd.append(k, v ?? ''))
       fd.append('mcattype', this.mcattype)
       if (this.mcattype === 'smart') {
-        const trimmed = this.conditions.map(c => ({
-          field_id : c.tag,
-          query_id : c.condition,
-          value    : c.value ?? ''
-        }))
-        fd.append('condition_logic', this.acondition)
-        fd.append('conditions', JSON.stringify(trimmed))
+        const trimmed = this.conditions.map(c => {
+          let value = c.value;
+
+          // Extract only the ID if it's an object (used in tag, brand, type)
+          if (value && typeof value === 'object') {
+            value = value.mtag_id || value.mbrand_id || value.mproduct_type_id || value.id || '';
+          }
+
+          return {
+            field_id: c.tag,
+            query_id: c.condition,
+            value: value ?? ''
+          };
+        });
+
+        fd.append('condition_logic', this.acondition);
+        fd.append('conditions', JSON.stringify(trimmed));
       } else {                           
         const ids = this.selectedProducts.map(p => p.mproduct_id)
         fd.append('product_ids', JSON.stringify(ids))
@@ -398,6 +525,7 @@ export default {
       .then((resp)=>{
           console.log(resp.data);
           window.location.href = '/admin/msub-categories/list';
+          this.$toast.success('Sub-Category added successfully!');
       })
     },
     navigateBack() {

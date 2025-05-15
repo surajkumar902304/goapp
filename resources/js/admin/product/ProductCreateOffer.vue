@@ -32,7 +32,7 @@
         </v-col>
       </v-row>
     <!-- ADD dialog -->
-    <v-dialog v-model="addDialog" max-width="420" @update:model-value="resetAdd">
+    <v-dialog v-model="addDialog" max-width="620" @update:model-value="resetAdd">
       <v-card>
         <v-card-title class="d-flex align-center">
           <span>Add Offer</span>
@@ -41,24 +41,29 @@
         </v-card-title>
         <v-form v-model="addValid" @submit.prevent="saveAdd">
           <v-card-text>
-            <v-autocomplete v-model="addForm.product_id"
-                            :items="products"
-                            item-text="mproduct_title"
-                            item-value="mproduct_id"
-                            label="Product"
-                            @change="loadAddVariants"
-                            :rules="[required]"/>
+            <v-autocomplete
+  v-model="addForm.product_ids"
+  :items="products"
+  item-text="mproduct_title"
+  item-value="mproduct_id"
+  label="Products"
+  multiple
+  small-chips deletable-chips
+  :rules="[required]"
+  @change="loadAddVariants"
+/>
+
                             <v-autocomplete
-                              v-model="addForm.variant_ids"
-                              :items="addVariants"
-                              item-text="sku"
-                              item-value="mvariant_id"
-                              label="Variants"
-                              :rules="[required]"
-                              multiple
-                              chips
-                              clearable
-                            />
+  v-model="addForm.variant_ids"
+  :items="addVariants"
+  item-text="option_label"
+  item-value="mvariant_id"
+  label="Variants"
+  multiple
+  small-chips deletable-chips
+  :rules="[required]"
+/>
+
 
             <v-text-field v-model="addForm.product_deal_tag"
                           label="Product Deal Tag"/>
@@ -75,7 +80,7 @@
     </v-dialog>
 
     <!-- EDIT dialog -->
-    <v-dialog v-model="editDialog" max-width="420" @update:model-value="resetEdit">
+    <v-dialog v-model="editDialog" max-width="620" @update:model-value="resetEdit">
       <v-card>
         <v-card-title class="d-flex align-center">
           <span>Edit Offer</span>
@@ -91,12 +96,16 @@
                             label="Product"
                             @change="loadEditVariants"
                             :rules="[required]"/>
-            <v-autocomplete v-model="editForm.variant_id"
-                            :items="editVariants"
-                            item-text="sku"
-                            item-value="mvariant_id"
-                            label="Variant"
-                            :rules="[required]"/>
+            <v-autocomplete
+  v-model="editForm.variant_id"
+  :items="editVariants"
+  item-text="option_label"
+  item-value="mvariant_id"
+  label="Variant"
+  :rules="[required]"
+  clearable
+/>
+
             <v-text-field v-model="editForm.product_deal_tag"
                           label="Product Deal Tag"/>
             <v-text-field v-model="editForm.product_offer"
@@ -155,7 +164,7 @@ export default {
       addValid: false,
       addVariants: [],
       addForm: {
-        product_id: null,
+        product_ids: [],
         variant_ids: [],
         product_deal_tag: "",
         product_offer: "",
@@ -203,60 +212,79 @@ export default {
       this.resetAdd(false);
       this.addDialog = true;
     },
-    loadAddVariants() {
-  const selectedProduct = this.products.find(
-    (p) => p.mproduct_id === this.addForm.product_id
-  );
+    async loadAddVariants() {
+      this.addVariants = [];
 
-  if (!selectedProduct) {
-    this.addVariants = [];
-    return;
-  }
+      if (!this.addForm.product_ids || this.addForm.product_ids.length === 0) return;
 
-  const usedVariantIds = this.productOffers.map((offer) => offer.mvariant_id);
+      try {
+        const { data } = await axios.get('/admin/product-offers/vlist');
+        const allVariants = [];
 
-  this.addVariants = selectedProduct.mvariants.filter(
-    (variant) => !usedVariantIds.includes(variant.mvariant_id)
-  );
+        for (const product of data.products) {
+          if (!this.addForm.product_ids.includes(product.mproduct_id)) continue;
 
-  if (
-    this.addForm.variant_id &&
-    !this.addVariants.some((v) => v.mvariant_id === this.addForm.variant_id)
-  ) {
-    this.addForm.variant_id = null;
-  }
-},
-    resetAdd(close = true) {
+          for (const variant of product.mvariants) {
+            // Parse option_value
+            let optionVal = variant.option_value;
+            if (typeof optionVal === 'string') {
+              try {
+                optionVal = JSON.parse(optionVal);
+              } catch (e) {
+                optionVal = {};
+              }
+            }
+
+            const isEmpty = !optionVal || Object.keys(optionVal).length === 0;
+
+            const label = isEmpty
+              ? product.mproduct_title
+              : `${product.mproduct_title} - ${Object.entries(optionVal).map(([key, val]) => `${key}: ${val}`).join(' / ')}`;
+
+            allVariants.push({
+              mvariant_id: variant.mvariant_id,
+              option_value: optionVal,
+              option_label: label
+            });
+          }
+        }
+
+        this.addVariants = allVariants;
+      } catch (e) {
+        console.error('❌ Failed to load variants:', e);
+      }
+    },
+    resetAdd() {
       this.addForm = {
-        product_id: null,
-        variant_id: null,
-        product_deal_tag: "",
-        product_offer: "",
+        product_ids: [],
+        variant_ids: [],
+        product_deal_tag: '',
+        product_offer: ''
       };
       this.addVariants = [];
-      this.addValid = false;
-      if (close) this.addDialog = false;
     },
+
     async saveAdd() {
   if (!this.addValid || this.saving) return;
   this.saving = true;
 
   try {
-    await axios.post("/admin/product-offers/add", {
-      product_id: this.addForm.product_id,
-      variant_ids: this.addForm.variant_ids,
-      product_deal_tag: this.addForm.product_deal_tag,
-      product_offer: this.addForm.product_offer,
-    });
-    this.$toast.success("Offers added successfully!");
-    this.addDialog = false;
-    this.loadAll();
-  } catch (err) {
-    this.$toast.error("Failed to add offers.");
-  } finally {
-    this.saving = false;
-  }
-},
+      await axios.post("/admin/product-offers/add", {
+        product_ids: this.addForm.product_ids,
+        variant_ids: this.addForm.variant_ids,
+        product_deal_tag: this.addForm.product_deal_tag,
+        product_offer: this.addForm.product_offer,
+      });
+
+      this.$toast.success("Offers added successfully!");
+      this.addDialog = false;
+      this.loadAll();
+    } catch (err) {
+      this.$toast.error("Failed to add offers.");
+    } finally {
+      this.saving = false;
+    }
+  },
 
     openEditDialog(item) {
       this.editForm = {
@@ -283,14 +311,38 @@ export default {
     .filter(o => o.product_offer_id !== this.editForm.product_offer_id)
     .map(o => o.mvariant_id);
 
-  this.editVariants = selectedProduct.mvariants.filter(
-    (v) => !usedVariantIds.includes(v.mvariant_id) ||
-           v.mvariant_id === this.editForm.variant_id 
-  );
+  this.editVariants = selectedProduct.mvariants
+    .filter(v => !usedVariantIds.includes(v.mvariant_id) || v.mvariant_id === this.editForm.variant_id)
+    .map(variant => {
+      // Parse option_value
+      let optionVal = variant.option_value;
+      if (typeof optionVal === 'string') {
+        try {
+          optionVal = JSON.parse(optionVal);
+        } catch (e) {
+          optionVal = {};
+        }
+      }
 
+      const isEmpty = !optionVal || Object.keys(optionVal).length === 0;
+
+      const option_label = isEmpty
+        ? selectedProduct.mproduct_title
+        : `${selectedProduct.mproduct_title} - ${Object.entries(optionVal)
+            .map(([key, val]) => `${key}: ${val}`)
+            .join(' / ')}`;
+
+      return {
+        ...variant,
+        option_value: optionVal,
+        option_label
+      };
+    });
+
+  // Ensure selected variant is still available, else reset
   if (
     this.editForm.variant_id &&
-    !this.editVariants.some((v) => v.mvariant_id === this.editForm.variant_id)
+    !this.editVariants.some(v => v.mvariant_id === this.editForm.variant_id)
   ) {
     this.editForm.variant_id = null;
   }

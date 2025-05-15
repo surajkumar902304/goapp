@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\BannerController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CartitemController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CompanyAddressController;
 use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +55,10 @@ Route::middleware(['auth.api'])->group(function () {
     // Cart Item
     Route::get('/cart-item', [CartitemController::class, 'index']);
     Route::post('/cart-item/update', [CartitemController::class, 'store']);
+
+    // Company Address
+    Route::get('/company-address', [CompanyAddressController::class, 'index']);
+    Route::post('/company-address/update', [CompanyAddressController::class, 'store']);
 
 });
 

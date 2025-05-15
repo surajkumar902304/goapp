@@ -9,9 +9,16 @@ import "vue-toastification/dist/index.css";
 // ✅ Vuetify
 import Vuetify from 'vuetify';
 import 'vuetify/dist/vuetify.min.css';
+import '@mdi/font/css/materialdesignicons.css';
 
 Vue.use(Vuetify);
 Vue.use(Toast);
+
+const vuetify = new Vuetify({
+  icons: {
+    iconfont: 'mdi',
+  },
+});
 
 // Dashboard
 Vue.component('admin-dashboard', require('./admin/AdminDashboard.vue').default);

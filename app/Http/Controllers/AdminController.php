@@ -99,7 +99,7 @@ class AdminController extends Controller
 
     public function moptionsVlist()
     {
-        $moptions = Moption::get();
+        $moptions = Moption::orderBy('moption_id', 'desc')->get();
         return response()->json([
             'status' => true,
             'moptions' => $moptions,
@@ -137,7 +137,7 @@ class AdminController extends Controller
 
     public function mbrandVlist()
     {
-        $mbrand = Mbrand::get();
+        $mbrand = Mbrand::orderBy('mbrand_id','desc')->get();
         return response()->json([
             'status' => true,
             'mbrands' => $mbrand,
@@ -210,9 +210,8 @@ class AdminController extends Controller
 
     public function productofferVlist()
     {
-        $productoffer = Product_Offer::get();
+        $productoffer = Product_Offer::orderBy('product_offer_id', 'desc')->get();
         $product = Mproduct::where('status','active')->with('mvariants')
-        ->orderBy('mproduct_id', 'desc')
         ->get();
 
         return response()->json([
@@ -225,11 +224,12 @@ class AdminController extends Controller
     public function addProductoffer(Request $request)
     {
         $request->validate([
-            'product_id'        => 'required|exists:mproducts,mproduct_id',
-            'variant_ids'       => 'required|array',
-            'variant_ids.*'     => 'exists:mvariants,mvariant_id',
-            'product_deal_tag'  => 'nullable|string|max:255',
-            'product_offer'     => 'nullable|string|max:255',
+            'product_ids'        => 'required|array',
+            'product_ids.*'      => 'exists:mproducts,mproduct_id',
+            'variant_ids'        => 'required|array',
+            'variant_ids.*'      => 'exists:mvariants,mvariant_id',
+            'product_deal_tag'   => 'nullable|string|max:255',
+            'product_offer'      => 'nullable|string|max:255',
         ]);
 
         foreach ($request->variant_ids as $variantId) {
@@ -242,7 +242,10 @@ class AdminController extends Controller
             );
         }
 
-        return response()->json(['status' => true, 'message' => 'Offers added successfully']);
+        return response()->json([
+            'status' => true,
+            'message' => 'Offers added successfully'
+        ]);
     }
 
     public function editProductoffer(Request $request)
@@ -672,52 +675,47 @@ class AdminController extends Controller
                 }
             }
             else {
-                $mvariant = Mvariant::where('mproduct_id', $mproduct->mproduct_id)->first();
-                if ($mvariant) {
-                    $mvariant->update([
-                        'sku'           => $request->psku ?? '',
-                        'mvariant_image'=> null,
-                        'price'         => $request->pprice ?? 0,
-                        'compare_price' => $request->pcompareprice ?? 0,
-                        'cost_price'    => $request->pcostprice ?? 0,
-                        'barcode'       => $request->pbarcode ?? '',
-                        'weight'        => $request->pweight ?? 0,
-                        'weightunit'    => $request->pweightunit ?? 'kg',
-                        'isvalidatedetails' => 0,
-                    ]);
-                    $mvariantDetail = Mvariant_detail::where('mvariant_id', $mvariant->mvariant_id)->first();
-                    if ($mvariantDetail) {
-                        $mvariantDetail->update([
-                            'options'      => [],
-                            'option_value' => [],
-                        ]);
-                    } else {
-                        Mvariant_detail::create([
-                            'mvariant_id'  => $mvariant->mvariant_id,
-                            'options'      => [],
-                            'option_value' => [],
-                        ]);
-                    }
-                    $mlocation = Mlocation::firstOrCreate(
-                        ['name' => "default", 'is_default' => true],
-                        ['adresss' => "default location"]
-                    );
-                    $mstock = Mstock::where('mvariant_id', $mvariant->mvariant_id)->first();
-                    if ($mstock) {
-                        $mstock->update([
-                            'quantity'     => $request->pstock ?? 0,
-                            'mlocation_id' => $mlocation->mlocation_id,
-                        ]);
-                    } else {
-                        Mstock::create([
-                            'quantity'     => $request->pstock ?? 0,
-                            'mlocation_id' => $mlocation->mlocation_id,
-                            'mvariant_id'  => $mvariant->mvariant_id,
-                        ]);
-                    }
-                }
-            }
+                $existingVariants = Mvariant::where('mproduct_id', $mproduct->mproduct_id)->get();
 
+                foreach ($existingVariants as $variant) {
+                    if (!empty($variant->mvariant_image) && Storage::disk('s3')->exists($variant->mvariant_image)) {
+                        Storage::disk('s3')->delete($variant->mvariant_image);
+                    }
+                    Mvariant_detail::where('mvariant_id', $variant->mvariant_id)->delete();
+                    Mstock::where('mvariant_id', $variant->mvariant_id)->delete();
+                    $variant->delete();
+                }
+
+                $mvariant = Mvariant::create([
+                    'mproduct_id'       => $mproduct->mproduct_id,
+                    'sku'               => $request->psku ?? '',
+                    'mvariant_image'    => null,
+                    'price'             => $request->pprice ?? 0,
+                    'compare_price'     => $request->pcompareprice ?? 0,
+                    'cost_price'        => $request->pcostprice ?? 0,
+                    'barcode'           => $request->pbarcode ?? '',
+                    'weight'            => $request->pweight ?? 0,
+                    'weightunit'        => $request->pweightunit ?? 'kg',
+                    'isvalidatedetails' => 0,
+                ]);
+
+                Mvariant_detail::create([
+                    'mvariant_id'  => $mvariant->mvariant_id,
+                    'options'      => [],
+                    'option_value' => [],
+                ]);
+
+                $mlocation = Mlocation::firstOrCreate(
+                    ['name' => "default", 'is_default' => true],
+                    ['adresss' => "default location"]
+                );
+
+                Mstock::create([
+                    'quantity'     => $request->pstock ?? 0,
+                    'mlocation_id' => $mlocation->mlocation_id,
+                    'mvariant_id'  => $mvariant->mvariant_id,
+                ]);
+            }
             return response()->json(['success' => true, 'message' => 'Product updated successfully']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

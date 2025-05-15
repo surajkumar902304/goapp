@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Field;
 use App\Models\Field_query_relation;
+use App\Models\Mbrand;
 use App\Models\Mcategory;
 use App\Models\Mcollection_auto;
 use App\Models\Mcollection_manual;
 use App\Models\Mproduct;
+use App\Models\Mproduct_type;
 use App\Models\Msubcategory;
+use App\Models\Mtag;
 use App\Models\Query;
 use Illuminate\Http\Request;
 use Intervention\Image\Facades\Image;
@@ -25,7 +28,7 @@ class McategoryController extends Controller
     
     public function mcatVlist()
     {
-        $mcat = Mcategory::get();
+        $mcat = Mcategory::orderBy('mcat_id', 'desc')->get();
         return response()->json([
             'status' => true,
             'mcats' => $mcat,
@@ -69,7 +72,9 @@ class McategoryController extends Controller
     
     public function mcatsubVlist()
     {
-        $subs = Msubcategory::with(['category:mcat_id,mcat_name'])->get();
+        $subs = Msubcategory::with(['category:mcat_id,mcat_name'])
+        ->orderBy('msubcat_id', 'desc')
+        ->get();
         return response()->json([
             'status' => true,
             'msubcats' => $subs,
@@ -78,12 +83,15 @@ class McategoryController extends Controller
 
     public function productsVlist()
     {
-        $products = Mproduct::where('status','=','Active')
-                    ->whereJsonContains('saleschannel', 'Online Store')
-                    ->select('mproduct_id','mproduct_title','mproduct_image')->get();
+        $types = Mproduct_type::get();
+        $brands = Mbrand::get();
+        $tags = Mtag::get();
+
         return response()->json([
             'status' => true,
-            'products'=>$products,
+            'types'=>$types,
+            'brands'=>$brands,
+            'tags'=>$tags,
         ],200);
     }
 
@@ -150,6 +158,7 @@ class McategoryController extends Controller
             'msubcat_publish'=> json_decode($validated['msubcat_publish'], true) ?? [],
             'msubcat_image'  => $subcatimagepath,
             'msubcat_type'   => $validated['mcattype'],
+            'logical_operator'   => $validated['condition_logic'],
             'product_ids'   => $ids,
             'offer_name'      => $validated['offer_name'] ?? null,
             'start_time'      => $validated['start_time'] ?? null,
@@ -166,7 +175,7 @@ class McategoryController extends Controller
                 if (
                     empty($row['field_id'])   ||
                     empty($row['query_id'])   ||
-                    !array_key_exists('value', $row)   
+                    $row['value'] === '' || $row['value'] === null
                 ) {
                     continue;                           
                 }
@@ -215,7 +224,6 @@ class McategoryController extends Controller
                 'value'    => $r->value,
             ]);
 
-            $logic = $autoRows->first()->logical_operator ?? 'all';
         }
 
         return response()->json([
@@ -232,7 +240,7 @@ class McategoryController extends Controller
                 'msubcat_type'    => $subcat->msubcat_type,
                 'product_ids'     => $productIds = is_array($subcat->product_ids) ? $subcat->product_ids: (json_decode($subcat->product_ids, true) ?: []),
                 'conditions'      => $conditions,
-                'condition_logic' => $logic,
+                'condition_logic' => $subcat->logical_operator,
             ],
         ]);
     }
@@ -282,6 +290,7 @@ class McategoryController extends Controller
         $sub->offer_name      = $validated['offer_name'] ?? null;
         $sub->start_time      = $validated['start_time'] ?? null;
         $sub->end_time        = $validated['end_time'] ?? null;
+        $sub->logical_operator = $validated['condition_logic'] ?? null;
 
         if ($validated['mcattype'] === 'manual') {
             $sub->product_ids = json_decode($validated['product_ids'] ?? '[]', true);
@@ -296,9 +305,14 @@ class McategoryController extends Controller
         
 
             foreach ($rows as $row) {
-                if (empty($row['field_id']) || empty($row['query_id'])) {
-                    continue;
+                if (
+                    empty($row['field_id'])   ||
+                    empty($row['query_id'])   ||
+                    $row['value'] === '' || $row['value'] === null
+                ) {
+                    continue;                           
                 }
+
                 Mcollection_auto::create([
                     'msubcat_id'      => $sub->msubcat_id,
                     'field_id'        => $row['field_id'],
