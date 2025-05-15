@@ -102,7 +102,7 @@
                                                 <span class="font-weight-bold mr-2">{{ key }}:</span>
                                                 <v-chip v-for="(opvalue, index) in variant" :key="index" outlined close 
                                                     @click:close="removeValue(key, opvalue)" close-icon="mdi-close-circle" color="primary" class="me-1">
-                                                    {{ opvalue }}
+                                                    <span class="text-capitalize">{{ opvalue }}</span>
                                                 </v-chip>
                                             </v-col>
                                             <v-col cols="4" class="d-flex justify-end">
@@ -156,7 +156,7 @@
                                 <div class="d-flex flex-row">
                                     <div v-for="(part, i) in parseVariant(item.variant)" :key="i" class="py-1">
                                         <span  class="font-weight-bold text-capitalize">{{ part.name }}: </span>
-                                        <span>{{ part.value }}</span>&nbsp;
+                                        <span class="text-capitalize">{{ part.value }}</span>&nbsp;
                                     </div>
                                 </div>
                             </template>
