@@ -17,7 +17,8 @@
     <v-row>
         <v-col cols="12">
             <v-card outlined>
-              <v-data-table :items="productOffers" :headers="offerheaders" :search="ssearch">
+              <v-data-table :items="productOffers" :headers="offerheaders" :search="ssearch" :footer-props="{
+                        'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
                 <template #item.actions="{ item }">
                   <v-icon small class="mr-2" color="primary" @click="openEditDialog(item)">
                     mdi-pencil
@@ -132,7 +133,7 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn text color="grey" @click="deleteDialog = false">Cancel</v-btn>
-          <v-btn text color="red" @click="performDelete">Delete</v-btn>
+          <v-btn text color="red" :loading="deleteLoading" :disabled="deleteLoading" @click="performDelete">Delete</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -183,6 +184,7 @@ export default {
 
       deleteDialog: false,
       offerToDelete: null,
+      deleteLoading: false,
       saving: false,   
       required: (v) => !!v || "Required",
     };
@@ -389,6 +391,7 @@ export default {
       },
       async performDelete(id) {
         if (!this.offerToDelete) return;
+        this.deleteLoading = true;
 
         try {
           await axios.post('/admin/product-offers/delete', {
@@ -400,6 +403,7 @@ export default {
         } catch (err) {
           this.$toast?.error('Failed to delete offer');
         } finally {
+          this.deleteLoading = false;
           this.deleteDialog = false;
           this.offerToDelete = null;
         }

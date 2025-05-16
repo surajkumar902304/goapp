@@ -43,6 +43,9 @@
                     <v-btn icon color="primary" @click="editItem(item)">
                       <v-icon small>mdi-pencil</v-icon>
                     </v-btn>
+                    <v-icon small color="red"  @click="confirmDelete(item)">
+                        mdi-delete
+                    </v-icon>
                   </td>
                   <!-- drag handle column -->
                   <td class="text-center drag-handle" style="cursor: grab">
@@ -127,6 +130,23 @@
           </v-form>
         </v-card>
       </v-dialog>
+
+        <!-- Delete dialog -->
+        <v-dialog v-model="deleteDialog" max-width="400">
+            <v-card>
+                <v-card-title class="text-h6">
+                    Confirm Delete
+                </v-card-title>
+                <v-card-text>
+                    Are you sure you want to delete this Category?
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text color="grey" @click="deleteDialog = false">Cancel</v-btn>
+                    <v-btn text color="red" :loading="deleteLoading" :disabled="deleteLoading" @click="performDelete">Delete</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
   </template>
   
@@ -172,7 +192,10 @@
         ],
         bannerimageRule: [
             v => !!v || 'Banner Name is required',
-        ]
+        ],
+        deleteDialog: false,
+        browseBannerToDelete: null,
+        deleteLoading: false,
       };
     },
     created() {
@@ -208,12 +231,12 @@
         return !!this.imageName;
       },
       filteredBanners() {
-  const term = (this.ssearch || '').toLowerCase();
+        const term = (this.ssearch || '').toLowerCase();
 
-  return this.browsebanners.filter(b =>
-    (b.browsebanner_name || '').toLowerCase().includes(term)
-  );
-}
+        return this.browsebanners.filter(b =>
+          (b.browsebanner_name || '').toLowerCase().includes(term)
+        );
+      }
     },
     methods: {
       getAllBanners() {
@@ -233,10 +256,10 @@
 
       /* 2) ensure helper – promise जिसे editItem await करेगा */
       ensureCategoriesLoaded () {
-  return this.categoriesAll.length
-    ? Promise.resolve()
-    : this.loadCategories()
-},
+        return this.categoriesAll.length
+          ? Promise.resolve()
+          : this.loadCategories()
+      },
       openDialog() {
         this.defaultItem = { mcat_id:null, msubcat_id:null, mproduct_id:null, browsebanner_id: null, browsebanner_name: '', browsebanner_image: '' };
         this.subcategories=[]; 
@@ -248,41 +271,41 @@
         this.addSdialog = true;
       },
       /* ------------ editItem ------------- */
-  async editItem(item){
-    await this.ensureCategoriesLoaded()
+    async editItem(item){
+      await this.ensureCategoriesLoaded()
 
-    /* 1) पहले drop‑downs तैयार करो  */
-    const cat = this.categoriesAll.find(c => c.mcat_id === item.mcat_id)
-    const subs = cat ? cat.subcategories : []
-    const sub  = subs.find(s => s.msubcat_id === item.msubcat_id)
-    const prods  = sub ? sub.products : []
+      /* 1) पहले drop‑downs तैयार करो  */
+      const cat = this.categoriesAll.find(c => c.mcat_id === item.mcat_id)
+      const subs = cat ? cat.subcategories : []
+      const sub  = subs.find(s => s.msubcat_id === item.msubcat_id)
+      const prods  = sub ? sub.products : []
 
-    /* lock watcher → fill everything → unlock */
-    this.fillLock = true
-    this.subcategories = subs
-    this.products      = prods
+      /* lock watcher → fill everything → unlock */
+      this.fillLock = true
+      this.subcategories = subs
+      this.products      = prods
 
-    this.defaultItem = {
-      browsebanner_id   : item.browsebanner_id,
-      browsebanner_name : item.browsebanner_name,
-      browsebanner_image: '',
-      mcat_id           : item.mcat_id,
-      msubcat_id        : item.msubcat_id,
-      mproduct_id       : item.mproduct_id
-    }
-    this.$nextTick(() => {     // unlock बाद के टिक पर
-      this.fillLock = false
-    })
+      this.defaultItem = {
+        browsebanner_id   : item.browsebanner_id,
+        browsebanner_name : item.browsebanner_name,
+        browsebanner_image: '',
+        mcat_id           : item.mcat_id,
+        msubcat_id        : item.msubcat_id,
+        mproduct_id       : item.mproduct_id
+      }
+      this.$nextTick(() => {     // unlock बाद के टिक पर
+        this.fillLock = false
+      })
 
-    this.imagePreview = item.image_url || (this.cdn + item.browsebanner_image)
-    this.imageName    = item.browsebanner_image
-                        ? item.browsebanner_image.split('/').pop()
-                        : ''
+      this.imagePreview = item.image_url || (this.cdn + item.browsebanner_image)
+      this.imageName    = item.browsebanner_image
+                          ? item.browsebanner_image.split('/').pop()
+                          : ''
 
-    this.editedIndex  = item.browsebanner_id
-    this.fsvalid      = true
-    this.addSdialog   = true
-  },
+      this.editedIndex  = item.browsebanner_id
+      this.fsvalid      = true
+      this.addSdialog   = true
+    },
       triggerFileInput() {
         this.$refs.imageInput.click();
       },
@@ -349,6 +372,28 @@
         }).catch(() => {
           this.$toast?.error('Failed to update order');
         });
+      },
+      confirmDelete(item) {
+          this.browseBannerToDelete = item;
+          this.deleteDialog = true;
+      },
+      async performDelete() {
+          if (!this.browseBannerToDelete) return;
+          this.deleteLoading = true;
+          try {
+          await axios.post('/admin/browsebanner-delete', {
+              browsebanner_id: this.browseBannerToDelete.browsebanner_id
+          });
+          this.$toast?.success('Browse Banner deleted successfully!');
+          this.getAllBanners(); 
+          } catch (err) {
+              console.error(err);
+          this.$toast?.error('Failed to delete product');
+          } finally {
+              this.deleteLoading = false;
+              this.deleteDialog = false;
+              this.browseBannerToDelete = null;
+          }
       }
     }
   };

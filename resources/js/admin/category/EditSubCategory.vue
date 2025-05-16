@@ -63,7 +63,7 @@
         </v-card> -->
 
         <!-- manual products -->
-        <!-- <v-card v-if="mcattype==='manual'" outlined class="my-3">
+        <v-card v-if="mcattype==='manual'" outlined class="my-3">
           <v-card-subtitle>Products</v-card-subtitle>
           <v-card-text>
             <v-row>
@@ -99,10 +99,10 @@
               </v-list>
             </div>
           </v-card-text>
-        </v-card> -->
+        </v-card>
 
         <!-- smart conditions -->
-        <v-card outlined class="my-3">
+        <v-card v-else outlined class="my-3">
           <v-card-subtitle>Conditions</v-card-subtitle>
           <v-card-text>
             <div class="d-flex align-items-end mb-3">
@@ -227,42 +227,42 @@
           </v-card-text>
         </v-card>
 
-        <v-card class="my-5" outlined>
+        <v-card v-if="mcattype==='smart'" class="my-5" outlined>
         <v-card-title class="font-weight-bold">Matched Products</v-card-title>
         <v-card-text>
           <v-data-table
-  :headers="[
-    { text: 'Index', value: 'index', width: '10%', sortable: true },
-    { text: 'Image', value: 'image', width: '20%', sortable: false },
-    { text: 'Title', value: 'mproduct_title', width: '40%' },
-    { text: 'Variants', value: 'option_value', width: '40%', sortable: false }
-  ]"
-  :items="indexedMatchedProducts"
-  :items-per-page="10"
-  class="elevation-1"
->
-  <template v-slot:item.index="{ item }">
-    {{ item.index }}
-  </template>
+            :headers="[
+              { text: 'Index', value: 'index', width: '10%', sortable: true },
+              { text: 'Image', value: 'image', width: '20%', sortable: false },
+              { text: 'Title', value: 'mproduct_title', width: '40%' },
+              { text: 'Variants', value: 'option_value', width: '40%', sortable: false }
+            ]"
+            :items="indexedMatchedProducts"
+            :items-per-page="10"
+            class="elevation-1"
+          >
+            <template v-slot:item.index="{ item }">
+              {{ item.index }}
+            </template>
 
-  <template v-slot:item.image="{ item }">
-    <v-img
-      :src="item.image ? cdn + item.image : cdn + item.mproduct_image"
-      max-width="60"
-      max-height="60"
-      class="rounded my-2"
-      contain
-    />
-  </template>
+            <template v-slot:item.image="{ item }">
+              <v-img
+                :src="item.image ? cdn + item.image : cdn + item.mproduct_image"
+                max-width="60"
+                max-height="60"
+                class="rounded my-2"
+                contain
+              />
+            </template>
 
-  <template v-slot:item.option_value="{ item }">
-    <div v-if="typeof item.option_value === 'object' && item.option_value !== null">
-      <div v-for="(val, key) in item.option_value" :key="key">
-        <strong>{{ key }}:</strong> {{ val }}
-      </div>
-    </div>
-  </template>
-</v-data-table>
+            <template v-slot:item.option_value="{ item }">
+              <div v-if="typeof item.option_value === 'object' && item.option_value !== null">
+                <div v-for="(val, key) in item.option_value" :key="key">
+                  <strong>{{ key }}:</strong> {{ val }}
+                </div>
+              </div>
+            </template>
+          </v-data-table>
 
         </v-card-text>
       </v-card>
@@ -318,7 +318,7 @@
     </v-row>
 
     <!-- product dialog -->
-    <!-- <v-dialog v-model="productDialog" max-width="650">
+    <v-dialog v-model="productDialog" max-width="650">
       <v-card>
         <v-card-title>
           <span class="text-h6">Select Products</span>
@@ -346,7 +346,7 @@
           <v-spacer/><v-btn color="primary" @click="confirmProducts">Done</v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog> -->
+    </v-dialog>
   </v-container>
 </template>
 
@@ -371,7 +371,7 @@ data () {
     allBrands: [], 
     matchedProducts: [], 
     productHeaders:[
-      {text:'Image', value:'mproduct_image'},
+      {text:'Image', value:'mproduct_image', sortable: false },
       {text:'Name',  value:'mproduct_title'}
     ],
 
@@ -409,7 +409,7 @@ data () {
     endTimeRules: [
       v => v > this.form.start_time || 'End time must be after start time'
     ],
-    mcattype:'smart',
+    mcattype:'manual',
     imagePreview:null, nameError:'',
 
     backLoading:false, saveLoading:false

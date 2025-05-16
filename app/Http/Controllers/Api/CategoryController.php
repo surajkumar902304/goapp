@@ -7,6 +7,7 @@ use App\Models\Mcategory;
 use App\Models\Wishlist;
 use App\Models\Mcollection_auto;
 use App\Models\Mproduct;
+use App\Models\Mtag;
 use Illuminate\Http\Request;
 
 /**
@@ -22,11 +23,12 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $wishlistProductIds = $user
+        $wishlistVariantIds = $user
             ? Wishlist::where('user_id', $user->id)
-                      ->pluck('mproduct_id')
-                      ->toArray()
+                    ->pluck('mvariant_id')
+                    ->toArray()
             : [];
+
 
         $needle   = mb_strtolower(trim($request->query('search', '')));
         $brandIds = $request->query('mbrand_id');
@@ -41,7 +43,7 @@ class CategoryController extends Controller
 
         $cats->each(fn($cat) =>
             $cat->subcategories->each(fn($sub) =>
-                $sub->setRelation('products', $this->buildProductsForSub($sub, $brandIds, $wishlistProductIds)))
+               $sub->setRelation('products', $this->buildProductsForSub($sub, $brandIds, $wishlistVariantIds)))
         );
 
         if ($needle === '' && !$brandIds) {
@@ -90,128 +92,250 @@ class CategoryController extends Controller
         return $this->jsonResponse($cats);
     }
 
-    private function buildProductsForSub($sub, ?array $brandIds = null, array $wishlistProductIds = [])
-    {
-        if ($sub->msubcat_type === 'manual') {
-            $query = Mproduct::with([
-                'type:mproduct_type_id,mproduct_type_name',
-                'brand:mbrand_id,mbrand_name',
-                'mvariantsApi.mvariantDetail',
-                'mvariantsApi.mstock',
-                'mvariantsApi.productoffer', 
-            ])
-            ->whereIn('mproduct_id', $sub->product_ids ?? [])
-            ->where('status', 'Active')
-            ->whereJsonContains('saleschannel', 'Online Store');
-            
+    private function buildProductsForSub($sub, ?array $brandIds = null, array $wishlistVariantIds = [])
+{
+    $allTags = Mtag::select('mtag_id', 'mtag_name')->get()->keyBy('mtag_id');
 
-            if ($brandIds) {
-                $query->whereIn('mbrand_id',$brandIds);
-            }
-
-            $products = $query->get();
-        } else {
-            $products = $this->getSmartCollectionProducts($sub, $brandIds);
-        }
-
-        $flat = collect();
-        foreach ($products as $p) {
-            $inWishlist = in_array($p->mproduct_id, $wishlistProductIds, true);
-            foreach ($p->mvariants as $v) {
-                $flat->push([
-                    'mproduct_id'        => $p->mproduct_id,
-                    'mproduct_title'     => $p->mproduct_title,
-                    'mproduct_image'     => $p->mproduct_image,
-                    'mproduct_slug'      => $p->mproduct_slug,
-                    'mproduct_desc'      => $p->mproduct_desc,
-                    'status'             => $p->status,
-                    'saleschannel'       => $p->saleschannel,
-                    'product_type'       => optional($p->type)->mproduct_type_name,
-                    'brand_name'         => optional($p->brand)->mbrand_name,
-        
-                    'mvariant_id'        => $v->mvariant_id,
-                    'sku'                => $v->sku,
-                    'image'              => $v->mvariant_image,
-                    'price'              => $v->price,
-                    'compare_price'      => $v->compare_price,
-                    'cost_price'         => $v->cost_price,
-                    'taxable'            => $v->taxable,
-                    'barcode'            => $v->barcode,
-        
-                    'options'            => optional($v->mvariantDetail)->options,
-                    'option_value'       => optional($v->mvariantDetail)->option_value,
-                    'quantity'           => optional($v->mstock->first())->quantity,    
-                    'mlocation_id'       => optional($v->mstock->first())->mlocation_id,
-        
-                    'product_deal_tag'   => optional($v->productoffer)->product_deal_tag,
-                    'product_offer'      => optional($v->productoffer)->product_offer,
-        
-                    'user_info_wishlist' => $inWishlist,
-                ]);
-            }
-        }
-        
-
-        return $flat->values();
-    }
-
-    private function getSmartCollectionProducts($sub, ?array $brandIds = null)
-    {
-        $rules = Mcollection_auto::query()
-            ->where('msubcat_id',$sub->msubcat_id)
-            ->join('fields','fields.field_id','=','mcollection_autos.field_id')
-            ->join('queries','queries.query_id','=','mcollection_autos.query_id')
-            ->select('fields.field_name','queries.query_name','mcollection_autos.value')
-            ->get();
-
-        // $query = Mproduct::where('status','Active');
-        $query = Mproduct::where('status','Active')
-                ->whereJsonContains('saleschannel', 'Online Store');
-
-        foreach ($rules as $r) {
-            [$field,$op,$val] = [$r->field_name,$r->query_name,$r->value];
-            switch ($field) {
-                case 'Title':
-                    $query = $this->applyTextRule($query,'mproduct_title',$op,$val);           break;
-                case 'Brand':
-                    $query->whereHas('brand',fn($q)=>$this->applyTextRule($q,'mbrand_name',$op,$val)); break;
-                case 'Type':
-                    $query->whereHas('type', fn($q)=>$this->applyTextRule($q,'mproduct_type_name',$op,$val)); break;
-                case 'Price':
-                    $query->whereHas('mvariants',fn($q)=>$this->applyNumericRule($q,'price',$op,$val));       break;
-                case 'Inventory stock':
-                    $query->whereHas('mvariants',fn($q)=>$this->applyNumericRule($q,'quantity',$op,$val));    break;
-            }
-        }
-
-        if ($brandIds) {
-            $query->whereIn('mbrand_id',$brandIds);
-        }
-
-        return $query->with([
+    // ───── Load manual products ─────
+    $manualProducts = collect();
+    if (!empty($sub->product_ids)) {
+        $manualQuery = Mproduct::with([
             'type:mproduct_type_id,mproduct_type_name',
             'brand:mbrand_id,mbrand_name',
             'mvariantsApi.mvariantDetail',
             'mvariantsApi.mstock',
             'mvariantsApi.productoffer',
+        ])
+        ->whereIn('mproduct_id', $sub->product_ids)
+        ->where('status', 'Active')
+        ->whereJsonContains('saleschannel', 'Online Store');
+
+        if ($brandIds) {
+            $manualQuery->whereIn('mbrand_id', $brandIds);
+        }
+
+        $manualProducts = $manualQuery->get();
+    }
+
+    // ───── Load smart products ─────
+    $smartProducts = collect();
+    if ($sub->msubcat_type === 'smart') {
+        $smartProducts = $this->getSmartCollectionProducts($sub, $brandIds);
+    }
+
+    // Merge both collections
+    $products = $manualProducts->merge($smartProducts)->unique('mproduct_id');
+
+    // Load rules (applies only if smart)
+    $rules = Mcollection_auto::where('msubcat_id', $sub->msubcat_id)
+        ->join('fields', 'fields.field_id', '=', 'mcollection_autos.field_id')
+        ->join('queries', 'queries.query_id', '=', 'mcollection_autos.query_id')
+        ->select('fields.field_name', 'queries.query_name', 'mcollection_autos.value')
+        ->get();
+
+    $logic = $sub->logical_operator === 'any' ? 'any' : 'all';
+
+    // ───── Flatten products into variant-wise rows ─────
+    $flat = collect();
+    foreach ($products as $p) {
+        $base = [
+            'mproduct_id'    => $p->mproduct_id,
+            'mproduct_title' => $p->mproduct_title,
+            'mproduct_image' => $p->mproduct_image,
+            'mproduct_slug'  => $p->mproduct_slug,
+            'mproduct_desc'  => $p->mproduct_desc,
+            'status'         => $p->status,
+            'saleschannel'   => $p->saleschannel,
+            'brand_id'       => $p->mbrand_id,
+            'brand_name'     => optional($p->brand)->mbrand_name,
+            'type_id'        => $p->mproduct_type_id,
+            'product_type'   => optional($p->type)->mproduct_type_name,
+            'tag_ids'        => $p->mtags ?? [],
+            'tag_names'      => collect($p->mtags ?? [])
+                ->map(fn($id) => $allTags[$id]->mtag_name ?? null)
+                ->filter()->values()->toArray(),
+        ];
+
+        foreach ($p->mvariants as $v) {
+            $inWishlist = in_array($v->mvariant_id, $wishlistVariantIds, true);
+            $row = array_merge($base, [
+                'mvariant_id'       => $v->mvariant_id,
+                'sku'               => $v->sku,
+                'image'             => $v->mvariant_image,
+                'price'             => $v->price,
+                'quantity'          => $v->quantity,
+                'compare_price'     => $v->compare_price,
+                'cost_price'        => $v->cost_price,
+                'taxable'           => $v->taxable,
+                'barcode'           => $v->barcode,
+                'options'           => $v->options,
+                'option_value'      => $v->option_value,
+                'mlocation_id'      => $v->mlocation_id,
+                'product_deal_tag'  => $v->product_deal_tag,
+                'product_offer'     => $v->product_offer,
+                'user_info_wishlist' => $inWishlist,
+            ]);
+
+            if ($rules->isEmpty()) {
+                $flat->push($row);
+                continue;
+            }
+
+            $results = $rules->map(fn($r) => $this->variantMatchesRule($row, $r))->all();
+
+            $keep = $logic === 'all'
+                ? !in_array(false, $results, true)
+                : in_array(true,  $results, true);
+
+            if ($keep) $flat->push($row);
+        }
+    }
+
+    return $flat->values();
+}
+
+
+    /* ------------------------------------------------------------------ */
+    /*  ONE rule ↔ ONE variant                                            */
+    /* ------------------------------------------------------------------ */
+    private function variantMatchesRule(array $row, $rule): bool
+    {
+        $field = $rule->field_name;
+        $op    = $rule->query_name;
+        $val   = mb_strtolower((string)$rule->value);
+
+        $actual = match ($field) {
+            'Title'            => mb_strtolower($row['mproduct_title']),
+            'Brand'            => (string)$row['brand_id'],
+            'Type'             => (string)$row['type_id'],
+            'Tag'              => array_map('strval', $row['tag_ids']),
+            'Price'            => (float)$row['price'],
+            'Inventory stock'  => (int)  $row['quantity'],
+            default            => null,
+        };
+
+        if (in_array($field, ['Price','Inventory stock'], true)) {
+            return match ($op) {
+                'is equal to'     => $actual == (float)$val,
+                'is not equal to' => $actual != (float)$val,
+                'greater than'    => $actual >  (float)$val,
+                'less than'       => $actual <  (float)$val,
+                default           => false,
+            };
+        }
+
+        if (in_array($field, ['Brand','Type'], true)) {
+            return match ($op) {
+                'is equal to'     => $actual === $val,
+                'is not equal to' => $actual !== $val,
+                default           => false,
+            };
+        }
+
+        if ($field === 'Tag') {
+            return match ($op) {
+                'is equal to'              => in_array($val, $actual),
+                default                    => false,
+            };
+        }
+
+        if ($field === 'Title') {
+            return match ($op) {
+                'is equal to'        => $actual === $val,
+                'is not equal to'    => $actual !== $val,
+                'contains'           => str_contains($actual,$val),
+                'does not contains'  => !str_contains($actual,$val),
+                'starts with'        => str_starts_with($actual,$val),
+                'ends with'          => str_ends_with($actual,$val),
+                default              => false,
+            };
+        }
+        return false;
+    }
+
+    /* ------------------------------------------------------------------ */
+    /*  SQL helper: fetch candidates for ONE smart sub-category           */
+    /* ------------------------------------------------------------------ */
+    private function getSmartCollectionProducts($sub, ?array $brandIds = null)
+    {
+        /* COLLECT field→op→value triplets */
+        $rules = Mcollection_auto::where('msubcat_id', $sub->msubcat_id)->get();
+
+        $logic = $sub->logical_operator === 'any' ? 'orWhere' : 'where';
+
+        $query = Mproduct::where('status','Active')
+                         ->whereJsonContains('saleschannel','Online Store');
+
+        if ($brandIds) {
+            $query->whereIn('mbrand_id',$brandIds);
+        }
+
+        /* apply only the rules that can be expressed in SQL
+           (Title, Brand, Type, Tag, Price, Inventory stock)            */
+        foreach ($rules as $r) {
+            $val = $r->value;
+            $field = $r->field_name;       // use the text directly
+
+            switch ($field) {
+                case 'Title':
+                    $query->$logic('mproduct_title', 'like', "%$val%");
+                    break;
+
+                case 'Brand':
+                    $query->$logic('mbrand_id', intval($val));
+                    break;
+
+                case 'Type':
+                    $query->$logic('mproduct_type_id', intval($val));
+                    break;
+
+                case 'Tag':
+                    $query->$logic(fn($q) => $q->whereJsonContains('mtags', intval($val)));
+                    break;
+
+                case 'Price':
+                    $query->$logic(function ($q) use ($r, $val) {
+                        $q->whereHas('mvariants', fn($v) =>
+                            $this->applyNumericRule($v, 'price', $r->query_name, $val)
+                        );
+                    });
+                    break;
+
+                case 'Inventory stock':
+                    $query->$logic(function ($q) use ($r, $val) {
+                        $q->whereHas('mvariants', function ($v) use ($r, $val) {
+                            $v->join('mstocks', 'mstocks.mvariant_id', '=', 'mvariants.mvariant_id');
+                            $this->applyNumericRule($v, 'mstocks.quantity', $r->query_name, $val);
+                        });
+                    });
+                    break;
+            }
+        }
+
+
+        return $query->with([
+            'type:mproduct_type_id,mproduct_type_name',
+            'brand:mbrand_id,mbrand_name',
+            'mvariantsApi'      => fn($q)=>$q
+                ->join('mvariant_details','mvariant_details.mvariant_id','=','mvariants.mvariant_id')
+                ->join('mstocks','mstocks.mvariant_id','=','mvariants.mvariant_id')
+                ->select(
+                    'mvariants.mvariant_id','mvariants.sku','mvariants.mvariant_image',
+                    'mvariants.price','mvariants.compare_price','mvariants.cost_price',
+                    'mvariants.taxable','mvariants.barcode',
+                    'mvariant_details.options','mvariant_details.option_value',
+                    'mstocks.quantity','mstocks.mlocation_id'
+                )
         ])->get();
     }
 
-    private function applyTextRule($q,string $col,string $op,string $val)
-    {
-        return match($op){
-            'is equal to'        => $q->where($col,$val),
-            'is not equal to'    => $q->where($col,'!=',$val),
-            'contains'           => $q->where($col,'like',"%$val%"),
-            'does not contains'  => $q->where($col,'not like',"%$val%"),
-            'starts with'        => $q->where($col,'like',"$val%"),
-            'ends with'          => $q->where($col,'like',"%$val"),
-            default              => $q,
-        };
-    }
+
+    /* ------------------------------------------------------------------ */
+    /*  Helpers already used elsewhere (numeric + jsonResponse)           */
+    /* ------------------------------------------------------------------ */
     private function applyNumericRule($q,string $col,string $op,$val)
     {
-        return match($op){
+        return match ($op) {
             'is equal to'     => $q->where($col,$val),
             'is not equal to' => $q->where($col,'!=',$val),
             'greater than'    => $q->where($col,'>',$val),

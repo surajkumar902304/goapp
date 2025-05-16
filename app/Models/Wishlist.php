@@ -11,10 +11,10 @@ class Wishlist extends Model
     protected $primaryKey = 'wishlist_id';
     protected $table = 'wishlists';
 
-    protected $fillable = ['user_id', 'mproduct_id'];
+    protected $fillable = ['user_id', 'mvariant_id'];
 
     public function product()
     {
-        return $this->belongsTo(Mproduct::class, 'mproduct_id');
+        return $this->belongsTo(Mvariant::class, 'mvariant_id');
     }
 }

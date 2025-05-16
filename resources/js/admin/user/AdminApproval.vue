@@ -22,11 +22,12 @@
             <v-tab class="text-none">Approved</v-tab>
             <v-tab class="text-none">Declined</v-tab>
           </v-tabs>
-            <v-data-table :items="filteredUsers" :headers="userHeaders" :search="ssearch">
-                <template v-slot:item.name="{ item }">
-                    <a @click="openUserDialog(item)" style="cursor: pointer; text-decoration: underline;">
-                        {{ item.name }}
-                    </a>
+            <v-data-table :items="filteredUsers" :headers="userHeaders" :search="ssearch" :footer-props="{
+                        'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
+                <template v-slot:item.eye="{ item }">
+                    <v-icon small class="ml-2" color="primary" style="cursor: pointer;" @click="openUserDialog(item)">
+                      mdi-eye
+                    </v-icon>
                 </template>
 
                 <template v-slot:item.admin_approval="{ item }">
@@ -91,6 +92,7 @@ export default {
       userHeaders: [
         { text: 'ID', value: 'id' },
         { text: 'Name', value: 'name' },
+        { text: '', value: 'eye', sortable: false },
         { text: 'Email', value: 'email' },
         { text: 'Status', value: 'admin_approval', sortable: false },
         { text: 'Action', value: 'actions', sortable: false },
@@ -144,5 +146,11 @@ export default {
 
 
 <style scoped>
+button.v-icon.notranslate.ml-2.v-icon--link.mdi.mdi-eye.theme--light.primary--text {
+    opacity: 0;
+}
 
+tr:hover button.v-icon.notranslate.ml-2.v-icon--link.mdi.mdi-eye.theme--light.primary--text {
+    opacity: 1;
+}
 </style>

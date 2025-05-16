@@ -45,11 +45,14 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::get('/moptions/vlist',[AdminController::class,'moptionsVlist'])->name('moptions.vlist');
         Route::post('/moption/add',[AdminController::class,'addMoption'])->name('moption.add');
         Route::post('/moption/update',[AdminController::class,'editMoption'])->name('moption.edit');
+        Route::post('/moption-delete', [AdminController::class, 'deleteMoption']);
+
         // Brands routes
         Route::get('/mbrands/list',[AdminController::class,'mbrandList'])->name('mbrands.list');
         Route::get('/mbrands/vlist',[AdminController::class,'mbrandVlist'])->name('mbrands.vlist');
         Route::post('/mbrands/add',[AdminController::class,'addBrand'])->name('mbrand.add');
         Route::post('/mbrands/update',[AdminController::class,'editBrand'])->name('mbrand.edit');
+        Route::post('/mbrand-delete', [AdminController::class, 'deleteBrand']);
 
         // Products routes
         Route::get('/products/list',[AdminController::class,'productsList'])->name('products.list');
@@ -57,6 +60,7 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::get('/product/addview',[AdminController::class,'productAddView'])->name('adminproduct.addview');
         Route::get('/product/pdata',[AdminController::class,'productAddData'])->name('adminproduct.pdata');
         Route::post('/product-duplicate', [AdminController::class, 'productDuplicate'])->name('mproduct.duplicate');
+        Route::post('/product-delete', [AdminController::class, 'deleteProduct']);
         
         // Product Variations routes
         Route::post('/save-product', [AdminController::class, 'productStoreData'])->name('adminproduct.storedata');
@@ -79,13 +83,15 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::get('/mcategories/vlist',[McategoryController::class,'mcatVlist'])->name('mcats.vlist');
         Route::post('/mcategory/add',[McategoryController::class,'addMcat'])->name('mcat.add');
         Route::post('/mcategory/update',[McategoryController::class,'editMcat'])->name('mcat.edit');
+        Route::post('/mcategory-delete', [McategoryController::class, 'deleteMcat']);
 
         // Sub-Categories routes
         Route::get('/msub-categories/list',[McategoryController::class,'mcatsubList'])->name('msubcats.list');
         Route::get('/msub-categories/vlist',[McategoryController::class,'mcatsubVlist'])->name('msubcats.vlist');
         Route::post('/msub-category/add',[McategoryController::class,'addMsubcat'])->name('msubcat.add');
         Route::get('/msub-category/add',[McategoryController::class,'addViewMsubcat'])->name('mcoll.add');
-        
+        Route::post('/msub-category-delete', [McategoryController::class, 'deleteMsubcat']);
+
         Route::get('/msub-category/{msubcatid}',[McategoryController::class,'msubcatEdit'])->name('msubcat.edit');
         Route::get('/vsub-category/editdata/{msubcatid}',[McategoryController::class,'msubcatEditData'])->name('msubcat.editdata');
         Route::post('/msub-category/{msubcatid}/update', [McategoryController::class, 'updateMsubcatData'])->name('msubcat.update-product');
@@ -100,9 +106,38 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::post('/browsebanners/add',[BannerController::class,'addBrowseBanner'])->name('browsebanner.add');
         Route::post('/browsebanners/update',[BannerController::class,'editBrowseBanner'])->name('browsebanner.edit');
         Route::post('/browsebanners/reorder', [BannerController::class, 'reorder']);
+        Route::post('/browsebanner-delete', [BannerController::class, 'deleteBrowseBanner']);
+
+        // Main Category api categories->sub-categories->products
         Route::get('/main/categories', [BannerController::class, 'index']);
 
-        
+        // Home Large Banners routes
+        // Route::get('/large-banners/list',[HomebannerController::class,'largeBannerList'])->name('largebanners.list');
+        // Route::get('/large-banners/vlist',[HomebannerController::class,'largeBannerVlist'])->name('largebanners.vlist');
+        // Route::post('/large-banners/add',[HomebannerController::class,'addLargeBanner'])->name('largebanner.add');
+        // Route::post('/large-banners/update',[HomebannerController::class,'editLargeBanner'])->name('largebanner.edit');
+        // Route::post('/large-banners/reorder', [HomebannerController::class, 'largereorder']);
+
+        // // Home Small Banners routes
+        // Route::get('/small-banners/list',[HomebannerController::class,'smallBannerList'])->name('smallbanners.list');
+        // Route::get('/small-banners/vlist',[HomebannerController::class,'smallBannerVlist'])->name('smallbanners.vlist');
+        // Route::post('/small-banners/add',[HomebannerController::class,'addSmallBanner'])->name('smallbanner.add');
+        // Route::post('/small-banners/update',[HomebannerController::class,'editSmallBanner'])->name('smallbanner.edit');
+        // Route::post('/small-banners/reorder', [HomebannerController::class, 'smallreorder']);
+
+        // // Home Explore Banners routes
+        // Route::get('/explore-deal-banners/list',[HomebannerController::class,'exploreDealBannerList'])->name('exploredealbanners.list');
+        // Route::get('/explore-deal-banners/vlist',[HomebannerController::class,'exploreDealBannerVlist'])->name('exploredealbanners.vlist');
+        // Route::post('/explore-deal-banners/add',[HomebannerController::class,'addExploreDealBanner'])->name('exploredealbanner.add');
+        // Route::post('/explore-deal-banners/update',[HomebannerController::class,'editExploreDealBanner'])->name('exploredealbanner.edit');
+        // Route::post('/explore-deal-banners/reorder', [HomebannerController::class, 'exploreDealreorder']);
+
+        // // Home Fruit Banners routes
+        // Route::get('/fruit-banners/list',[HomebannerController::class,'fruitBannerList'])->name('fruitbanners.list');
+        // Route::get('/fruit-banners/vlist',[HomebannerController::class,'fruitBannerVlist'])->name('fruitbanners.vlist');
+        // Route::post('/fruit-banners/add',[HomebannerController::class,'addFruitBanner'])->name('fruitbanner.add');
+        // Route::post('/fruit-banners/update',[HomebannerController::class,'editFruitBanner'])->name('fruitbanner.edit');
+        // Route::post('/fruit-banners/reorder', [HomebannerController::class, 'fruitreorder']);
     });
 });
 

@@ -22,7 +22,8 @@
     <v-row>
         <v-col cols="12">
             <v-card outlined>
-                <v-data-table :items="subcats" :headers="msubcatsHeaders" :search="ssearch">
+                <v-data-table :items="subcats" :headers="msubcatsHeaders" :search="ssearch" :footer-props="{
+                        'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
                     <template #item.msubcat_image="{ item }">
                         <img :src="cdn + item.msubcat_image || 'https://via.placeholder.com/50'" width="50" />
                     </template>
@@ -32,10 +33,32 @@
                     <template #item.mcat_name="{ item }">
                         {{ item.category?.mcat_name || '—' }}
                     </template>
+                    <template #item.actions="{ item }">
+                        <v-icon small color="red" style="margin-left: 14px;" @click="confirmDelete(item)">
+                            mdi-delete
+                        </v-icon>
+                    </template>
                 </v-data-table>
             </v-card>
         </v-col>
     </v-row>
+
+    <!-- Delete dialog -->
+    <v-dialog v-model="deleteDialog" max-width="400">
+        <v-card>
+            <v-card-title class="text-h6">
+                Confirm Delete
+            </v-card-title>
+            <v-card-text>
+                Are you sure you want to delete this Sub-Category?
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn text color="grey" @click="deleteDialog = false">Cancel</v-btn>
+                <v-btn text color="red" :loading="deleteLoading" :disabled="deleteLoading" @click="performDelete">Delete</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </div>
 </template>
 
@@ -57,10 +80,13 @@ export default {
       msubcatsHeaders: [
         { text: 'Image',             value: 'msubcat_image', sortable: false },
         { text: 'Sub-Category Name', value: 'msubcat_name' },
-        { text: 'Sub-Category Tag',  value: 'msubcat_tag' },
         { text: 'Category Name',     value: 'mcat_name', sortable: false },
         { text: 'Collection Type',   value: 'msubcat_type' },
+        { text: 'Actions',           value: 'actions', sortable: false }
       ],
+      deleteDialog: false,
+      subcategoryToDelete: null,
+      deleteLoading: false,
     };
   },
 
@@ -97,6 +123,29 @@ export default {
             } else {
             this.subcats = this.msubcats.filter(subcat => subcat.msubcat_type === this.typeFilter);
             }
+    },
+    confirmDelete(item) {
+        this.subcategoryToDelete = item;
+        this.deleteDialog = true;
+    },
+
+    async performDelete() {
+        if (!this.subcategoryToDelete) return;
+        this.deleteLoading = true;
+        try {
+        await axios.post('/admin/msub-category-delete', {
+            msubcat_id: this.subcategoryToDelete.msubcat_id
+        });
+        this.$toast?.success('Sub-Category deleted successfully!');
+        this.getAllSubCategories(); 
+        } catch (err) {
+            console.error(err);
+        this.$toast?.error('Failed to delete product');
+        } finally {
+          this.deleteLoading = false;
+          this.deleteDialog = false;
+          this.subcategoryToDelete = null;
+        }
     }
 
     

@@ -135,6 +135,27 @@ class BannerController extends Controller
         return response()->json(['status' => true]);
     }
 
+    public function deleteBrowseBanner(Request $request)
+    {
+        $request->validate([
+            'browsebanner_id' => 'required|exists:browsebanners,browsebanner_id',
+        ]);
+
+        try {
+            $browsebanner = Browsebanner::findOrFail($request->browsebanner_id);
+
+            if ($browsebanner->msubcat_image && Storage::disk('s3')->exists($browsebanner->msubcat_image)) {
+                Storage::disk('s3')->delete($browsebanner->msubcat_image);
+            }
+
+            $browsebanner->delete();
+
+            return response()->json(['status' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
 
     // Category main API
 

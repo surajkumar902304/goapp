@@ -129,6 +129,23 @@ class AdminController extends Controller
         ]);
     }
 
+    public function deleteMoption(Request $request)
+    {
+        $request->validate([
+            'moption_id' => 'required|exists:moptions,moption_id',
+        ]);
+
+        try {
+            $Moption = Moption::findOrFail($request->moption_id);
+
+            $Moption->delete();
+
+            return response()->json(['status' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     // Brands 
     public function mbrandList()
     {
@@ -203,6 +220,29 @@ class AdminController extends Controller
         return response()->json(['status' => true]);
     }
 
+    public function deleteBrand(Request $request)
+    {
+        $request->validate([
+            'mbrand_id' => 'required|exists:mbrands,mbrand_id',
+        ]);
+
+        try {
+            $brand = Mbrand::findOrFail($request->mbrand_id);
+
+            if ($brand->mbrand_image && Storage::disk('s3')->exists($brand->mbrand_image)) {
+                Storage::disk('s3')->delete($brand->mbrand_image);
+            }
+
+            $brand->delete();
+
+            return response()->json(['status' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
+    // Product Offer 
     public function productofferlist()
     {
        return view('admin.product.product_offer');
@@ -719,6 +759,27 @@ class AdminController extends Controller
             return response()->json(['success' => true, 'message' => 'Product updated successfully']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteProduct(Request $request)
+    {
+        $request->validate([
+            'mproduct_id' => 'required|exists:mproducts,mproduct_id',
+        ]);
+
+        try {
+            $product = Mproduct::findOrFail($request->mproduct_id);
+
+            if ($product->mproduct_image && Storage::disk('s3')->exists($product->mproduct_image)) {
+                Storage::disk('s3')->delete($product->mproduct_image);
+            }
+
+            $product->delete();
+
+            return response()->json(['status' => true, 'message' => 'Product deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
     }
 

@@ -39,7 +39,7 @@
         </v-card>
 
         <!-- Collection Type -->
-        <!-- <v-card outlined class="my-3">
+        <v-card outlined class="my-3">
           <v-card-subtitle>Collection Type</v-card-subtitle>
           <v-card-text>
             <v-radio-group v-model="mcattype" column dense>
@@ -47,10 +47,10 @@
               <v-radio label="Smart"  value="smart"/>
             </v-radio-group>
           </v-card-text>
-        </v-card> -->
+        </v-card>
 
         <!-- Products Browse -->
-        <!-- <v-card v-if="mcattype==='manual'" outlined class="my-3">
+        <v-card v-if="mcattype==='manual'" outlined class="my-3">
           <v-card-subtitle>Products</v-card-subtitle>
           <v-card-text>
             <v-row>
@@ -87,10 +87,10 @@
               </v-list>
             </div>
           </v-card-text>
-        </v-card> -->
+        </v-card>
 
         <!-- Conditions All / Any -->
-        <v-card outlined class="my-3">
+        <v-card v-else outlined class="my-3">
           <v-card-subtitle>Conditions</v-card-subtitle>
           <v-card-text>
             <div class="d-flex align-items-end mb-3">
@@ -264,7 +264,7 @@
       </v-col>
     </v-row>
 
-    <!-- <v-dialog v-model="productDialog" max-width="650">
+    <v-dialog v-model="productDialog" max-width="650">
       <v-card>
         <v-card-title>
           <span class="text-h6">Select Products</span>
@@ -287,7 +287,7 @@
           <v-spacer/><v-btn color="primary" @click="confirmProducts">Done</v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog> -->
+    </v-dialog>
   </v-container>
 </template>
 
@@ -312,7 +312,7 @@ export default {
       selectedProducts:[], 
       sortMethod:null,
       productHeaders:[
-        { text:'Image', value:'mproduct_image' },
+        { text:'Image', value:'mproduct_image', sortable: false },
         { text:'Name',  value:'mproduct_title' }
       ],
       sorts:[
@@ -337,7 +337,7 @@ export default {
         end_time: null,
       },
 
-      mcattype:'smart',
+      mcattype:'manual',
       imagePreview:null, 
       nameError:'',
 
@@ -520,6 +520,7 @@ export default {
       } else {                           
         const ids = this.selectedProducts.map(p => p.mproduct_id)
         fd.append('product_ids', JSON.stringify(ids))
+        fd.append('condition_logic', 'this.acondition');
       }
       await axios.post('/admin/msub-category/add', fd)
       .then((resp)=>{

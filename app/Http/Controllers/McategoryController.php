@@ -63,6 +63,24 @@ class McategoryController extends Controller
         return response()->json(['status' => true]);
     }
 
+    public function deleteMcat(Request $request)
+    {
+        $request->validate([
+            'mcat_id' => 'required|exists:mcategories,mcat_id',
+        ]);
+
+        try {
+            $category = Mcategory::findOrFail($request->mcat_id);
+
+
+            $category->delete();
+
+            return response()->json(['status' => true, 'message' => 'Category deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
 
     // Sub-Category code below
     public function mcatsubList()
@@ -83,12 +101,16 @@ class McategoryController extends Controller
 
     public function productsVlist()
     {
+        $products = Mproduct::where('status','=','Active')
+                    ->WhereJsonContains('saleschannel', 'Online Store')
+                    ->select('mproduct_id','mproduct_title','mproduct_image')->get();
         $types = Mproduct_type::get();
         $brands = Mbrand::get();
         $tags = Mtag::get();
 
         return response()->json([
             'status' => true,
+            'products'=>$products,
             'types'=>$types,
             'brands'=>$brands,
             'tags'=>$tags,
@@ -158,7 +180,7 @@ class McategoryController extends Controller
             'msubcat_publish'=> json_decode($validated['msubcat_publish'], true) ?? [],
             'msubcat_image'  => $subcatimagepath,
             'msubcat_type'   => $validated['mcattype'],
-            'logical_operator'   => $validated['condition_logic'],
+            'logical_operator'   => $validated['condition_logic'] ?? null,
             'product_ids'   => $ids,
             'offer_name'      => $validated['offer_name'] ?? null,
             'start_time'      => $validated['start_time'] ?? null,
@@ -282,6 +304,8 @@ class McategoryController extends Controller
             $sub->msubcat_image = $path;
         }
 
+        $sub->logical_operator = null;
+
         $sub->mcat_id         = $validated['mcat_id'];
         $sub->msubcat_name    = $validated['subcatname'];
         $sub->msubcat_tag     = $validated['subcattag'] ?? null;
@@ -290,14 +314,15 @@ class McategoryController extends Controller
         $sub->offer_name      = $validated['offer_name'] ?? null;
         $sub->start_time      = $validated['start_time'] ?? null;
         $sub->end_time        = $validated['end_time'] ?? null;
-        $sub->logical_operator = $validated['condition_logic'] ?? null;
+        
 
         if ($validated['mcattype'] === 'manual') {
+            $sub->logical_operator = null;
             $sub->product_ids = json_decode($validated['product_ids'] ?? '[]', true);
             Mcollection_auto::where('msubcat_id', $sub->msubcat_id)->delete();
         } else {
             $sub->product_ids = [];
-
+            $sub->logical_operator = $validated['condition_logic'];
             Mcollection_auto::where('msubcat_id', $sub->msubcat_id)->delete();
 
             $rows  = json_decode($validated['conditions'] ?? '[]', true);
@@ -329,6 +354,27 @@ class McategoryController extends Controller
             [
                 'status' => true, 
         ],201);
+    }
+
+    public function deleteMsubcat(Request $request)
+    {
+        $request->validate([
+            'msubcat_id' => 'required|exists:msubcategories,msubcat_id',
+        ]);
+
+        try {
+            $subcategory = Msubcategory::findOrFail($request->msubcat_id);
+
+            if ($subcategory->msubcat_image && Storage::disk('s3')->exists($subcategory->msubcat_image)) {
+                Storage::disk('s3')->delete($subcategory->msubcat_image);
+            }
+
+            $subcategory->delete();
+
+            return response()->json(['status' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
 }

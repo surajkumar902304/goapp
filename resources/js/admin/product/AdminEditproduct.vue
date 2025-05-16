@@ -12,7 +12,7 @@
                     </v-btn>
                 </div>
                 <div class="col-md-6 text-right">
-                    <v-btn color="secondary" @click="openDuplicateDialog">Duplicate</v-btn>
+                    <v-btn color="secondary" :loading="deleteLoading" :disabled="deleteLoading" @click="openDuplicateDialog">Duplicate</v-btn>
                     <v-btn type="submit" color="success" :disabled="!fvalid || isSubmitting" :loading="isSubmitting">Update</v-btn>
                 </div>
             </div>
@@ -288,12 +288,12 @@
             isSubmitting: false,
             previousOptionKey: null,
             variantHeaders: [
-            { text: "Image", value: "variantImage" },
-            { text: "Variant", value: "variant" },
-            { text: "Price", value: "price" },
-            { text: "Stock", value: "stock" },
-            { text: "SKU", value: "sku" },
-            { text: "Barcode", value: "barcode" }
+                { text: "Image", value: "variantImage" },
+                { text: "Variant", value: "variant" },
+                { text: "Price", value: "price" },
+                { text: "Stock", value: "stock" },
+                { text: "SKU", value: "sku" },
+                { text: "Barcode", value: "barcode" }
             ],
             pro: {
                 selectedSalesChannel: [],
@@ -311,6 +311,7 @@
             availableOptions: [],
             duplicateDialog: false,
             duplicateProductId: null,
+            deleteLoading: false,
             nameRules: [
             v => !!v || "Product name is required",
             v => (v && v.length <= 255) || "Product name must be less than 50 characters"
@@ -435,6 +436,7 @@
             this.$toast?.error('No product selected to duplicate');
             return;
             }
+            this.deleteLoading = true;
 
             try {
             await axios.post('/admin/product-duplicate', {
@@ -448,8 +450,9 @@
             console.error(err);
             this.$toast?.error('Failed to duplicate product');
             } finally {
-            this.duplicateDialog = false;
-            this.duplicateProductId = null;
+                this.deleteLoading = false;
+                this.duplicateDialog = false;
+                this.duplicateProductId = null;
             }
         },
         parseVariant(variantString) {

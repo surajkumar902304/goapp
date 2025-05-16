@@ -12,9 +12,15 @@
         <v-row>
             <v-col cols="12" md="12">
                 <v-card outlined>
-                    <v-data-table :items="moptions" :headers="moptionHeaders" :search="ssearch">
+                    <v-data-table :items="moptions" :headers="moptionHeaders" :search="ssearch" :footer-props="{
+                        'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
                         <template v-slot:item.actions="{item}">
-                            <v-btn color="primary" small  @click="editItem(item)"> <v-icon small>mdi-pencil-outline</v-icon>Edit</v-btn>
+                            <v-btn icon color="primary" @click="editItem(item)">
+                                <v-icon small>mdi-pencil</v-icon>
+                            </v-btn>
+                            <v-icon small color="red"  @click="confirmDelete(item)">
+                                mdi-delete
+                            </v-icon>
                         </template>
                     </v-data-table>
                 </v-card>
@@ -56,6 +62,23 @@
                 </v-form>
             </v-card>
         </v-dialog>
+
+        <!-- Delete dialog -->
+        <v-dialog v-model="deleteDialog" max-width="400">
+            <v-card>
+                <v-card-title class="text-h6">
+                    Confirm Delete
+                </v-card-title>
+                <v-card-text>
+                    Are you sure you want to delete this Category?
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text color="grey" @click="deleteDialog = false">Cancel</v-btn>
+                    <v-btn text color="red" :loading="deleteLoading" :disabled="deleteLoading" @click="performDelete">Delete</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
 </template>
 <script>
@@ -86,7 +109,10 @@ export default {
                 (v) => !!v || "Name is required",
                 (v) => (v && v.length >= 3) || "Name must be at least 3 characters",
                 (v) => /^[a-zA-Z\s]+$/.test(v) || "Name can only contain letters and spaces",
-            ]
+            ],
+            deleteDialog: false,
+            optionToDelete: null,
+            deleteLoading: false,
         }
     },
     created() {
@@ -127,6 +153,28 @@ export default {
             this.editedIndex = this.moptions.indexOf(item);
             this.editedItem = Object.assign({}, item);
             this.editDialog = true;
+        },
+        confirmDelete(item) {
+            this.optionToDelete = item;
+            this.deleteDialog = true;
+        },
+        async performDelete() {
+            if (!this.optionToDelete) return;
+            this.deleteLoading = true;
+            try {
+            await axios.post('/admin/moption-delete', {
+                moption_id: this.optionToDelete.moption_id
+            });
+            this.$toast?.success('Option deleted successfully!');
+            this.getMoptions(); 
+            } catch (err) {
+                console.error(err);
+            this.$toast?.error('Failed to delete product');
+            } finally {
+                this.deleteLoading = false;
+                this.deleteDialog = false;
+                this.optionToDelete = null;
+            }
         }
     }
 }

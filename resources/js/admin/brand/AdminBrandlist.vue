@@ -14,7 +14,8 @@
     <v-row>
         <v-col cols="12">
             <v-card outlined>
-                <v-data-table :items="mbrands" :headers="mbrandsHeaders" :search="ssearch">
+                <v-data-table :items="mbrands" :headers="mbrandsHeaders" :search="ssearch" :footer-props="{
+                        'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
                     <template #item.mbrand_image="{ item }">
                         <img :src="cdn + item.mbrand_image || 'https://via.placeholder.com/50'" width="50" />
                     </template>
@@ -25,6 +26,9 @@
                         <v-btn icon color="primary" @click="editItem(item)">
                             <v-icon small>mdi-pencil</v-icon>
                         </v-btn>
+                        <v-icon small color="red"  @click="confirmDelete(item)">
+                                mdi-delete
+                            </v-icon>
                     </template>
                 </v-data-table>
             </v-card>
@@ -68,6 +72,23 @@
             </v-form>
         </v-card>
     </v-dialog>
+
+    <!-- Delete dialog -->
+    <v-dialog v-model="deleteDialog" max-width="400">
+        <v-card>
+            <v-card-title class="text-h6">
+                Confirm Delete
+            </v-card-title>
+            <v-card-text>
+                Are you sure you want to delete this Category?
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn text color="grey" @click="deleteDialog = false">Cancel</v-btn>
+                <v-btn text color="red" :loading="deleteLoading" :disabled="deleteLoading" @click="performDelete">Delete</v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </div>
 </template>
   
@@ -107,7 +128,10 @@ export default {
                         brand.mbrand_name === v &&
                         brand.mbrand_id !== this.defaultItem.mbrand_id
                     ) || "Brand already exists"
-            ]
+            ],
+            deleteDialog: false,
+            brandToDelete: null,
+            deleteLoading: false,
         };
     },
     created() {
@@ -201,6 +225,28 @@ export default {
             .finally(() => {
             this.submitting = false;
             });
+        },
+        confirmDelete(item) {
+            this.brandToDelete = item;
+            this.deleteDialog = true;
+        },
+        async performDelete() {
+            if (!this.brandToDelete) return;
+            this.deleteLoading = true;
+            try {
+            await axios.post('/admin/mbrand-delete', {
+                mbrand_id: this.brandToDelete.mbrand_id
+            });
+            this.$toast?.success('Brand deleted successfully!');
+            this.getAllBrands(); 
+            } catch (err) {
+                console.error(err);
+            this.$toast?.error('Failed to delete product');
+            } finally {
+                this.deleteLoading = false;
+                this.deleteDialog = false;
+                this.brandToDelete = null;
+            }
         }
     }
 };

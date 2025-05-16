@@ -33,7 +33,8 @@
                         <v-tab class="text-none">Active</v-tab>
                         <v-tab class="text-none">Draft</v-tab>
                     </v-tabs>
-                    <v-data-table  dense  :headers="mprosHeaders"  :items="filteredMpros"  :search="msearch">
+                    <v-data-table  dense  :headers="mprosHeaders"  :items="filteredMpros"  :search="msearch" :footer-props="{
+                        'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
                         <template v-slot:item.mproduct_image="{ item }">
                             <v-img :src="item.mproduct_image ? cdn + item.mproduct_image : ''" cover width="50" height="50" class="ma-1" 
                                 style="border: 1px solid #e0e0e0; border-radius: 10px;">  
@@ -58,10 +59,32 @@
                                 <span v-if="item.hasOptions"> for {{ item.vCount }} variant{{ item.vCount > 1 ? 's' : '' }}</span>
                             </span>
                         </template>
+                        <template #item.actions="{ item }">
+                            <v-icon small color="red" style="margin-left: 14px;" @click="confirmDelete(item)">
+                                mdi-delete
+                            </v-icon>
+                        </template>
                     </v-data-table>
                 </v-card>
             </v-col>
         </v-row>
+
+        <!-- Delete dialog -->
+        <v-dialog v-model="deleteDialog" max-width="400">
+            <v-card>
+                <v-card-title class="text-h6">
+                Confirm Delete
+                </v-card-title>
+                <v-card-text>
+                Are you sure you want to delete this Product?
+                </v-card-text>
+                <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn text color="grey" @click="deleteDialog = false">Cancel</v-btn>
+                <v-btn text color="red" :loading="deleteLoading" :disabled="deleteLoading" @click="performDelete">Delete</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
 </template>
   
@@ -88,8 +111,12 @@ export default {
                 { text: 'Status', value: 'status', class: 'grey lighten-3', width: '150px' },
                 { text: 'Inventory', value: 'minventory', class: 'grey lighten-3', width: '150px', sortable: false },
                 { text: 'Type', value: 'type_name', class: 'grey lighten-3', width: '150px' },
-                { text: 'Brand', value: 'brand_name', class: 'grey lighten-3', width: '150px' }
-            ]
+                { text: 'Brand', value: 'brand_name', class: 'grey lighten-3', width: '150px' },
+                { text: 'Actions', value: 'actions', class: 'grey lighten-3', width: '150px', sortable: false }
+            ],
+            deleteDialog: false,
+            productToDelete: null,
+            deleteLoading: false,
         }
     },
     computed: {
@@ -185,6 +212,31 @@ export default {
             .catch(err => {
                 console.error('Error loading products:', err)
             })
+        },
+        confirmDelete(item) {
+            this.productToDelete = item;
+            this.deleteDialog = true;
+        },
+
+        async performDelete() {
+            if (!this.productToDelete) return;
+            this.deleteLoading = true;
+
+            try {
+            await axios.post('/admin/product-delete', {
+                mproduct_id: this.productToDelete.mproduct_id
+            });
+
+            this.$toast?.success('Product deleted successfully!');
+            this.getAllMpros();
+            } catch (err) {
+                console.error(err);
+            this.$toast?.error('Failed to delete product');
+            } finally {
+                this.deleteLoading = false;
+                this.deleteDialog = false;
+                this.productToDelete = null;
+            }
         }
     }
 }

@@ -54,11 +54,11 @@ class WishlistController extends Controller
     {
         $data = $request->validate([
             'user_id'    => ['required','integer','exists:users,id'],
-            'mproduct_id' => ['required','integer','exists:mproducts,mproduct_id'],
+            'mvariant_id' => ['required','integer','exists:mvariants,mvariant_id'],
         ]);
 
         $entry = Wishlist::where('user_id', $data['user_id'])
-            ->where('mproduct_id', $data['mproduct_id'])
+            ->where('mvariant_id', $data['mvariant_id'])
             ->first();
 
         if ($entry) {
