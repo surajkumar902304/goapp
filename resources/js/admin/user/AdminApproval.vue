@@ -24,12 +24,7 @@
           </v-tabs>
             <v-data-table :items="filteredUsers" :headers="userHeaders" :search="ssearch" :footer-props="{
                         'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
-                <template v-slot:item.eye="{ item }">
-                    <v-icon small class="ml-2" color="primary" style="cursor: pointer;" @click="openUserDialog(item)">
-                      mdi-eye
-                    </v-icon>
-                </template>
-
+          
                 <template v-slot:item.admin_approval="{ item }">
                     <v-chip :color="item.admin_approval === 'Approved' ? 'green' : item.admin_approval === 'Declined' ? 'red darken-1' : 'orange'" class="ma-1" outlined pill small>
                         {{
@@ -39,6 +34,11 @@
                             ? 'Declined'
                             : 'Pending'
                         }}
+                    </v-chip>
+                </template>
+                <template v-slot:item.user_details="{ item }">
+                    <v-chip :color="'blue'" class="ma-1" outlined pill small @click="openUserDialog(item)">
+                        View
                     </v-chip>
                 </template>
 
@@ -92,9 +92,9 @@ export default {
       userHeaders: [
         { text: 'ID', value: 'id' },
         { text: 'Name', value: 'name' },
-        { text: '', value: 'eye', sortable: false },
         { text: 'Email', value: 'email' },
         { text: 'Status', value: 'admin_approval', sortable: false },
+        { text: 'User Details', value: 'user_details', sortable: false },
         { text: 'Action', value: 'actions', sortable: false },
       ],
     };
