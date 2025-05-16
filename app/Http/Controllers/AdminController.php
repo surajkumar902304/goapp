@@ -165,7 +165,7 @@ class AdminController extends Controller
     {
         $request->validate([
             'mbrand_name'  => 'required|string|max:50',
-            'mbrand_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'mbrand_image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $bimagepath = null;
@@ -192,7 +192,7 @@ class AdminController extends Controller
         $request->validate([
             'mbrand_id'    => 'required|exists:mbrands,mbrand_id',
             'mbrand_name'  => 'required|string|max:255',
-            'mbrand_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'mbrand_image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $brand = Mbrand::find($request->mbrand_id);

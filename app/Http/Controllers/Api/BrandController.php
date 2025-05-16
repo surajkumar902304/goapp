@@ -30,19 +30,18 @@ class BrandController extends Controller
         }
         
         
-        $items = Wishlist::where('user_id', $data['user_id'])
-            ->get();
+        $items = Wishlist::where('user_id', $data['user_id'])->pluck('mvariant_id');
 
-            $brands = $items
-            ->pluck('product.brand')
-            ->filter()                  
-            ->unique('mbrand_id')       
-            ->values()                   
-            ->map(fn($brand) => [       
-                'mbrand_id'   => $brand->mbrand_id,
-                'mbrand_name' => $brand->mbrand_name,
-                'mbrand_image' => $brand->mbrand_image,
-            ]);
+        $brands = Mbrand::whereIn('mbrand_id', function ($query) use ($items) {
+            $query->select('mproducts.mbrand_id')
+                ->from('mvariants')
+                ->join('mproducts', 'mvariants.mproduct_id', '=', 'mproducts.mproduct_id')
+                ->whereIn('mvariants.mvariant_id', $items)
+                ->whereNotNull('mproducts.mbrand_id');
+        })
+        ->distinct()
+        ->get(['mbrand_id', 'mbrand_name', 'mbrand_image']);
+
 
         $mbrands = Mbrand::get();
 

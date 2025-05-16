@@ -93,106 +93,109 @@ class CategoryController extends Controller
     }
 
     private function buildProductsForSub($sub, ?array $brandIds = null, array $wishlistVariantIds = [])
-{
-    $allTags = Mtag::select('mtag_id', 'mtag_name')->get()->keyBy('mtag_id');
+    {
+        $allTags = Mtag::select('mtag_id', 'mtag_name')->get()->keyBy('mtag_id');
 
-    // ───── Load manual products ─────
-    $manualProducts = collect();
-    if (!empty($sub->product_ids)) {
-        $manualQuery = Mproduct::with([
-            'type:mproduct_type_id,mproduct_type_name',
-            'brand:mbrand_id,mbrand_name',
-            'mvariantsApi.mvariantDetail',
-            'mvariantsApi.mstock',
-            'mvariantsApi.productoffer',
-        ])
-        ->whereIn('mproduct_id', $sub->product_ids)
-        ->where('status', 'Active')
-        ->whereJsonContains('saleschannel', 'Online Store');
+        // ───── Load manual products ─────
+        $manualProducts = collect();
+        if (!empty($sub->product_ids)) {
+            $manualQuery = Mproduct::with([
+                'type:mproduct_type_id,mproduct_type_name',
+                'brand:mbrand_id,mbrand_name',
+                'mvariantsApi.mvariantDetail',
+                'mvariantsApi.mstock',
+                'mvariantsApi.productoffer',
+            ])
+            ->whereIn('mproduct_id', $sub->product_ids)
+            ->where('status', 'Active')
+            ->whereJsonContains('saleschannel', 'Online Store');
 
-        if ($brandIds) {
-            $manualQuery->whereIn('mbrand_id', $brandIds);
-        }
-
-        $manualProducts = $manualQuery->get();
-    }
-
-    // ───── Load smart products ─────
-    $smartProducts = collect();
-    if ($sub->msubcat_type === 'smart') {
-        $smartProducts = $this->getSmartCollectionProducts($sub, $brandIds);
-    }
-
-    // Merge both collections
-    $products = $manualProducts->merge($smartProducts)->unique('mproduct_id');
-
-    // Load rules (applies only if smart)
-    $rules = Mcollection_auto::where('msubcat_id', $sub->msubcat_id)
-        ->join('fields', 'fields.field_id', '=', 'mcollection_autos.field_id')
-        ->join('queries', 'queries.query_id', '=', 'mcollection_autos.query_id')
-        ->select('fields.field_name', 'queries.query_name', 'mcollection_autos.value')
-        ->get();
-
-    $logic = $sub->logical_operator === 'any' ? 'any' : 'all';
-
-    // ───── Flatten products into variant-wise rows ─────
-    $flat = collect();
-    foreach ($products as $p) {
-        $base = [
-            'mproduct_id'    => $p->mproduct_id,
-            'mproduct_title' => $p->mproduct_title,
-            'mproduct_image' => $p->mproduct_image,
-            'mproduct_slug'  => $p->mproduct_slug,
-            'mproduct_desc'  => $p->mproduct_desc,
-            'status'         => $p->status,
-            'saleschannel'   => $p->saleschannel,
-            'brand_id'       => $p->mbrand_id,
-            'brand_name'     => optional($p->brand)->mbrand_name,
-            'type_id'        => $p->mproduct_type_id,
-            'product_type'   => optional($p->type)->mproduct_type_name,
-            'tag_ids'        => $p->mtags ?? [],
-            'tag_names'      => collect($p->mtags ?? [])
-                ->map(fn($id) => $allTags[$id]->mtag_name ?? null)
-                ->filter()->values()->toArray(),
-        ];
-
-        foreach ($p->mvariants as $v) {
-            $inWishlist = in_array($v->mvariant_id, $wishlistVariantIds, true);
-            $row = array_merge($base, [
-                'mvariant_id'       => $v->mvariant_id,
-                'sku'               => $v->sku,
-                'image'             => $v->mvariant_image,
-                'price'             => $v->price,
-                'quantity'          => $v->quantity,
-                'compare_price'     => $v->compare_price,
-                'cost_price'        => $v->cost_price,
-                'taxable'           => $v->taxable,
-                'barcode'           => $v->barcode,
-                // 'options'           => $v->options,
-                // 'option_value'      => $v->option_value,
-                'mlocation_id'      => $v->mlocation_id,
-                'product_deal_tag'  => $v->product_deal_tag,
-                'product_offer'     => $v->product_offer,
-                'user_info_wishlist' => $inWishlist,
-            ]);
-
-            if ($rules->isEmpty()) {
-                $flat->push($row);
-                continue;
+            if ($brandIds) {
+                $manualQuery->whereIn('mbrand_id', $brandIds);
             }
 
-            $results = $rules->map(fn($r) => $this->variantMatchesRule($row, $r))->all();
-
-            $keep = $logic === 'all'
-                ? !in_array(false, $results, true)
-                : in_array(true,  $results, true);
-
-            if ($keep) $flat->push($row);
+            $manualProducts = $manualQuery->get();
         }
-    }
 
-    return $flat->values();
-}
+        // ───── Load smart products ─────
+        $smartProducts = collect();
+        if ($sub->msubcat_type === 'smart') {
+            $smartProducts = $this->getSmartCollectionProducts($sub, $brandIds);
+        }
+
+        // Merge both collections
+        $products = $manualProducts->merge($smartProducts)->unique('mproduct_id');
+
+        // Load rules (applies only if smart)
+        $rules = Mcollection_auto::where('msubcat_id', $sub->msubcat_id)
+            ->join('fields', 'fields.field_id', '=', 'mcollection_autos.field_id')
+            ->join('queries', 'queries.query_id', '=', 'mcollection_autos.query_id')
+            ->select('fields.field_name', 'queries.query_name', 'mcollection_autos.value')
+            ->get();
+
+        $logic = $sub->logical_operator === 'any' ? 'any' : 'all';
+
+        // ───── Flatten products into variant-wise rows ─────
+        $flat = collect();
+        foreach ($products as $p) {
+            $base = [
+                'mproduct_id'    => $p->mproduct_id,
+                'mproduct_title' => $p->mproduct_title,
+                'mproduct_image' => $p->mproduct_image,
+                'mproduct_slug'  => $p->mproduct_slug,
+                'mproduct_desc'  => $p->mproduct_desc,
+                'status'         => $p->status,
+                'saleschannel'   => $p->saleschannel,
+                'brand_id'       => $p->mbrand_id,
+                'brand_name'     => optional($p->brand)->mbrand_name,
+                'type_id'        => $p->mproduct_type_id,
+                'product_type'   => optional($p->type)->mproduct_type_name,
+                'tag_ids'        => $p->mtags ?? [],
+                'tag_names'      => collect($p->mtags ?? [])
+                    ->map(fn($id) => $allTags[$id]->mtag_name ?? null)
+                    ->filter()->values()->toArray(),
+            ];
+
+            foreach ($p->mvariants as $v) {
+                $inWishlist = in_array($v->mvariant_id, $wishlistVariantIds, true);
+                if ((int)$v->quantity <= 0) {
+                    continue;
+                }
+                $row = array_merge($base, [
+                    'mvariant_id'       => $v->mvariant_id,
+                    'sku'               => $v->sku,
+                    'image'             => $v->mvariant_image,
+                    'price'             => $v->price,
+                    'quantity'          => $v->quantity,
+                    'compare_price'     => $v->compare_price,
+                    'cost_price'        => $v->cost_price,
+                    'taxable'           => $v->taxable,
+                    'barcode'           => $v->barcode,
+                    // 'options'           => $v->options,
+                    // 'option_value'      => $v->option_value,
+                    'mlocation_id'      => $v->mlocation_id,
+                    'product_deal_tag'  => $v->product_deal_tag,
+                    'product_offer'     => $v->product_offer,
+                    'user_info_wishlist' => $inWishlist,
+                ]);
+
+                if ($rules->isEmpty()) {
+                    $flat->push($row);
+                    continue;
+                }
+
+                $results = $rules->map(fn($r) => $this->variantMatchesRule($row, $r))->all();
+
+                $keep = $logic === 'all'
+                    ? !in_array(false, $results, true)
+                    : in_array(true,  $results, true);
+
+                if ($keep) $flat->push($row);
+            }
+        }
+
+        return $flat->values();
+    }
 
 
     /* ------------------------------------------------------------------ */
@@ -258,23 +261,21 @@ class CategoryController extends Controller
     /* ------------------------------------------------------------------ */
     private function getSmartCollectionProducts($sub, ?array $brandIds = null)
     {
-        /* COLLECT field→op→value triplets */
+   
         $rules = Mcollection_auto::where('msubcat_id', $sub->msubcat_id)->get();
 
         $logic = $sub->logical_operator === 'any' ? 'orWhere' : 'where';
 
         $query = Mproduct::where('status','Active')
-                         ->whereJsonContains('saleschannel','Online Store');
+                ->whereJsonContains('saleschannel','Online Store');
 
         if ($brandIds) {
             $query->whereIn('mbrand_id',$brandIds);
         }
 
-        /* apply only the rules that can be expressed in SQL
-           (Title, Brand, Type, Tag, Price, Inventory stock)            */
         foreach ($rules as $r) {
             $val = $r->value;
-            $field = $r->field_name;       // use the text directly
+            $field = $r->field_name;  
 
             switch ($field) {
                 case 'Title':
