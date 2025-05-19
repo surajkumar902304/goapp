@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Browsebanner;
+use App\Models\MainCategory;
 use App\Models\Mcategory;
 use App\Models\Mcollection_auto;
 use App\Models\Mproduct;
@@ -38,11 +39,13 @@ class BannerController extends Controller
                 'browsebanner_position'=> $b->browsebanner_position,
 
                 /* foreign‑keys */
+                'main_mcat_id'    => $b->main_mcat_id,
                 'mcat_id'    => $b->mcat_id,
                 'msubcat_id' => $b->msubcat_id,
                 'mproduct_id'=> $b->mproduct_id,
 
                 /* human‑readable names */
+                'main_mcat_name'     => optional($b->category)->main_mcat_name,
                 'mcat_name'     => optional($b->category)->mcat_name,
                 'msubcat_name'  => optional($b->subcategory)->msubcat_name,
                 'mproduct_title'=> optional($b->product)->mproduct_title,
@@ -70,6 +73,7 @@ class BannerController extends Controller
     public function addBrowseBanner(Request $request)
     {
         $request->validate([
+            'main_mcat_id' => 'nullable|exists:main_categories,main_mcat_id',
             'mcat_id' => 'nullable|exists:mcategories,mcat_id',
             'msubcat_id' => 'nullable|exists:msubcategories,msubcat_id',
             'mproduct_id' => 'nullable|exists:mproducts,mproduct_id',
@@ -87,6 +91,7 @@ class BannerController extends Controller
         }
 
         $browsebanner  = new Browsebanner();
+        $browsebanner->main_mcat_id    = $request->main_mcat_id;
         $browsebanner->mcat_id    = $request->mcat_id;
         $browsebanner->msubcat_id    = $request->msubcat_id;
         $browsebanner->mproduct_id    = $request->mproduct_id;
@@ -102,6 +107,7 @@ class BannerController extends Controller
     {
         $request->validate([
             'browsebanner_id'    => 'required|exists:browsebanners,browsebanner_id',
+            'main_mcat_id' => 'nullable|exists:main_categories,main_mcat_id',
             'mcat_id' => 'nullable|exists:mcategories,mcat_id',
             'msubcat_id' => 'nullable|exists:msubcategories,msubcat_id',
             'mproduct_id' => 'nullable|exists:mproducts,mproduct_id',
@@ -110,6 +116,7 @@ class BannerController extends Controller
         ]);
 
         $browsebanner = Browsebanner::find($request->browsebanner_id);
+        $browsebanner->main_mcat_id  = $request->main_mcat_id;
         $browsebanner->mcat_id  = $request->mcat_id;
         $browsebanner->msubcat_id  = $request->msubcat_id;
         $browsebanner->mproduct_id  = $request->mproduct_id;
@@ -159,47 +166,42 @@ class BannerController extends Controller
 
     // Category main API
 
-
     public function index(Request $request)
     {
-        $needle = mb_strtolower(trim($request->query('search', '')));
+        // Load the full structure first
+        $mainCategories = MainCategory::with([
+            'categories' => function ($q) {
+                $q->select('*')->with([
+                    'subcategories' => function ($subQ) {
+                        $subQ->whereJsonContains('msubcat_publish', 'Online Store');
+                    }
+                ]);
+            }
+        ])->get();
 
-        $cats = Mcategory::with('subcategories')->get();
+        // Attach filtered products to subcategories
+        $mainCategories->each(function ($main) {
+            $main->categories->each(function ($cat) {
+                $cat->subcategories->each(function ($sub) {
+                    $sub->setRelation('products', collect($this->buildProductsForSub($sub)));
+                });
 
-        $cats->each(fn ($cat) =>
-            $cat->subcategories->each(fn ($sub) =>
-                $sub->setRelation('products', $this->buildProductsForSub($sub)))
-        );
+                // Filter out subcategories without products
+                $cat->setRelation('subcategories', $cat->subcategories->filter(
+                    fn($sub) => $sub->products->isNotEmpty()
+                )->values());
+            });
 
-        if ($needle === '') {
-            return $this->jsonResponse($cats);
-        }
+            // Filter out categories with no subcategories left
+            $main->setRelation('categories', $main->categories->filter(
+                fn($cat) => $cat->subcategories->isNotEmpty()
+            )->values());
+        });
 
-        $filtered = $cats->filter(function ($cat) use ($needle) {
-
-            $categoryHit = str_contains(mb_strtolower($cat->mcat_name), $needle);
-
-            $subFiltered = $cat->subcategories->filter(function ($sub) use ($needle) {
-
-                $subHit = str_contains(mb_strtolower($sub->msubcat_name), $needle);
-
-                $matchedProducts = $sub->products->filter(
-                    fn ($p) => str_contains(mb_strtolower($p['mproduct_title']), $needle)
-                );
-
-                if ($subHit) return true;
-
-                if ($matchedProducts->isNotEmpty()) {
-                    $sub->setRelation('products', $matchedProducts->values());
-                    return true;
-                }
-
-                return false;
-            })->values();
-
-            $cat->setRelation('subcategories', $subFiltered);
-            return $categoryHit || $subFiltered->isNotEmpty();
-        })->values();
+        // Final filter to only keep main categories that still have categories
+        $filtered = $mainCategories->filter(
+            fn($main) => $main->categories->isNotEmpty()
+        )->values();
 
         return $this->jsonResponse($filtered);
     }

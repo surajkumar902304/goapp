@@ -492,34 +492,41 @@ methods:{
   resetSubcat(){ 
     this.form.subcatname=''; this.nameError='' 
   },
-  async loadMatchedProducts() {
+ async loadMatchedProducts() {
   try {
     const { data } = await axios.get('/admin/main/categories');
 
     if (!data || !data.categories) return;
 
-    const subcatId = this.msubcatid; // msubcat_id from the route param or prop
+    const subcatId = this.msubcatid; // From route or prop
+    let found = false;
 
-    for (const cat of data.categories) {
-      const matchSubcat = cat.subcategories.find(s => s.msubcat_id == subcatId);
+    for (const main of data.categories) {
+      for (const cat of main.categories || []) {
+        const matchSubcat = (cat.subcategories || []).find(s => s.msubcat_id == subcatId);
 
-      if (matchSubcat) {
-        this.cdn = data.cdnURL || '';
+        if (matchSubcat) {
+          this.cdn = data.cdnURL || '';
 
-        this.matchedProducts = (matchSubcat.products || []).map(p => {
-          // Parse option_value if it's a JSON string
-          if (typeof p.option_value === 'string') {
-            try {
-              p.option_value = JSON.parse(p.option_value);
-            } catch (e) {
-              p.option_value = {}; // fallback if parse fails
+          this.matchedProducts = (matchSubcat.products || []).map(p => {
+            if (typeof p.option_value === 'string') {
+              try {
+                p.option_value = JSON.parse(p.option_value);
+              } catch (e) {
+                p.option_value = {};
+              }
             }
-          }
-          return p;
-        });
+            return p;
+          });
 
-        break;
+          found = true;
+          break;
+        }
+
+        if (found) break;
       }
+
+      if (found) break;
     }
   } catch (e) {
     console.error('❌ Failed to load matched products:', e);
