@@ -73,6 +73,12 @@
                           </v-list-item-icon>
                           <v-list-item-title>Product Offers</v-list-item-title>
                         </v-list-item>
+                        <v-list-item href="{{route('mainmcats.list')}}" class="{{ request()->routeIs('mainmcats.list') ? 'active' : '' }}">
+                            <v-list-item-icon>
+                              <v-icon>mdi-storefront</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>Main Categories</v-list-item-title>
+                        </v-list-item>
                         <v-list-item href="{{route('mcats.list')}}" class="{{ request()->routeIs('mcats.list') ? 'active' : '' }}">
                             <v-list-item-icon>
                               <v-icon>mdi-storefront</v-icon>

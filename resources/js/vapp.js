@@ -35,6 +35,9 @@ Vue.component('admin-moptions', require('./admin/option/AdminMoptions.vue').defa
 // Brand
 Vue.component('admin-brandlist',require('./admin/brand/AdminBrandlist.vue').default);
 
+// Main Category
+Vue.component('admin-mainmcatlist',require('./admin/category/MainMcatlist.vue').default);
+
 // Category
 Vue.component('admin-mcatlist',require('./admin/category/Mcatlist.vue').default);
 

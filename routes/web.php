@@ -78,6 +78,13 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::post('/product-offers/update',[AdminController::class,'editProductoffer'])->name('productoffer.edit');
         Route::post('/product-offers/delete',[AdminController::class,'deleteProductoffer'])->name('productoffer.delete');
 
+        // Main Categories routes
+        Route::get('/main-mcategories/list',[McategoryController::class,'mainmcat'])->name('mainmcats.list');
+        Route::get('/main-mcategories/vlist',[McategoryController::class,'mainMcatVlist'])->name('mainmcats.vlist');
+        Route::post('/main-mcategory/add',[McategoryController::class,'addMainMcat'])->name('mainmcat.add');
+        Route::post('/main-mcategory/update',[McategoryController::class,'editMainMcat'])->name('mainmcat.edit');
+        Route::post('/main-mcategory-delete', [McategoryController::class, 'deleteMainMcat']);
+
         // Categories routes
         Route::get('/mcategories/list',[McategoryController::class,'index'])->name('mcats.list');
         Route::get('/mcategories/vlist',[McategoryController::class,'mcatVlist'])->name('mcats.vlist');

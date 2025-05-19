@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Field;
 use App\Models\Field_query_relation;
+use App\Models\MainCategory;
 use App\Models\Mbrand;
 use App\Models\Mcategory;
 use App\Models\Mcollection_auto;
@@ -20,6 +21,68 @@ use Illuminate\Support\str;
 
 class McategoryController extends Controller
 {
+    // Main Category code below
+    public function mainmcat()
+    {
+        return view('admin.mcategory.maincatlist');
+    }
+    
+    public function mainMcatVlist()
+    {
+        $mainmcat = MainCategory::orderBy('main_mcat_id', 'desc')->get();
+        return response()->json([
+            'status' => true,
+            'mainmcats' => $mainmcat,
+        ],200);
+    }
+
+    public function addMainMcat(Request $request)
+    {
+        $request->validate([
+            'main_mcat_name'  => 'required|string|max:255',
+        ]);
+
+        $cat = new MainCategory();
+        $cat->main_mcat_name = $request->main_mcat_name;
+        $cat->save();
+
+        return response()->json(['status' => true]);
+    }
+
+    
+    public function editMainMcat(Request $request)
+    {
+        $request->validate([
+            'main_mcat_id'    => 'required|exists:main_categories,main_mcat_id',
+            'main_mcat_name'  => 'required|string|max:50',
+        ]);
+
+        $cat = MainCategory::find($request->main_mcat_id);
+        $cat->main_mcat_name = $request->main_mcat_name;
+        $cat->save();
+
+        return response()->json(['status' => true]);
+    }
+
+    public function deleteMainMcat(Request $request)
+    {
+        $request->validate([
+            'main_mcat_id' => 'required|exists:main_categories,main_mcat_id',
+        ]);
+
+        try {
+            $category = MainCategory::findOrFail($request->main_mcat_id);
+
+
+            $category->delete();
+
+            return response()->json(['status' => true, 'message' => 'Category deleted successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+
     // Category code below
     public function index()
     {
@@ -28,10 +91,19 @@ class McategoryController extends Controller
     
     public function mcatVlist()
     {
-        $mcat = Mcategory::orderBy('mcat_id', 'desc')->get();
+        $categories = Mcategory::with('mainCategory:main_mcat_id,main_mcat_name')->orderBy('mcat_id', 'desc')->get();
+
+        $mcats = $categories->map(function ($cat) {
+            return [
+                'mcat_id'        => $cat->mcat_id,
+                'mcat_name'      => $cat->mcat_name,
+                'main_mcat_id'   => $cat->main_mcat_id,
+                'mainmcat_name'  => optional($cat->mainCategory)->main_mcat_name,
+            ];
+        });
         return response()->json([
             'status' => true,
-            'mcats' => $mcat,
+            'mcats' => $mcats,
         ],200);
     }
 
@@ -39,10 +111,12 @@ class McategoryController extends Controller
     {
         $request->validate([
             'mcat_name'  => 'required|string|max:50',
+            'main_mcat_id' => 'nullable|exists:main_categories,main_mcat_id',
         ]);
 
         $cat = new Mcategory();
         $cat->mcat_name = $request->mcat_name;
+        $cat->main_mcat_id = $request->main_mcat_id;
         $cat->save();
 
         return response()->json(['status' => true]);
@@ -53,11 +127,13 @@ class McategoryController extends Controller
     {
         $request->validate([
             'mcat_id'    => 'required|exists:mcategories,mcat_id',
+            'main_mcat_id' => 'nullable|exists:main_categories,main_mcat_id',
             'mcat_name'  => 'required|string|max:50',
         ]);
 
         $cat = Mcategory::find($request->mcat_id);
         $cat->mcat_name = $request->mcat_name;
+        $cat->main_mcat_id = $request->main_mcat_id;
         $cat->save();
 
         return response()->json(['status' => true]);

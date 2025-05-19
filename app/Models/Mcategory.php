@@ -11,7 +11,13 @@ class Mcategory extends Model
     protected $primaryKey = 'mcat_id';
     protected $table = 'mcategories';
 
-    protected $fillable = ['mcat_name'];
+    protected $fillable = ['mcat_name','main_mcat_id'];
+
+    public function mainCategory()
+    {
+        return $this->belongsTo(MainCategory::class, 'main_mcat_id', 'main_mcat_id');
+    }
+
     // category api
     public function subcategories()
     {

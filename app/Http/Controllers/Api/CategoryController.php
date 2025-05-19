@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MainCategory;
 use App\Models\Mcategory;
 use App\Models\Wishlist;
 use App\Models\Mcollection_auto;
@@ -24,73 +25,78 @@ class CategoryController extends Controller
     {
         $user = $request->user();
         $wishlistVariantIds = $user
-            ? Wishlist::where('user_id', $user->id)
-                    ->pluck('mvariant_id')
-                    ->toArray()
+            ? Wishlist::where('user_id', $user->id)->pluck('mvariant_id')->toArray()
             : [];
-
 
         $needle   = mb_strtolower(trim($request->query('search', '')));
         $brandIds = $request->query('mbrand_id');
         $brandIds = $brandIds ? explode(',', $brandIds) : null;
 
-        $cats = Mcategory::with([
-            'subcategories' => fn($q) =>
-                $q->whereJsonContains('msubcat_publish', 'Online Store')
-                  ->select('*')
-        ])->get();
-        
+        $mainCats = MainCategory::with(['categories.subcategories' => function ($q) {
+            $q->whereJsonContains('msubcat_publish', 'Online Store');
+        }])->get();
 
-        $cats->each(fn($cat) =>
-            $cat->subcategories->each(fn($sub) =>
-               $sub->setRelation('products', $this->buildProductsForSub($sub, $brandIds, $wishlistVariantIds)))
-        );
-
-        if ($needle === '' && !$brandIds) {
-            return $this->jsonResponse($cats);
-        }
-
-        if ($needle === '' && $brandIds) {
-            $cats = $cats->map(function($cat) {
-                $subs = $cat->subcategories
-                            ->filter(fn($s) => $s->products->isNotEmpty())
-                            ->values();
-                $cat->setRelation('subcategories', $subs);
-                return $subs->isNotEmpty() ? $cat : null;
-            })->filter()->values();
-
-            return $this->jsonResponse($cats);
-        }
-
-        $cats = $cats->map(function ($cat) use ($needle) {
-            $subs = $cat->subcategories->map(function ($sub) use ($needle) {
-                if (str_contains(mb_strtolower($sub->msubcat_name), $needle)) {
-                    return $sub->products->isNotEmpty() ? $sub : null;
-                }
-        
-                $matched = $sub->products->filter(function ($p) use ($needle) {
-                    return str_contains(mb_strtolower($p['mproduct_title']), $needle);
+        // Attach products to each sub-category
+        $mainCats->each(function ($main) use ($brandIds, $wishlistVariantIds) {
+            $main->categories->each(function ($cat) use ($brandIds, $wishlistVariantIds) {
+                $cat->subcategories->each(function ($sub) use ($brandIds, $wishlistVariantIds) {
+                    $sub->setRelation('products', $this->buildProductsForSub($sub, $brandIds, $wishlistVariantIds));
                 });
-        
-                if ($matched->isNotEmpty()) {
-                    $sub->setRelation('products', $matched->values());
-                    return $sub;
-                }
-        
-                return null;
-            })->filter()->values();
-        
-            if (str_contains(mb_strtolower($cat->mcat_name), $needle)) {
-                $subs = $cat->subcategories->filter(fn($s) => $s->products->isNotEmpty())->values();
-            }
-        
-            $cat->setRelation('subcategories', $subs);
-            return $subs->isNotEmpty() ? $cat : null;
-        })->filter()->values();
-              
+            });
+        });
 
-        return $this->jsonResponse($cats);
+        // === No search and no filter ===
+        if ($needle === '' && !$brandIds) {
+            return $this->jsonResponse($mainCats);
+        }
+
+        // === Brand filter only ===
+        if ($needle === '' && $brandIds) {
+            $filtered = $mainCats->map(function ($main) {
+                $main->categories = $main->categories->map(function ($cat) {
+                    $cat->subcategories = $cat->subcategories
+                        ->filter(fn($s) => $s->products->isNotEmpty())
+                        ->values();
+                    return $cat->subcategories->isNotEmpty() ? $cat : null;
+                })->filter()->values();
+                return $main->categories->isNotEmpty() ? $main : null;
+            })->filter()->values();
+
+            return $this->jsonResponse($filtered);
+        }
+
+        // === Search + Filter ===
+        $filtered = $mainCats->map(function ($main) use ($needle) {
+            $mainHit = str_contains(mb_strtolower($main->main_mcat_name), $needle);
+
+            $main->categories = $main->categories->map(function ($cat) use ($needle) {
+                $catHit = str_contains(mb_strtolower($cat->mcat_name), $needle);
+
+                $cat->subcategories = $cat->subcategories->map(function ($sub) use ($needle) {
+                    $subHit = str_contains(mb_strtolower($sub->msubcat_name), $needle);
+
+                    $matched = $sub->products->filter(function ($p) use ($needle) {
+                        return str_contains(mb_strtolower($p['mproduct_title']), $needle);
+                    });
+
+                    if ($subHit) return $sub;
+                    if ($matched->isNotEmpty()) {
+                        $sub->setRelation('products', $matched->values());
+                        return $sub;
+                    }
+
+                    return null;
+                })->filter()->values();
+
+                return $catHit || $cat->subcategories->isNotEmpty() ? $cat : null;
+            })->filter()->values();
+
+            return $mainHit || $main->categories->isNotEmpty() ? $main : null;
+        })->filter()->values();
+
+        return $this->jsonResponse($filtered);
     }
+
 
     private function buildProductsForSub($sub, ?array $brandIds = null, array $wishlistVariantIds = [])
     {
@@ -351,7 +357,7 @@ class CategoryController extends Controller
             'status'     => true,
             'message'    => 'Fetch all Categories Successfully',
             'cdnURL'     => config('cdn.url'),
-            'categories' => $payload,
+            'main_categories' => $payload,
         ]);
     }
 }

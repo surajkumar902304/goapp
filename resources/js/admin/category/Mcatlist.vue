@@ -41,6 +41,15 @@
                 </v-card-title>
                 <v-form v-model="fsvalid" @submit.prevent="saveCategory">
                     <v-card-text>
+                        <v-autocomplete
+                            v-model="defaultItem.main_mcat_id"
+                            :items="mainCategories"
+                            item-text="main_mcat_name"
+                            item-value="main_mcat_id"
+                            label="Main Category"
+                            :rules="[v => !!v || 'Main category is required']"
+                            />
+                    
                         <v-text-field v-model="defaultItem.mcat_name" :rules="mcategorynameRule" label="Category Name"/>
                     </v-card-text>
                     <v-card-actions>
@@ -80,9 +89,11 @@
             return {
                 ssearch: '',
                 mcats: [],
+                mainCategories: [],
                 mcatsHeaders: [
                 { text: 'ID', value: 'mcat_id' },
                 { text: 'Category Name', value: 'mcat_name' },
+                { text: 'Main Category Name', value: 'mainmcat_name' },
                 { text: 'Actions', value: 'actions', sortable: false }
                 ],
                 addSdialog: false,
@@ -90,8 +101,9 @@
                 fsvalid: false,
                 submitting: false,
                 defaultItem: {
-                mcat_id: null,
-                mcat_name: '',
+                    mcat_id: null,
+                    mcat_name: '',
+                    main_mcat_id: null,
                 },
                 mcategorynameRule: [
                     v => !!v || 'Category Name is required',
@@ -110,6 +122,7 @@
         },
         created() {
             this.getAllCategories();
+            this.getMainCategories();
         },
         watch: {
             addSdialog(val) {
@@ -122,6 +135,11 @@
                 this.mcats = res.data.mcats;
                 });
             },
+            getMainCategories() {
+                axios.get('/admin/main-mcategories/vlist').then(res => {
+                this.mainCategories = res.data.mainmcats;
+                });
+            },
             openDialog() {
                 this.defaultItem = { mcat_id: null, mcat_name: '' };
                 this.editedIndex = -1;
@@ -132,6 +150,7 @@
                 this.defaultItem = {
                     mcat_id: item.mcat_id,
                     mcat_name: item.mcat_name,
+                    main_mcat_id: item.main_mcat_id,
                 };
                 
                 this.editedIndex = item.mcat_id;
@@ -152,17 +171,28 @@
         
                 const fd = new FormData();
                 fd.append('mcat_name', this.defaultItem.mcat_name);
-        
+                fd.append('main_mcat_id', this.defaultItem.main_mcat_id);
         
                 if (this.editedIndex !== -1) fd.append('mcat_id', this.editedIndex);
-        
                 const url = this.editedIndex === -1 ? '/admin/mcategory/add' : '/admin/mcategory/update';
         
                 axios
                 .post(url, fd, { headers: { 'Content-Type': 'multipart/form-data' } })
                 .then(() => {
+                    this.$toast.success(
+                        this.editedIndex === -1 
+                            ? 'Category added successfully!' 
+                            : 'Category updated successfully!'
+                    );
                     this.getAllCategories();
                     this.addSdialog = false;
+                })
+                .catch((error) => {
+                    console.error(error);
+                    this.$toast.error('Failed to save category. Please try again.');
+                })
+                .finally(() => {
+                    this.submitting = false;
                 });
             },
             confirmDelete(item) {
