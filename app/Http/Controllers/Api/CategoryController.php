@@ -158,9 +158,9 @@ class CategoryController extends Controller
 
             foreach ($p->mvariants as $v) {
                 $inWishlist = in_array($v->mvariant_id, $wishlistVariantIds, true);
-                if ((int)$v->quantity <= 0) {
-                    continue;
-                }
+                // if ((int)$v->quantity <= 0) {
+                //     continue;
+                // }
                 $row = array_merge($base, [
                     'mvariant_id'       => $v->mvariant_id,
                     'sku'               => $v->sku,

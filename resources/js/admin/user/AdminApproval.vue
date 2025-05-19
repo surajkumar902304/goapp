@@ -23,35 +23,35 @@
             <v-tab class="text-none">Declined</v-tab>
           </v-tabs>
             <v-data-table :items="filteredUsers" :headers="userHeaders" :search="ssearch" :footer-props="{
-                        'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
-          
-                <template v-slot:item.admin_approval="{ item }">
-                    <v-chip :color="item.admin_approval === 'Approved' ? 'green' : item.admin_approval === 'Declined' ? 'red darken-1' : 'orange'" class="ma-1" outlined pill small>
-                        {{
-                        item.admin_approval === 'Approved'
-                            ? 'Approved'
-                            : item.admin_approval === 'Declined'
-                            ? 'Declined'
-                            : 'Pending'
-                        }}
-                    </v-chip>
-                </template>
-                <template v-slot:item.user_details="{ item }">
-                    <v-chip :color="'blue'" class="ma-1" outlined pill small @click="openUserDialog(item)">
-                        View
-                    </v-chip>
-                </template>
-
-                <template v-slot:item.actions="{ item }">
-                    <v-icon v-if="item.admin_approval === 'Pending'" color="green" class="mr-2" @click="changeStatus(item, 'Approved')" >mdi-check</v-icon>
-                    <v-icon v-if="item.admin_approval === 'Pending' || item.admin_approval === 'Approved'" color="red" class="mr-2" @click="changeStatus(item, 'Declined')" >mdi-close</v-icon>
-                    <v-icon v-if="item.admin_approval === 'Declined'" color="green" @click="changeStatus(item, 'Approved')" >mdi-check</v-icon>
-                </template>
+                      'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
+        
+              <template v-slot:item.admin_approval="{ item }">
+                  <v-chip :color="item.admin_approval === 'Approved' ? 'green' : item.admin_approval === 'Declined' ? 'red darken-1' : 'orange'" class="ma-1" outlined pill small>
+                      {{
+                      item.admin_approval === 'Approved'
+                          ? 'Approved'
+                          : item.admin_approval === 'Declined'
+                          ? 'Declined'
+                          : 'Pending'
+                      }}
+                  </v-chip>
+              </template>
+              <template v-slot:item.user_details="{ item }">
+                  <v-chip :color="'blue'" class="ma-1" outlined pill small @click="openUserDialog(item)">
+                      View
+                  </v-chip>
+              </template>
+              <template v-slot:item.actions="{ item }">
+                  <v-icon v-if="item.admin_approval === 'Pending'" color="green" class="mr-2" @click="changeStatus(item, 'Approved')" >mdi-check</v-icon>
+                  <v-icon v-if="item.admin_approval === 'Pending' || item.admin_approval === 'Approved'" color="red" class="mr-2" @click="changeStatus(item, 'Declined')" >mdi-close</v-icon>
+                  <v-icon v-if="item.admin_approval === 'Declined'" color="green" @click="changeStatus(item, 'Approved')" >mdi-check</v-icon>
+              </template>
             </v-data-table>
         </v-card>
       </v-col>
     </v-row>
 
+    <!-- user Details dailog -->
     <v-dialog v-model="userDialog" max-width="500">
         <v-card>
             <v-card-title>
@@ -100,17 +100,17 @@ export default {
     };
   },
   computed: {
-        filteredUsers() {
-            return this.users.filter(user => {
-            switch (this.activeTab) {
-                case 0: return user.admin_approval === 'Pending';
-                case 1: return user.admin_approval === 'Approved';
-                case 2: return user.admin_approval === 'Declined';
-                default: return true;
-            }
-            });
+    filteredUsers() {
+        return this.users.filter(user => {
+        switch (this.activeTab) {
+            case 0: return user.admin_approval === 'Pending';
+            case 1: return user.admin_approval === 'Approved';
+            case 2: return user.admin_approval === 'Declined';
+            default: return true;
         }
-    },
+        });
+    }
+  },
   created() {
     this.getusers();
   },
@@ -126,31 +126,22 @@ export default {
         this.userDialog = true;
     },
     changeStatus(user, newStatus) {
-        user.admin_approval = newStatus;
-
-        axios
-            .post("/admin/users/update-approval", {
-            user_id: user.id,
-            admin_approval: newStatus,
-            })
-            .then(() => {
-            this.$toast?.success(`Status updated to ${newStatus}.`);
-            })
-            .catch(() => {
-            this.$toast?.error("Failed to update status.");
-            });
+      user.admin_approval = newStatus;
+      axios.post("/admin/users/update-approval", {
+        user_id: user.id,
+        admin_approval: newStatus,
+        })
+        .then(() => {
+        this.$toast?.success(`Status updated to ${newStatus}.`);
+        })
+        .catch(() => {
+        this.$toast?.error("Failed to update status.");
+        });
     }
   }
 }
 </script>
 
-
 <style scoped>
-button.v-icon.notranslate.ml-2.v-icon--link.mdi.mdi-eye.theme--light.primary--text {
-    opacity: 0;
-}
 
-tr:hover button.v-icon.notranslate.ml-2.v-icon--link.mdi.mdi-eye.theme--light.primary--text {
-    opacity: 1;
-}
 </style>
