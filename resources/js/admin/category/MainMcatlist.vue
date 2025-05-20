@@ -5,7 +5,7 @@
                 <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Main Category name"/>
             </v-col>
             <v-col cols="12" md="2" class="text-end mt-1">
-                <v-btn color="secondary" small class="text-none font-weight-bold" @click="openDialog">
+                <v-btn color="secondary" small class="text-none font-weight-bold" style="font-size:14px" @click="openDialog">
                     Add Main Category
                 </v-btn>
             </v-col>
@@ -239,5 +239,7 @@
     </script>
       
     <style scoped>
-
+.v-btn {
+    font-size: 14px !important;
+}
     </style>

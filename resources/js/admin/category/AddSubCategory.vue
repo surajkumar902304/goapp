@@ -577,4 +577,7 @@ export default {
   justify-content: center;
   overflow: hidden;
 }
+.v-btn {
+    font-size: 14px !important;
+}
 </style>

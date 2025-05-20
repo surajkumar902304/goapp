@@ -117,7 +117,7 @@ export default {
       typeFilter: null,
 
       msubcatsHeaders: [
-        { text: 'Index',             value: 'index', sortable: true },
+        { text: 'Index',             value: 'index', width: '80px', sortable: true },
         { text: 'Image',             value: 'msubcat_image', sortable: false },
         { text: 'Sub-Category Name', value: 'msubcat_name' },
         { text: 'Category Name',     value: 'mcat_name', sortable: false },
@@ -221,4 +221,7 @@ export default {
 };
 </script>
 <style scoped>
+.v-btn {
+    font-size: 14px !important;
+}
 </style>
