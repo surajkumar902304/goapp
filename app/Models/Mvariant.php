@@ -36,10 +36,11 @@ class Mvariant extends Model
         ->select(['mstock_id', 'quantity', 'mlocation_id', 'mvariant_id']);
     }
 
-    public function productoffer() 
-{ 
-    return $this->hasOne(Product_Offer::class, 'mvariant_id', 'mvariant_id')
-        ->select(['product_offer_id', 'mvariant_id', 'product_deal_tag', 'product_offer']);
+    public function productoffer()
+{
+    return $this->hasOne(Product_Offer::class, 'mvariant_id', 'mvariant_id');
 }
+
+
 
 }

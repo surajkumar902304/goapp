@@ -174,7 +174,7 @@ class CategoryController extends Controller
         }
 
         // Merge both collections
-        $products = $manualProducts->merge($smartProducts)->unique('mproduct_id');
+        $products = $manualProducts->merge($smartProducts)->unique('mproduct_id')->sortByDesc('mproduct_id');
 
         // Load rules (applies only if smart)
         $rules = Mcollection_auto::where('msubcat_id', $sub->msubcat_id)
@@ -221,11 +221,11 @@ class CategoryController extends Controller
                     'cost_price'        => $v->cost_price,
                     'taxable'           => $v->taxable,
                     'barcode'           => $v->barcode,
-                    // 'options'           => $v->options,
-                    // 'option_value'      => $v->option_value,
+                    'options'           => json_decode($v->options, true),
+                    'option_value'      => json_decode($v->option_value, true),
                     'mlocation_id'      => $v->mlocation_id,
-                    'product_deal_tag'  => $v->product_deal_tag,
-                    'product_offer'     => $v->product_offer,
+                    'product_deal_tag'  => optional($v->productoffer)->product_deal_tag,
+                    'product_offer'     => optional($v->productoffer)->product_offer,
                     'user_info_wishlist' => $inWishlist,
                 ]);
 
