@@ -61,6 +61,7 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::get('/product/pdata',[AdminController::class,'productAddData'])->name('adminproduct.pdata');
         Route::post('/product-duplicate', [AdminController::class, 'productDuplicate'])->name('mproduct.duplicate');
         Route::post('/product-delete', [AdminController::class, 'deleteProduct']);
+        Route::post('/products/bulk-delete', [AdminController::class, 'bulkDeleteProduct']);
         
         // Product Variations routes
         Route::post('/save-product', [AdminController::class, 'productStoreData'])->name('adminproduct.storedata');
@@ -84,6 +85,7 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::post('/main-mcategory/add',[McategoryController::class,'addMainMcat'])->name('mainmcat.add');
         Route::post('/main-mcategory/update',[McategoryController::class,'editMainMcat'])->name('mainmcat.edit');
         Route::post('/main-mcategory-delete', [McategoryController::class, 'deleteMainMcat']);
+        Route::post('/main-mcategories/reorder', [McategoryController::class, 'mainCatReorder']);
 
         // Categories routes
         Route::get('/mcategories/list',[McategoryController::class,'index'])->name('mcats.list');
@@ -91,6 +93,7 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::post('/mcategory/add',[McategoryController::class,'addMcat'])->name('mcat.add');
         Route::post('/mcategory/update',[McategoryController::class,'editMcat'])->name('mcat.edit');
         Route::post('/mcategory-delete', [McategoryController::class, 'deleteMcat']);
+        Route::post('/mcategories/bulk-delete', [McategoryController::class, 'bulkDeleteMcat']);
 
         // Sub-Categories routes
         Route::get('/msub-categories/list',[McategoryController::class,'mcatsubList'])->name('msubcats.list');
@@ -98,6 +101,7 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::post('/msub-category/add',[McategoryController::class,'addMsubcat'])->name('msubcat.add');
         Route::get('/msub-category/add',[McategoryController::class,'addViewMsubcat'])->name('mcoll.add');
         Route::post('/msub-category-delete', [McategoryController::class, 'deleteMsubcat']);
+        Route::post('/msub-categories/bulk-delete', [McategoryController::class, 'bulkDeleteMsubcat']);
 
         Route::get('/msub-category/{msubcatid}',[McategoryController::class,'msubcatEdit'])->name('msubcat.edit');
         Route::get('/vsub-category/editdata/{msubcatid}',[McategoryController::class,'msubcatEditData'])->name('msubcat.editdata');

@@ -10,12 +10,40 @@
                 </v-btn>
             </v-col>
         </v-row>
+
+        <v-row v-if="selected.length">
+            <v-col cols="12" class="text-end">
+                <v-btn
+                color="red"
+                small
+                :loading="bulkDeleteLoading"
+                :disabled="bulkDeleteLoading"
+                @click="confirmBulkDelete"
+                >
+                Delete&nbsp;Selected&nbsp;({{ selected.length }})
+                </v-btn>
+            </v-col>
+        </v-row>
       
         <v-row>
             <v-col cols="12">
                 <v-card outlined>
-                    <v-data-table :items="mcats" :headers="mcatsHeaders" :search="ssearch" :footer-props="{
-                        'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
+                    <v-data-table
+                        v-model="selected"         
+                        :show-select="true"       
+                        item-key="mcat_id"
+                        :items="mcats"
+                        :headers="mcatsHeaders"
+                        :search="ssearch"
+                        
+                        :footer-props="{
+                        'items-per-page-options': [10, 25, 50, 100],
+                        'items-per-page-text': 'Rows per page:'
+                        }"
+                    >
+                        <template v-slot:item.index="{ item }">
+                            {{ item.index }}
+                        </template>
                         <template #item.mcat_name="{ item }">
                             <span>{{ item.mcat_name }}</span>
                         </template>
@@ -77,6 +105,29 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+
+        <!-- Bulk-delete confirmation -->
+        <v-dialog v-model="bulkDeleteDialog" max-width="400">
+            <v-card>
+                <v-card-title class="text-h6">Confirm Delete</v-card-title>
+                <v-card-text>
+                Are you sure you want to delete <strong>{{ selected.length }}</strong> categories?
+                </v-card-text>
+                <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn text color="grey" @click="bulkDeleteDialog = false">Cancel</v-btn>
+                <v-btn
+                    text
+                    color="red"
+                    :loading="bulkDeleteLoading"
+                    :disabled="bulkDeleteLoading"
+                    @click="performBulkDelete"
+                >
+                    Delete
+                </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
     </template>
       
@@ -91,10 +142,10 @@
                 mcats: [],
                 mainCategories: [],
                 mcatsHeaders: [
-                { text: 'ID', value: 'mcat_id' },
-                { text: 'Category Name', value: 'mcat_name' },
-                { text: 'Main Category Name', value: 'mainmcat_name' },
-                { text: 'Actions', value: 'actions', sortable: false }
+                    { text: 'Index', value: 'index', sortable: true },
+                    { text: 'Category Name', value: 'mcat_name' },
+                    { text: 'Main Category Name', value: 'mainmcat_name' },
+                    { text: 'Actions', value: 'actions', sortable: false }
                 ],
                 addSdialog: false,
                 editedIndex: -1,
@@ -118,6 +169,10 @@
                 deleteDialog: false,
                 categoryToDelete: null,
                 deleteLoading: false,
+
+                selected: [],         
+                bulkDeleteDialog: false,
+                bulkDeleteLoading: false,
             };
         },
         created() {
@@ -132,7 +187,10 @@
         methods: {
             getAllCategories() {
                 axios.get('/admin/mcategories/vlist').then(res => {
-                this.mcats = res.data.mcats;
+                this.mcats = res.data.mcats.map((cat, i) => ({
+                    ...cat,
+                    index: i + 1
+                    }));
                 });
             },
             getMainCategories() {
@@ -219,7 +277,31 @@
                     this.deleteDialog = false;
                     this.categoryToDelete = null;
                 }
-            }
+            },
+            confirmBulkDelete() {
+                this.bulkDeleteDialog = true;
+            },
+
+            async performBulkDelete() {
+                if (!this.selected.length) return;
+                this.bulkDeleteLoading = true;
+
+                try {
+                    await axios.post('/admin/mcategories/bulk-delete', {
+                    mcat_ids: this.selected.map((c) => c.mcat_id),
+                    });
+
+                    this.$toast?.success('Selected categories deleted!');
+                    this.selected = [];        
+                    this.getAllCategories();  
+                } catch (err) {
+                    console.error(err);
+                    this.$toast?.error('Failed to delete selected categories.');
+                } finally {
+                    this.bulkDeleteLoading = false;
+                    this.bulkDeleteDialog   = false;
+                }
+            },
         }
     };
     </script>

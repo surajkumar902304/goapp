@@ -25,6 +25,19 @@
                 </v-btn>
             </v-col>
         </v-row>
+        <v-row v-if="selected.length">
+            <v-col cols="12" class="text-end">
+                <v-btn
+                color="red"
+                small
+                :loading="bulkDeleteLoading"
+                :disabled="bulkDeleteLoading"
+                @click="confirmBulkDelete"
+                >
+                Delete&nbsp;Selected&nbsp;({{ selected.length }})
+                </v-btn>
+            </v-col>
+        </v-row>
         <v-row>
             <v-col cols="12">
                 <v-card outlined>
@@ -33,7 +46,7 @@
                         <v-tab class="text-none">Active</v-tab>
                         <v-tab class="text-none">Draft</v-tab>
                     </v-tabs>
-                    <v-data-table  dense  :headers="mprosHeaders"  :items="filteredMpros"  :search="msearch" :footer-props="{
+                    <v-data-table  dense v-model="selected" :show-select="true" item-key="mproduct_id" :headers="mprosHeaders"  :items="filteredMpros"  :search="msearch" :footer-props="{
                         'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
                         <template v-slot:item.mproduct_image="{ item }">
                             <v-img :src="item.mproduct_image ? cdn + item.mproduct_image : ''" cover width="50" height="50" class="ma-1" 
@@ -85,6 +98,29 @@
                 </v-card-actions>
             </v-card>
         </v-dialog>
+
+        <!-- Bulk-delete confirmation -->
+        <v-dialog v-model="bulkDeleteDialog" max-width="400">
+            <v-card>
+                <v-card-title class="text-h6">Confirm Delete</v-card-title>
+                <v-card-text>
+                Are you sure you want to delete <strong>{{ selected.length }}</strong> products?
+                </v-card-text>
+                <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn text color="grey" @click="bulkDeleteDialog = false">Cancel</v-btn>
+                <v-btn
+                    text
+                    color="red"
+                    :loading="bulkDeleteLoading"
+                    :disabled="bulkDeleteLoading"
+                    @click="performBulkDelete"
+                >
+                    Delete
+                </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
 </template>
   
@@ -117,6 +153,10 @@ export default {
             deleteDialog: false,
             productToDelete: null,
             deleteLoading: false,
+
+            selected: [],         
+            bulkDeleteDialog: false,
+            bulkDeleteLoading: false,
         }
     },
     computed: {
@@ -237,7 +277,31 @@ export default {
                 this.deleteDialog = false;
                 this.productToDelete = null;
             }
-        }
+        },
+        confirmBulkDelete() {
+            this.bulkDeleteDialog = true;
+        },
+
+        async performBulkDelete() {
+            if (!this.selected.length) return;
+            this.bulkDeleteLoading = true;
+
+            try {
+                await axios.post('/admin/products/bulk-delete', {
+                mproduct_ids: this.selected.map((c) => c.mproduct_id),
+                });
+
+                this.$toast?.success('Selected products deleted!');
+                this.selected = [];        
+                this.getAllMpros();  
+            } catch (err) {
+                console.error(err);
+                this.$toast?.error('Failed to delete selected products.');
+            } finally {
+                this.bulkDeleteLoading = false;
+                this.bulkDeleteDialog   = false;
+            }
+        },
     }
 }
 </script>

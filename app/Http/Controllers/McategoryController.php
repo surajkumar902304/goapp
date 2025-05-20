@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\str;
+use Illuminate\Support\Facades\DB;
 
 class McategoryController extends Controller
 {
@@ -29,7 +30,7 @@ class McategoryController extends Controller
     
     public function mainMcatVlist()
     {
-        $mainmcat = MainCategory::orderBy('main_mcat_id', 'desc')->get();
+        $mainmcat = MainCategory::orderBy('main_mcat_position')->get();
         return response()->json([
             'status' => true,
             'mainmcats' => $mainmcat,
@@ -62,6 +63,16 @@ class McategoryController extends Controller
         $cat->save();
 
         return response()->json(['status' => true]);
+    }
+
+    public function mainCatReorder(Request $request)
+    {
+        foreach ($request->all() as $item) {
+            MainCategory::where('main_mcat_id', $item['id'])
+                ->update(['main_mcat_position' => $item['position']]);
+        }
+
+        return response()->json(['success' => true]);
     }
 
     public function deleteMainMcat(Request $request)
@@ -155,6 +166,21 @@ class McategoryController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function bulkDeleteMcat(Request $request)
+    {
+        $data = $request->validate([
+            'mcat_ids'   => 'required|array',
+            'mcat_ids.*' => 'integer|exists:mcategories,mcat_id',
+        ]);
+
+        DB::transaction(function () use ($data) {
+            Mcategory::whereIn('mcat_id', $data['mcat_ids'])->delete();
+
+        });
+
+        return response()->json(['status' => true]);
     }
 
 
@@ -451,6 +477,21 @@ class McategoryController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function bulkDeleteMsubcat(Request $request)
+    {
+        $data = $request->validate([
+            'msubcat_ids'   => 'required|array',
+            'msubcat_ids.*' => 'integer|exists:msubcategories,msubcat_id',
+        ]);
+
+        DB::transaction(function () use ($data) {
+            Msubcategory::whereIn('msubcat_id', $data['msubcat_ids'])->delete();
+
+        });
+
+        return response()->json(['status' => true]);
     }
 
 }

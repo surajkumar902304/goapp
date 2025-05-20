@@ -98,10 +98,10 @@
                                 <div v-for="(variant, key) in variants" :key="key">
                                     <v-sheet class="pa-2 rounded border mb-3" style="background-color: rgb(249, 249, 249);">
                                         <v-row class="align-center">
-                                            <v-col cols="8" class="d-flex align-center">
+                                            <v-col cols="8" class="d-flex flex-wrap align-center gap-2">
                                                 <span class="font-weight-bold mr-2">{{ key }}:</span>
                                                 <v-chip v-for="(opvalue, index) in variant" :key="index" outlined close 
-                                                    @click:close="removeValue(key, opvalue)" close-icon="mdi-close-circle" color="primary" class="me-1">
+                                                    @click:close="removeValue(key, opvalue)" close-icon="mdi-close-circle" color="primary">
                                                     <span class="text-capitalize">{{ opvalue }}</span>
                                                 </v-chip>
                                             </v-col>

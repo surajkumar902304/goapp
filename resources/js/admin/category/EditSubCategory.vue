@@ -238,7 +238,10 @@
               { text: 'Variants', value: 'option_value', width: '40%', sortable: false }
             ]"
             :items="indexedMatchedProducts"
-            :items-per-page="10"
+            :footer-props="{
+                        'items-per-page-options': [10, 25, 50, 100],
+                        'items-per-page-text': 'Rows per page:'
+                        }"
             class="elevation-1"
           >
             <template v-slot:item.index="{ item }">
@@ -334,7 +337,11 @@
                       :items="allProducts"
                       :headers="productHeaders"
                       :search="productSearch"
-                      show-select item-key="mproduct_id" return-object>
+                      show-select item-key="mproduct_id" return-object
+                      :footer-props="{
+                        'items-per-page-options': [10, 25, 50, 100],
+                        'items-per-page-text': 'Rows per page:'
+                        }">
           <template #item.mproduct_image="{ item }">
             <img :src="item.mproduct_image ? cdn+item.mproduct_image
                                            : '/images/no-image-available.png'"

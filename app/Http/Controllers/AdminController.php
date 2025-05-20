@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\str;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -192,7 +193,7 @@ class AdminController extends Controller
         $request->validate([
             'mbrand_id'    => 'required|exists:mbrands,mbrand_id',
             'mbrand_name'  => 'required|string|max:255',
-            'mbrand_image' => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            'mbrand_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $brand = Mbrand::find($request->mbrand_id);
@@ -781,6 +782,21 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function bulkDeleteProduct(Request $request)
+    {
+        $data = $request->validate([
+            'mproduct_ids'   => 'required|array',
+            'mproduct_ids.*' => 'integer|exists:mproducts,mproduct_id',
+        ]);
+
+        DB::transaction(function () use ($data) {
+            Mproduct::whereIn('mproduct_id', $data['mproduct_ids'])->delete();
+
+        });
+
+        return response()->json(['status' => true]);
     }
 
 

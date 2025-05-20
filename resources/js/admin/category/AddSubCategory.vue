@@ -277,7 +277,10 @@
         </v-card-text>
 
         <v-data-table v-model="productSelection" :items="allProducts" :headers="productHeaders" :search="productSearch" show-select 
-          item-key="mproduct_id" return-object>
+          item-key="mproduct_id" return-object :footer-props="{
+                        'items-per-page-options': [10, 25, 50, 100],
+                        'items-per-page-text': 'Rows per page:'
+                        }">
           <template #item.mproduct_image="{ item }">
             <img :src="item.mproduct_image ? cdn+item.mproduct_image : '/images/no-image-available.png'" width="50"/>
           </template>
@@ -520,7 +523,6 @@ export default {
       } else {                           
         const ids = this.selectedProducts.map(p => p.mproduct_id)
         fd.append('product_ids', JSON.stringify(ids))
-        fd.append('condition_logic', 'this.acondition');
       }
       await axios.post('/admin/msub-category/add', fd)
       .then((resp)=>{

@@ -10,24 +10,39 @@
                 </v-btn>
             </v-col>
         </v-row>
-      
+
         <v-row>
             <v-col cols="12">
                 <v-card outlined>
-                    <v-data-table :items="mainmcats" :headers="mainmcatsHeaders" :search="ssearch" :footer-props="{
-                        'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
-                        <template #item.main_mcat_name="{ item }">
-                            <span>{{ item.main_mcat_name }}</span>
-                        </template>
-                        <template #item.actions="{ item }">
-                            <v-btn icon color="primary" @click="editItem(item)">
+                    <v-simple-table>
+                        <thead>
+                            <tr>
+                            <th style="width:50%">Main Category Name</th>
+                            <th style="width:25%">Actions</th>
+                            <th style="width:25%">Position Drag</th>
+                            </tr>
+                        </thead>
+
+                        <!-- ✅ draggable wrapper -->
+                        <draggable tag="tbody" :list="mainmcats" handle=".drag-handle" @end="onDragEnd">
+                            <tr v-for="item in mainmcats" :key="item.main_mcat_id">
+                            <td class="align-middle">
+                                {{ item.main_mcat_name }}
+                            </td>
+                            <td>
+                                <v-btn icon color="primary" @click="editItem(item)">
                                 <v-icon small>mdi-pencil</v-icon>
-                            </v-btn>
-                            <v-icon small color="red"  @click="confirmDelete(item)">
+                                </v-btn>
+                                <v-icon small color="red" @click="confirmDelete(item)">
                                 mdi-delete
-                            </v-icon>
-                        </template>
-                    </v-data-table>
+                                </v-icon>
+                            </td>
+                            <td class="text-center drag-handle" style="cursor: grab">
+                                <v-icon small>mdi-drag</v-icon>
+                            </td>
+                            </tr>
+                        </draggable>
+                    </v-simple-table>
                 </v-card>
             </v-col>
         </v-row>
@@ -73,17 +88,19 @@
       
     <script>
     import axios from 'axios';
+    import draggable  from 'vuedraggable'
       
     export default {
         name: 'MainMcatlist',
+        components : { draggable },
         data() {
             return {
                 ssearch: '',
                 mainmcats: [],
                 mainmcatsHeaders: [
-                { text: 'ID', value: 'main_mcat_id' },
-                { text: 'Main Category Name', value: 'main_mcat_name' },
-                { text: 'Actions', value: 'actions', sortable: false }
+                    { text: 'ID', value: 'main_mcat_id' },
+                    { text: 'Main Category Name', value: 'main_mcat_name' },
+                    { text: 'Actions', value: 'actions', sortable: false }
                 ],
                 addSdialog: false,
                 editedIndex: -1,
@@ -145,6 +162,21 @@
                 this.fsvalid = false;
                 this.submitting = false;
                 this.editedIndex = -1;
+                }
+            },
+            /* --------------- DRAG REORDER --------------- */
+            async onDragEnd() {
+                const payload = this.mainmcats.map((it, i) => ({
+                id: it.main_mcat_id,
+                position: i + 1,
+                }));
+
+                try {
+                await axios.post('/admin/main-mcategories/reorder', payload);
+                this.$toast.success('Order saved');
+                } catch (err) {
+                console.error(err);
+                this.$toast.error('Failed to save order');
                 }
             },
             saveCategory() {

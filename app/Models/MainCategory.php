@@ -11,7 +11,7 @@ class MainCategory extends Model
     protected $primaryKey = 'main_mcat_id';
     protected $table = 'main_categories';
 
-    protected $fillable = ['main_mcat_name'];
+    protected $fillable = ['main_mcat_name', 'main_mcat_position'];
     // category api
     public function categories()
     {

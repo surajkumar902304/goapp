@@ -19,11 +19,27 @@
             </v-btn>
         </v-col>
     </v-row>
+    <v-row v-if="selected.length">
+        <v-col cols="12" class="text-end">
+            <v-btn
+            color="red"
+            small
+            :loading="bulkDeleteLoading"
+            :disabled="bulkDeleteLoading"
+            @click="confirmBulkDelete"
+            >
+            Delete&nbsp;Selected&nbsp;({{ selected.length }})
+            </v-btn>
+        </v-col>
+    </v-row>
     <v-row>
         <v-col cols="12">
             <v-card outlined>
-                <v-data-table :items="subcats" :headers="msubcatsHeaders" :search="ssearch" :footer-props="{
+                <v-data-table v-model="selected" :show-select="true" item-key="msubcat_id" :items="subcats" :headers="msubcatsHeaders" :search="ssearch" :footer-props="{
                         'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
+                    <template v-slot:item.index="{ item }">
+                        {{ item.index }}
+                    </template>
                     <template #item.msubcat_image="{ item }">
                         <img :src="cdn + item.msubcat_image || 'https://via.placeholder.com/50'" width="50" />
                     </template>
@@ -59,6 +75,29 @@
             </v-card-actions>
         </v-card>
     </v-dialog>
+
+    <!-- Bulk-delete confirmation -->
+    <v-dialog v-model="bulkDeleteDialog" max-width="400">
+        <v-card>
+            <v-card-title class="text-h6">Confirm Delete</v-card-title>
+            <v-card-text>
+            Are you sure you want to delete <strong>{{ selected.length }}</strong> sub-categories?
+            </v-card-text>
+            <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn text color="grey" @click="bulkDeleteDialog = false">Cancel</v-btn>
+            <v-btn
+                text
+                color="red"
+                :loading="bulkDeleteLoading"
+                :disabled="bulkDeleteLoading"
+                @click="performBulkDelete"
+            >
+                Delete
+            </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </div>
 </template>
 
@@ -78,6 +117,7 @@ export default {
       typeFilter: null,
 
       msubcatsHeaders: [
+        { text: 'Index',             value: 'index', sortable: true },
         { text: 'Image',             value: 'msubcat_image', sortable: false },
         { text: 'Sub-Category Name', value: 'msubcat_name' },
         { text: 'Category Name',     value: 'mcat_name', sortable: false },
@@ -87,6 +127,10 @@ export default {
       deleteDialog: false,
       subcategoryToDelete: null,
       deleteLoading: false,
+
+      selected: [],         
+      bulkDeleteDialog: false,
+      bulkDeleteLoading: false,
     };
   },
 
@@ -99,7 +143,10 @@ export default {
     getAllSubCategories () {
       axios.get('/admin/msub-categories/vlist').then(res => {
         this.msubcats = res.data.msubcats;
-        this.subcats = res.data.msubcats;
+        this.subcats = res.data.msubcats.map((subcat, i) => ({
+                    ...subcat,
+                    index: i + 1
+                    }));
       });
     },
     getAllCategories () {
@@ -146,7 +193,28 @@ export default {
           this.deleteDialog = false;
           this.subcategoryToDelete = null;
         }
-    }
+    },
+    confirmBulkDelete() {
+        this.bulkDeleteDialog = true;
+    },
+    async performBulkDelete() {
+        if (!this.selected.length) return;
+        this.bulkDeleteLoading = true;
+        try {
+            await axios.post('/admin/msub-categories/bulk-delete', {
+            msubcat_ids: this.selected.map((c) => c.msubcat_id),
+            });
+            this.$toast?.success('Selected sub-categories deleted!');
+            this.selected = [];        
+            this.getAllSubCategories();  
+        } catch (err) {
+            console.error(err);
+            this.$toast?.error('Failed to delete selected sub-categories.');
+        } finally {
+            this.bulkDeleteLoading = false;
+            this.bulkDeleteDialog   = false;
+        }
+    },
 
     
   }

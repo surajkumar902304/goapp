@@ -177,20 +177,20 @@ export default {
       /* table */
       cdn            : 'https://cdn.truewebpro.com/',
       ssearch        : '',
-      browsebanners  : [],            // list rendered in the table
+      browsebanners  : [],          
 
       /* cascading-select caches  */
-      mainCats       : [],            // [{main_mcat_id, main_mcat_name, categories:[...]}]
-      categories     : [],            // ↓ dynamic options for Category   select
-      subcategories  : [],            // ↓ dynamic options for Sub-Cat    select
-      products       : [],            // ↓ dynamic options for Product    select
+      mainCats       : [],           
+      categories     : [],           
+      subcategories  : [],           
+      products       : [],           
 
       /* dialog / form */
       addSdialog     : false,
-      editedIndex    : -1,            // -1 = add >-1 = edit
+      editedIndex    : -1,           
       fsvalid        : false,
       submitting     : false,
-      fillLock       : false,         // prevents watcher loops
+      fillLock       : false,       
       defaultItem    : {
         browsebanner_id   : null,
         browsebanner_name : '',
@@ -218,12 +218,10 @@ export default {
     }
   },
 
-  /* ───────────────────────── life-cycle ───────────────────────── */
   async created () {
     await Promise.all([ this.loadMainCats(), this.loadBanners() ])
   },
 
-  /* ───────────────────────── watchers ───────────────────────── */
   watch : {
     /* MAIN-CATEGORY changed */
     'defaultItem.main_mcat_id' (val) {
