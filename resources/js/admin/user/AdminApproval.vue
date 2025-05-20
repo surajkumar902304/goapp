@@ -132,10 +132,14 @@ export default {
         admin_approval: newStatus,
         })
         .then(() => {
-        this.$toast?.success(`Status updated to ${newStatus}.`);
+        this.$toast?.success(`Status updated to ${newStatus}.`, {
+                        timeout: 500
+                    })
         })
         .catch(() => {
-        this.$toast?.error("Failed to update status.");
+        this.$toast?.error("Failed to update status.", {
+                        timeout: 500
+                    })
         });
     }
   }

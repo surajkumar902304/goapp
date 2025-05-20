@@ -1,7 +1,7 @@
 <template>
     <div>
         <v-row>
-            <v-col cols="12" md="5">
+            <v-col cols="12" md="4">
                 <v-text-field v-model="msearch" clearable dense outlined prepend-inner-icon="mdi-magnify" placeholder="Search all products" hide-details></v-text-field>
             </v-col>
             <v-col cols="12" md="2">
@@ -19,25 +19,18 @@
                     clearable multiple small-chips deletable-chips>
                 </v-autocomplete>
             </v-col>
-            <v-col cols="12" md="1" class="text-end mt-1">
-                <v-btn color="secondary" small href="/admin/product/addview" class="text-none font-weight-bold">
+            <v-col cols="12" md="1">
+                <v-btn color="secondary" small href="/admin/product/addview" class="text-none" style="height: 40px">
                     Add Product
                 </v-btn>
             </v-col>
-        </v-row>
-        <v-row v-if="selected.length">
-            <v-col cols="12" class="text-end">
-                <v-btn
-                color="red"
-                small
-                :loading="bulkDeleteLoading"
-                :disabled="bulkDeleteLoading"
-                @click="confirmBulkDelete"
-                >
-                Delete&nbsp;Selected&nbsp;({{ selected.length }})
-                </v-btn>
+            <v-col cols="12" md="1" v-if="selected.length" class="text-end">
+                <v-icon small class="text-none" style="height: 40px" :loading="bulkDeleteLoading" :disabled="bulkDeleteLoading" @click="confirmBulkDelete">
+                    mdi-menu
+                </v-icon>
             </v-col>
         </v-row>
+        
         <v-row>
             <v-col cols="12">
                 <v-card outlined>
@@ -267,11 +260,15 @@ export default {
                 mproduct_id: this.productToDelete.mproduct_id
             });
 
-            this.$toast?.success('Product deleted successfully!');
+            this.$toast?.success('Product deleted successfully!', {
+                        timeout: 500
+                    })
             this.getAllMpros();
             } catch (err) {
                 console.error(err);
-            this.$toast?.error('Failed to delete product');
+            this.$toast?.error('Failed to delete product', {
+                        timeout: 500
+                    })
             } finally {
                 this.deleteLoading = false;
                 this.deleteDialog = false;
@@ -291,12 +288,16 @@ export default {
                 mproduct_ids: this.selected.map((c) => c.mproduct_id),
                 });
 
-                this.$toast?.success('Selected products deleted!');
+                this.$toast?.success('Selected products deleted!', {
+                        timeout: 500
+                    })
                 this.selected = [];        
                 this.getAllMpros();  
             } catch (err) {
                 console.error(err);
-                this.$toast?.error('Failed to delete selected products.');
+                this.$toast?.error('Failed to delete selected products.', {
+                        timeout: 500
+                    })
             } finally {
                 this.bulkDeleteLoading = false;
                 this.bulkDeleteDialog   = false;

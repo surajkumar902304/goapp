@@ -81,13 +81,31 @@
                         <v-card-text>
                             <v-row>
                                 <v-col cols="12" md="4">
-                                    <v-input dense outlined>
-                                        <v-text-field v-model.number="weight" type="number" dense outlined label="Weight" :rules="weightRules"></v-text-field>
-                                        <template v-slot:append>
-                                            <v-select v-model="weightUnit" dense solo :items="['kg', 'g']"></v-select>
-                                        </template>
-                                    </v-input>
+                                <label class="font-weight-medium mb-2 d-block">Shipping</label>
+                                <v-row dense>
+                                    <v-col cols="7">
+                                    <v-text-field
+                                        v-model.number="weight"
+                                        type="number"
+                                        dense
+                                        outlined
+                                        label="Weight"
+                                        :rules="weightRules"
+                                    ></v-text-field>
+                                    </v-col>
+                                    <v-col cols="5">
+                                    <v-select
+                                        v-model="weightUnit"
+                                        :items="['kg', 'g']"
+                                        dense
+                                        outlined
+                                        label=""
+                                        hide-details
+                                    ></v-select>
+                                    </v-col>
+                                </v-row>
                                 </v-col>
+
                             </v-row>
                         </v-card-text>
                     </v-card>
@@ -118,12 +136,12 @@
                                 </div>
                             </v-col>
                         </v-row>   
-                        <v-card-text>
+                        <v-card-text class="mb-5">
                             <v-btn v-if="!showVariantForm && Object.keys(variants).length < 1" color="primary" @click="showVariantForm = true" class="mb-3">
-                                <v-icon left>mdi-plus</v-icon> Add Variation
+                                <v-icon left>mdi-plus</v-icon>Add Variation
                             </v-btn>
                             <v-btn v-if="Object.keys(variants).length > 0 && Object.keys(variants).length < 3 && !showVariantForm" color="secondary" @click="showVariantForm = true" class="mt-3">
-                                <v-icon left>mdi-plus</v-icon> Add Another Variation
+                                <v-icon left>mdi-plus</v-icon>Add Variation
                             </v-btn> 
                             <v-row v-if="showVariantForm" class="align-center">
                                 <v-col cols="12" md="4">
@@ -347,11 +365,11 @@ export default {
                         sku: `${baseSKU}${skuSuffix}`,
                         barcode: `${vbarcode}`,
                         optname: optionKeys,
-                        optvalue: optionKeys.reduce((acc, key, i) => 
-                                    {
-                                        acc[key] = prefix[i]; 
-                                        return acc;
-                                    }, {})
+                        optvalue: optionKeys.reduce((acc, key, i) => {
+                            const formattedValue = prefix[i].charAt(0).toUpperCase() + prefix[i].slice(1);
+                            acc[key] = formattedValue;
+                            return acc;
+                        }, {})
                     });
                     variantCount++;
                     return;
@@ -670,7 +688,9 @@ export default {
             .then((resp)=>{
                 console.log(resp.data);
                 window.location.href = '/admin/products/list';
-                this.$toast.success('Product added successfully!');
+                this.$toast.success('Product added successfully!', {
+                        timeout: 500
+                    })
             })
             .catch((err)=>{
                 console.log(err)

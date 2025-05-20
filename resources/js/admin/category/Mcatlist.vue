@@ -4,23 +4,14 @@
             <v-col cols="12" md="10">
                 <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Category name"/>
             </v-col>
-            <v-col cols="12" md="2" class="text-end mt-1">
-                <v-btn color="secondary" small class="text-none font-weight-bold" @click="openDialog">
+            <v-col cols="12" md="1">
+                <v-btn color="secondary" small class="text-none font-weight-bold ma-0" style="height: 40px" @click="openDialog" > 
                     Add Category
                 </v-btn>
             </v-col>
-        </v-row>
-
-        <v-row v-if="selected.length">
-            <v-col cols="12" class="text-end">
-                <v-btn
-                color="red"
-                small
-                :loading="bulkDeleteLoading"
-                :disabled="bulkDeleteLoading"
-                @click="confirmBulkDelete"
-                >
-                Delete&nbsp;Selected&nbsp;({{ selected.length }})
+            <v-col cols="12" md="1" v-if="selected.length" class="text-end">
+                <v-btn color="red" small class="text-none font-weight-bold ma-0" style="height: 40px" :loading="bulkDeleteLoading" :disabled="bulkDeleteLoading" @click="confirmBulkDelete" >
+                    Delete ({{ selected.length }})
                 </v-btn>
             </v-col>
         </v-row>
@@ -241,13 +232,17 @@
                         this.editedIndex === -1 
                             ? 'Category added successfully!' 
                             : 'Category updated successfully!'
-                    );
+                    , {
+                        timeout: 500
+                    })
                     this.getAllCategories();
                     this.addSdialog = false;
                 })
                 .catch((error) => {
                     console.error(error);
-                    this.$toast.error('Failed to save category. Please try again.');
+                    this.$toast.error('Failed to save category. Please try again.', {
+                        timeout: 500
+                    })
                 })
                 .finally(() => {
                     this.submitting = false;
@@ -267,11 +262,15 @@
                     mcat_id: this.categoryToDelete.mcat_id
                 });
 
-                this.$toast?.success('Category deleted successfully!');
+                this.$toast?.success('Category deleted successfully!', {
+                        timeout: 500
+                    })
                 this.getAllCategories(); 
                 } catch (err) {
                     console.error(err);
-                this.$toast?.error('Failed to delete product');
+                this.$toast?.error('Failed to delete product', {
+                        timeout: 500
+                    })
                 } finally {
                     this.deleteLoading = false;
                     this.deleteDialog = false;
@@ -291,12 +290,16 @@
                     mcat_ids: this.selected.map((c) => c.mcat_id),
                     });
 
-                    this.$toast?.success('Selected categories deleted!');
+                    this.$toast?.success('Selected categories deleted!', {
+                        timeout: 500
+                    })
                     this.selected = [];        
                     this.getAllCategories();  
                 } catch (err) {
                     console.error(err);
-                    this.$toast?.error('Failed to delete selected categories.');
+                    this.$toast?.error('Failed to delete selected categories.', {
+                        timeout: 500
+                    })
                 } finally {
                     this.bulkDeleteLoading = false;
                     this.bulkDeleteDialog   = false;

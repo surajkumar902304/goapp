@@ -13,25 +13,18 @@
             <v-autocomplete v-model="typeFilter" :items="[ { text: 'All', value: null }, { text: 'Smart', value: 'smart' }, { text: 'Manual', value: 'manual' } ]" 
                 item-text="text" item-value="value" outlined dense label="Type" hide-details @change="typeByStatus"></v-autocomplete>
         </v-col>
-        <v-col cols="12" md="2" class="text-end mt-1">
-            <v-btn color="secondary" small href="/admin/msub-category/add" class="text-none font-weight-bold">
-                Add Sub-Category
+        <v-col cols="12" md="1" class="text-end">
+            <v-btn color="secondary" small href="/admin/msub-category/add" class="text-none font-weight-bold" style="height: 40px">
+                Sub-Category
             </v-btn>
         </v-col>
+        <v-col cols="12" md="1" v-if="selected.length" class="text-end">
+                <v-btn color="red" small class="text-none font-weight-bold ma-0" style="height: 40px" :loading="bulkDeleteLoading" :disabled="bulkDeleteLoading" @click="confirmBulkDelete" >
+                    Delete ({{ selected.length }})
+                </v-btn>
+            </v-col>
     </v-row>
-    <v-row v-if="selected.length">
-        <v-col cols="12" class="text-end">
-            <v-btn
-            color="red"
-            small
-            :loading="bulkDeleteLoading"
-            :disabled="bulkDeleteLoading"
-            @click="confirmBulkDelete"
-            >
-            Delete&nbsp;Selected&nbsp;({{ selected.length }})
-            </v-btn>
-        </v-col>
-    </v-row>
+
     <v-row>
         <v-col cols="12">
             <v-card outlined>
@@ -183,11 +176,15 @@ export default {
         await axios.post('/admin/msub-category-delete', {
             msubcat_id: this.subcategoryToDelete.msubcat_id
         });
-        this.$toast?.success('Sub-Category deleted successfully!');
+        this.$toast?.success('Sub-Category deleted successfully!', {
+                        timeout: 500
+                    })
         this.getAllSubCategories(); 
         } catch (err) {
             console.error(err);
-        this.$toast?.error('Failed to delete product');
+        this.$toast?.error('Failed to delete product', {
+                        timeout: 500
+                    })
         } finally {
           this.deleteLoading = false;
           this.deleteDialog = false;
@@ -204,12 +201,16 @@ export default {
             await axios.post('/admin/msub-categories/bulk-delete', {
             msubcat_ids: this.selected.map((c) => c.msubcat_id),
             });
-            this.$toast?.success('Selected sub-categories deleted!');
+            this.$toast?.success('Selected sub-categories deleted!', {
+                        timeout: 500
+                    })
             this.selected = [];        
             this.getAllSubCategories();  
         } catch (err) {
             console.error(err);
-            this.$toast?.error('Failed to delete selected sub-categories.');
+            this.$toast?.error('Failed to delete selected sub-categories.', {
+                        timeout: 500
+                    })
         } finally {
             this.bulkDeleteLoading = false;
             this.bulkDeleteDialog   = false;

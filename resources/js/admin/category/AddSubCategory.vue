@@ -249,7 +249,7 @@
         <!-- Create offer -->
         <v-card outlined class="mt-3">
           <v-card-actions><span class="body-2 fw-semibold">Create Offer</span></v-card-actions>
-          <v-text-field class="px-4 mt-6" v-model="form.offer_name" label="Offer Name" dense outlined/>
+          <v-text-field class="px-4 mt-6" v-model="form.offer_name" label="Timer" dense outlined/>
           <v-text-field class="px-4 mt-3" v-model="form.start_time" label="Start Time" type="datetime-local" dense outlined :rules="startTimeRules"/>
           <v-text-field class="px-4 mt-3" v-model="form.end_time" label="End Time" type="datetime-local" dense outlined :rules="endTimeRules"/>
         </v-card>
@@ -528,7 +528,9 @@ export default {
       .then((resp)=>{
           console.log(resp.data);
           window.location.href = '/admin/msub-categories/list';
-          this.$toast.success('Sub-Category added successfully!');
+          this.$toast.success('Sub-Category added successfully!', {
+                        timeout: 500
+                    })
       })
     },
     navigateBack() {

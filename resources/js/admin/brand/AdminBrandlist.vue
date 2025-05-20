@@ -217,10 +217,14 @@ export default {
                 this.getAllBrands();
                 this.addSdialog = false;
 
-                this.$toast.success(isNew ? 'Banner added successfully!' : 'Banner updated successfully!');
+                this.$toast.success(isNew ? 'Banner added successfully!' : 'Banner updated successfully!', {
+                        timeout: 500
+                    })
             })
             .catch(() => {
-            this.$toast.error('Something went wrong while saving the brand.');
+            this.$toast.error('Something went wrong while saving the brand.', {
+                        timeout: 500
+                    })
             })
             .finally(() => {
             this.submitting = false;
@@ -237,11 +241,15 @@ export default {
             await axios.post('/admin/mbrand-delete', {
                 mbrand_id: this.brandToDelete.mbrand_id
             });
-            this.$toast?.success('Brand deleted successfully!');
+            this.$toast?.success('Brand deleted successfully!', {
+                        timeout: 500
+                    })
             this.getAllBrands(); 
             } catch (err) {
                 console.error(err);
-            this.$toast?.error('Failed to delete product');
+            this.$toast?.error('Failed to delete product', {
+                        timeout: 500
+                    })
             } finally {
                 this.deleteLoading = false;
                 this.deleteDialog = false;

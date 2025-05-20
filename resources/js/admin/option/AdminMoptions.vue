@@ -146,7 +146,9 @@ export default {
                 .then((resp)=>{
                     this.getMoptions();
                     this.editDialog = false;
-                    this.$toast?.success('Option updated successfully!');
+                    this.$toast?.success('Option updated successfully!', {
+                        timeout: 500
+                    })
                 })
         },
         editItem(item){

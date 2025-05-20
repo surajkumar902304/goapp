@@ -80,14 +80,32 @@
                         <v-card-title>Shipping</v-card-title>
                         <v-card-text>
                             <v-row>
-                            <v-col cols="12" md="4">
-                                <v-input dense outlined>
-                                <v-text-field v-model.number="weight" type="number" dense outlined label="Weight" :rules="weightRules" />
-                                <template v-slot:append>
-                                    <v-select v-model="weightUnit" dense solo :items="['kg','g']" />
-                                </template>
-                                </v-input>
-                            </v-col>
+                                <v-col cols="12" md="4">
+                                <label class="font-weight-medium mb-2 d-block">Shipping</label>
+                                <v-row dense>
+                                    <v-col cols="7">
+                                    <v-text-field
+                                        v-model.number="weight"
+                                        type="number"
+                                        dense
+                                        outlined
+                                        label="Weight"
+                                        :rules="weightRules"
+                                    ></v-text-field>
+                                    </v-col>
+                                    <v-col cols="5">
+                                    <v-select
+                                        v-model="weightUnit"
+                                        :items="['kg', 'g']"
+                                        dense
+                                        outlined
+                                        label=""
+                                        hide-details
+                                    ></v-select>
+                                    </v-col>
+                                </v-row>
+                                </v-col>
+
                             </v-row>
                         </v-card-text>
                     </v-card>
@@ -115,7 +133,7 @@
                         </v-row>
                         <v-card-text>
                             <v-btn v-if="!showVariantForm && Object.keys(variants).length < 1" color="primary" @click="showVariantForm = true" class="mb-3"><v-icon left>mdi-plus</v-icon> Add Variation</v-btn>
-                            <v-btn v-if="Object.keys(variants).length > 0 && Object.keys(variants).length < 3 && !showVariantForm" color="secondary" @click="showVariantForm = true" class="mt-3"><v-icon left>mdi-plus</v-icon> Add Another Variation</v-btn>
+                            <v-btn v-if="Object.keys(variants).length > 0 && Object.keys(variants).length < 3 && !showVariantForm" color="secondary" @click="showVariantForm = true" class="mt-3"><v-icon left>mdi-plus</v-icon>Add Variation</v-btn>
                             <v-row v-if="showVariantForm" class="align-center">
                             <v-col cols="12" md="4">
                                 <v-select v-model="selectedOption" :items="filteredOptions" item-text="moption_name" item-value="moption_name" label="Option Name" dense outlined hide-details />
@@ -433,7 +451,9 @@
 
         async performDuplicate() {
             if (!this.duplicateProductId) {
-            this.$toast?.error('No product selected to duplicate');
+            this.$toast?.error('No product selected to duplicate', {
+                        timeout: 500
+                    })
             return;
             }
             this.deleteLoading = true;
@@ -443,12 +463,16 @@
                 mproduct_id: this.duplicateProductId
             });
 
-            this.$toast?.success('Product duplicated successfully!');
+            this.$toast?.success('Product duplicated successfully!', {
+                        timeout: 500
+                    })
             window.location.href = '/admin/products/list';
             this.getProductData();
             } catch (err) {
             console.error(err);
-            this.$toast?.error('Failed to duplicate product');
+            this.$toast?.error('Failed to duplicate product', {
+                        timeout: 500
+                    })
             } finally {
                 this.deleteLoading = false;
                 this.duplicateDialog = false;
@@ -489,8 +513,9 @@
                     variantImage: null,
                     optname: optionKeys,
                     optvalue: optionKeys.reduce((acc, key, i) => {
-                    acc[key] = prefix[i];
-                    return acc;
+                        const value = prefix[i];
+                        acc[key] = value.charAt(0).toUpperCase() + value.slice(1);
+                        return acc;
                     }, {}),
                     mvariant_id: null
                 });
@@ -824,7 +849,9 @@
             })
             .then(resp => {
                 console.log(resp.data);
-                this.$toast.success('Product updated successfully!');
+                this.$toast.success('Product updated successfully!', {
+                        timeout: 500
+                    })
             })
             .catch ((err) => {
                 console.error(err);

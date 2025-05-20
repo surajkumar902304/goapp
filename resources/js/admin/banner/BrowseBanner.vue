@@ -368,10 +368,14 @@ export default {
       try {
         await axios.post(url, fd, { headers:{'Content-Type':'multipart/form-data'} })
         await this.loadBanners()
-        this.$toast.success(isNew ? 'Banner added!' : 'Banner updated!')
+        this.$toast.success(isNew ? 'Banner added!' : 'Banner updated!', {
+                        timeout: 500
+                    })
         this.addSdialog = false
       } catch {
-        this.$toast.error('Save failed')
+        this.$toast.error('Save failed', {
+                        timeout: 500
+                    })
       } finally {
         this.submitting = false
       }
@@ -382,9 +386,13 @@ export default {
       const payload = this.browsebanners.map((it,i)=>({id:it.browsebanner_id,position:i+1}))
       try {
         await axios.post('/admin/browsebanners/reorder', payload)
-        this.$toast.success('Order saved')
+        this.$toast.success('Order saved', {
+                        timeout: 500
+                    })
       } catch {
-        this.$toast.error('Failed to save order')
+        this.$toast.error('Failed to save order', {
+                        timeout: 500
+                    })
       }
     },
 
@@ -400,10 +408,14 @@ export default {
       try {
         await axios.post('/admin/browsebanner-delete',
                          {browsebanner_id:this.browseBannerToDelete.browsebanner_id})
-        this.$toast.success('Banner deleted')
+        this.$toast.success('Banner deleted', {
+                        timeout: 500
+                    })
         await this.loadBanners()
       } catch {
-        this.$toast.error('Delete failed')
+        this.$toast.error('Delete failed', {
+                        timeout: 500
+                    })
       } finally {
         this.deleteLoading = false
         this.deleteDialog  = false

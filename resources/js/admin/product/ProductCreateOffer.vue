@@ -278,11 +278,15 @@ export default {
         product_offer: this.addForm.product_offer,
       });
 
-      this.$toast.success("Offers added successfully!");
+      this.$toast.success("Offers added successfully!", {
+                        timeout: 500
+                    })
       this.addDialog = false;
       this.loadAll();
     } catch (err) {
-      this.$toast.error("Failed to add offers.");
+      this.$toast.error("Failed to add offers.", {
+                        timeout: 500
+                    })
     } finally {
       this.saving = false;
     }
@@ -371,7 +375,9 @@ export default {
           product_deal_tag: this.editForm.product_deal_tag,
           product_offer: this.editForm.product_offer,
         });
-        this.$toast?.success('Offer Updated successfully!');
+        this.$toast?.success('Offer Updated successfully!', {
+                        timeout: 500
+                    })
         await this.loadAll();
         this.resetEdit();
       } finally {
@@ -398,10 +404,14 @@ export default {
             product_offer_id: this.offerToDelete.product_offer_id
           });
 
-          this.$toast?.success('Offer deleted successfully!');
+          this.$toast?.success('Offer deleted successfully!', {
+                        timeout: 500
+                    })
           this.loadAll();
         } catch (err) {
-          this.$toast?.error('Failed to delete offer');
+          this.$toast?.error('Failed to delete offer', {
+                        timeout: 500
+                    })
         } finally {
           this.deleteLoading = false;
           this.deleteDialog = false;

@@ -173,10 +173,14 @@
 
                 try {
                 await axios.post('/admin/main-mcategories/reorder', payload);
-                this.$toast.success('Order saved');
+                this.$toast.success('Order saved', {
+                        timeout: 500
+                    })
                 } catch (err) {
                 console.error(err);
-                this.$toast.error('Failed to save order');
+                this.$toast.error('Failed to save order', {
+                        timeout: 500
+                    })
                 }
             },
             saveCategory() {
@@ -197,13 +201,17 @@
                         this.editedIndex === -1 
                             ? 'Main category added successfully!' 
                             : 'Main category updated successfully!'
-                    );
+                    , {
+                        timeout: 500
+                    })
                     this.getAllMainCategories();
                     this.addSdialog = false;
                 })
                 .catch((error) => {
                     console.error(error);
-                    this.$toast.error('Failed to save category. Please try again.');
+                    this.$toast.error('Failed to save category. Please try again.', {
+                        timeout: 500
+                    })
                 })
                 .finally(() => {
                     this.submitting = false;
@@ -223,11 +231,15 @@
                     main_mcat_id: this.categoryToDelete.main_mcat_id
                 });
 
-                this.$toast?.success('Main Category deleted successfully!');
+                this.$toast?.success('Main Category deleted successfully!', {
+                        timeout: 500
+                    })
                 this.getAllMainCategories(); 
                 } catch (err) {
                     console.error(err);
-                this.$toast?.error('Failed to delete product');
+                this.$toast?.error('Failed to delete product', {
+                        timeout: 500
+                    })
                 } finally {
                     this.deleteLoading = false;
                     this.deleteDialog = false;
