@@ -26,7 +26,7 @@
               <thead>
                 <tr>
                   <th style="width:30%">Image</th>
-                  <th style="width:40%">Name</th>
+                  <th style="width:40%">Banner Name</th>
                   <th style="width:20%">Actions</th>
                   <th style="width:10%">Position Drag</th> <!-- drag column -->
                 </tr>

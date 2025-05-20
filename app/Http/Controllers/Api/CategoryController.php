@@ -40,7 +40,9 @@ class CategoryController extends Controller
             'subcategories' => fn ($q2) =>
                 $q2->whereJsonContains('msubcat_publish', 'Online Store')
         ])
-    ])->get();
+    ])
+    ->orderBy('main_mcat_position')
+    ->get();
 
     /* ---------- 3. attach products ---------- */
     $mainCats->each(fn ($main) =>
