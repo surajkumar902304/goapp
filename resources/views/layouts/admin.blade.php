@@ -55,25 +55,156 @@
                             </v-list-item-icon>
                             <v-list-item-title>Dashboard</v-list-item-title>
                         </v-list-item>
+                        <v-list-item href="#" class="">
+                          <v-list-item-icon>
+                            <v-icon>mdi-account-edit</v-icon>
+                          </v-list-item-icon>
+                          <v-list-item-title>Orders</v-list-item-title>
+                        </v-list-item>
+                        <v-list-item href="{{route('products.list')}}" class="{{ request()->routeIs('products.list') ? 'active' : '' }}">
+                            <v-list-item-icon>
+                              <v-icon>mdi-package-variant</v-icon>
+                            </v-list-item-icon>
+                            <v-list-item-title>Products</v-list-item-title>
+                        </v-list-item>
                         <v-list-item href="{{route('users.list')}}" class="{{ request()->routeIs('users.list') ? 'active' : '' }}">
                           <v-list-item-icon>
                             <v-icon>mdi-account-edit</v-icon>
                           </v-list-item-icon>
-                          <v-list-item-title>Users</v-list-item-title>
+                          <v-list-item-title>Customers</v-list-item-title>
                         </v-list-item>
-                        <v-list-item href="{{route('products.list')}}" class="{{ request()->routeIs('products.list') ? 'active' : '' }}">
-                            <v-list-item-icon>
-                              <v-icon>mdi-format-list-text</v-icon>
-                            </v-list-item-icon>
-                            <v-list-item-title>Products</v-list-item-title>
-                        </v-list-item>
-                        <v-list-item href="{{route('productoffers.list')}}" class="{{ request()->routeIs('productoffers.list') ? 'active' : '' }}">
+                        <!-- Product Setting -->
+                        <v-list-group
+                          prepend-icon="mdi-package-variant"
+                          :value="{{ request()->routeIs(
+                            'mainmcats.list', 
+                            'mcats.list', 
+                            'msubcats.list', 
+                            'productoffers.list', 
+                            'moptions.list', 
+                            'mbrands.list'
+                          ) ? 'true' : 'false' }}"
+                          no-action
+                        >
+                          <template v-slot:activator>
+                            <v-list-item-title>Product Setting</v-list-item-title>
+                          </template>
+
+                          <v-list-item href="{{route('mainmcats.list')}}" class="{{ request()->routeIs('mainmcats.list') ? 'active' : '' }}">
+                            <v-list-item-icon><v-icon>mdi-format-list-text</v-icon></v-list-item-icon>
+                            <v-list-item-title>Main Categories</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="{{route('mcats.list')}}" class="{{ request()->routeIs('mcats.list') ? 'active' : '' }}">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Categories</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="{{route('msubcats.list')}}" class="{{ request()->routeIs('msubcats.list') ? 'active' : '' }}">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Sub-Categories</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="{{route('productoffers.list')}}" class="{{ request()->routeIs('productoffers.list') ? 'active' : '' }}">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Product Offers</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="{{route('moptions.list')}}" class="{{ request()->routeIs('moptions.list') ? 'active' : '' }}">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Product Options</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="{{route('mbrands.list')}}" class="{{ request()->routeIs('mbrands.list') ? 'active' : '' }}">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Brands</v-list-item-title>
+                          </v-list-item>
+                        </v-list-group>
+
+                        <!-- Banners Group -->
+                        <v-list-group
+                          prepend-icon="mdi-image-multiple"
+                          value="{{ request()->routeIs('browsebanners.list') ? true : false }}"
+                          no-action
+                        >
+                          <template v-slot:activator>
+                            <v-list-item-title>Theme Setting</v-list-item-title>
+                          </template>
+
+                          <v-list-item href="{{ route('browsebanners.list') }}" class="{{ request()->routeIs('browsebanners.list') ? 'active' : '' }}">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Round Banners</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="#" class="">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Big Sliders</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="#" class="">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Small Sliders</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="#" class="">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Deals Sliders</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="#" class="">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>New Products Sliders</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="#" class="">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Categories Sliders</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="#" class="">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Top Sallers</v-list-item-title>
+                          </v-list-item>
+                        </v-list-group>
+                        {{-- Shop Setting --}}
+                        <v-list-group
+                          prepend-icon="mdi-image-multiple"
+                          value="{{ request()->routeIs('browsebanners.list') ? true : false }}"
+                          no-action
+                        >
+                          <template v-slot:activator>
+                            <v-list-item-title>Shop Setting</v-list-item-title>
+                          </template>
+
+                          <v-list-item href="#" class="">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Round Banners</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="#" class="">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Shipping</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="#" class="">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Pages</v-list-item-title>
+                          </v-list-item>
+
+                          <v-list-item href="#" class="">
+                            <v-list-item-icon><v-icon>mdi-sale</v-icon></v-list-item-icon>
+                            <v-list-item-title>Payment Method</v-list-item-title>
+                          </v-list-item>
+
+                          
+                        </v-list-group>
+                        {{-- <v-list-item href="{{route('productoffers.list')}}" class="{{ request()->routeIs('productoffers.list') ? 'active' : '' }}">
                           <v-list-item-icon>
                             <v-icon>mdi-offer</v-icon>
                           </v-list-item-icon>
                           <v-list-item-title>Product Offers</v-list-item-title>
-                        </v-list-item>
-                        <v-list-item href="{{route('mainmcats.list')}}" class="{{ request()->routeIs('mainmcats.list') ? 'active' : '' }}">
+                        </v-list-item> --}}
+                        {{-- <v-list-item href="{{route('mainmcats.list')}}" class="{{ request()->routeIs('mainmcats.list') ? 'active' : '' }}">
                             <v-list-item-icon>
                               <v-icon>mdi-storefront</v-icon>
                             </v-list-item-icon>
@@ -102,7 +233,7 @@
                               <v-icon>mdi-domain</v-icon>
                             </v-list-item-icon>
                             <v-list-item-title>Brands</v-list-item-title>
-                        </v-list-item>
+                        </v-list-item> --}}
                         {{-- <v-list-item href="{{ route('largebanners.list') }}" class="{{ request()->routeIs('largebanners.list') ? 'active' : '' }}">
                             <v-list-item-icon>
                               <v-icon>mdi-size-xxs</v-icon>
@@ -127,12 +258,12 @@
                             </v-list-item-icon>
                             <v-list-item-title>Home Fruit Banners</v-list-item-title>
                         </v-list-item> --}}
-                        <v-list-item href="{{ route('browsebanners.list') }}" class="{{ request()->routeIs('browsebanners.list') ? 'active' : '' }}">
+                        {{-- <v-list-item href="{{ route('browsebanners.list') }}" class="{{ request()->routeIs('browsebanners.list') ? 'active' : '' }}">
                             <v-list-item-icon>
                               <v-icon>mdi-simple-icons</v-icon>
                             </v-list-item-icon>
                             <v-list-item-title>Browse Banners</v-list-item-title>
-                        </v-list-item>
+                        </v-list-item> --}}
                         <v-list-item href="/admin/logout">
                             <v-list-item-icon>
                               <v-icon>mdi-logout</v-icon>
