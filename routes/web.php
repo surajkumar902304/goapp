@@ -54,6 +54,9 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::post('/mbrands/update',[AdminController::class,'editBrand'])->name('mbrand.edit');
         Route::post('/mbrand-delete', [AdminController::class, 'deleteBrand']);
 
+        // Brands routes
+        Route::get('/mtags/vlist',[AdminController::class,'mtagVlist'])->name('mtags.vlist');
+
         // Products routes
         Route::get('/products/list',[AdminController::class,'productsList'])->name('products.list');
         Route::get('/products/vlist',[AdminController::class,'adminProductlist'])->name('products.vlist');
@@ -62,6 +65,12 @@ Route::group(['prefix'=> 'admin'], function (){
         Route::post('/product-duplicate', [AdminController::class, 'productDuplicate'])->name('mproduct.duplicate');
         Route::post('/product-delete', [AdminController::class, 'deleteProduct']);
         Route::post('/products/bulk-delete', [AdminController::class, 'bulkDeleteProduct']);
+
+        // Products more bulk option routes
+        Route::post('/products-bulk/mark-status', [AdminController::class, 'productsBulkmarkStatus']);
+        Route::post('/products-bulk/delete', [AdminController::class, 'productsBulkDelete']);
+        Route::post('/products-bulk/add-tags', [AdminController::class, 'productsBulkAddTags']);
+        Route::post('/products-bulk/remove-tags', [AdminController::class, 'productsBulkRemoveTags']);
         
         // Product Variations routes
         Route::post('/save-product', [AdminController::class, 'productStoreData'])->name('adminproduct.storedata');

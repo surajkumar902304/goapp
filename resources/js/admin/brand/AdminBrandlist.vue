@@ -26,9 +26,9 @@
                         <v-btn icon color="primary" @click="editItem(item)">
                             <v-icon small>mdi-pencil</v-icon>
                         </v-btn>
-                        <v-icon small color="red"  @click="confirmDelete(item)">
+                        <!-- <v-icon small color="red"  @click="confirmDelete(item)">
                                 mdi-delete
-                            </v-icon>
+                            </v-icon> -->
                     </template>
                 </v-data-table>
             </v-card>

@@ -20,6 +20,21 @@
                     </v-btn>
                 </div>
             </div>
+            <!-- Save or Back without Save -->
+            <v-dialog v-model="unsavedDialog" max-width="400">
+                <v-card>
+                    <v-card-title class="text-h6">Unsaved Changes</v-card-title>
+                    <v-card-text>
+                    You have unsaved product data. Do you want to save it before leaving?
+                    </v-card-text>
+                    <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn text color="primary" @click="saveProductData">Save</v-btn>
+                    <v-btn text color="red" @click="exitWithoutSaving">Back Without Saving</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
             <v-row>
                 <v-col cols="12" md="9">
                     <v-card>
@@ -272,6 +287,7 @@ export default {
         return {
             method:"add",
             backLoading: false,
+            unsavedDialog: false,
             saveLoading: false,
             optname:{},
             optvalue:{},
@@ -697,14 +713,21 @@ export default {
             })
         },
         navigateBack() {
-            if (this.backLoading) return;
-
-            this.backLoading = true;
-
+            if (!this.productname?.trim()) {
+                this.backLoading = true; 
+                setTimeout(() => {
+                    window.location.href = '/admin/products/list';
+                }, 500); 
+            } else {
+                this.unsavedDialog = true;
+            }
+        },
+        exitWithoutSaving() {
+            this.unsavedDialog = false;
             setTimeout(() => {
                 window.location.href = '/admin/products/list';
-            }, 500); 
-        },
+            }, 500);
+        }
     } 
 };
 </script>

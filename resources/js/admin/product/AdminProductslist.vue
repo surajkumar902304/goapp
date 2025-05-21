@@ -1,7 +1,7 @@
 <template>
     <div>
         <v-row>
-            <v-col cols="12" md="4">
+            <v-col cols="12" md="5">
                 <v-text-field v-model="msearch" clearable dense outlined prepend-inner-icon="mdi-magnify" placeholder="Search all products" hide-details></v-text-field>
             </v-col>
             <v-col cols="12" md="2">
@@ -20,25 +20,64 @@
                 </v-autocomplete>
             </v-col>
             <v-col cols="12" md="1">
-                <v-btn color="secondary" small href="/admin/product/addview" class="text-none" style="height: 40px">
+                <v-btn color="secondary" small href="/admin/product/addview" class="text-none" style="height: 40px; padding: 7px; margin-left: -5px;">
                     Add Product
                 </v-btn>
             </v-col>
-            <v-col cols="12" md="1" v-if="selected.length" class="text-end">
+            <!-- <v-col cols="12" md="1" v-if="selected.length" class="text-end">
                 <v-icon small class="text-none" style="height: 40px" :loading="bulkDeleteLoading" :disabled="bulkDeleteLoading" @click="confirmBulkDelete">
                     mdi-menu
                 </v-icon>
-            </v-col>
+                
+            </v-col> -->
         </v-row>
         
         <v-row>
             <v-col cols="12">
                 <v-card outlined>
-                    <v-tabs v-model="activeTab" class="mb-2" active-class="grey lighten-3" height="30">
-                        <v-tab class="text-none">All</v-tab>
-                        <v-tab class="text-none">Active</v-tab>
-                        <v-tab class="text-none">Draft</v-tab>
-                    </v-tabs>
+                    <v-row class="align-center">
+                        <v-col>
+                            <v-tabs v-model="activeTab" active-class="grey lighten-3" height="40" class="text-none">
+                            <v-tab>All</v-tab>
+                            <v-tab>Active</v-tab>
+                            <v-tab>Draft</v-tab>
+                            </v-tabs>
+                        </v-col>
+
+                        <v-col class="d-flex justify-end" cols="auto" v-if="selected.length > 0">
+                            <v-menu offset-y>
+                                <template v-slot:activator="{ on, attrs }">
+                                <v-icon
+                                    color="primary"
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    style="cursor: pointer; margin-right: 5px;"
+                                >
+                                    mdi-dots-vertical
+                                </v-icon>
+                                </template>
+
+                                <v-list dense>
+                                    <v-list-item @click="openConfirmDialog('delete')">
+                                        <v-list-item-title>Delete</v-list-item-title>
+                                    </v-list-item>
+                                    <v-list-item @click="openAddTagDialog">
+                                        <v-list-item-title>Add Tag</v-list-item-title>
+                                    </v-list-item>
+                                    <v-list-item @click="openremoveTagDialog">
+                                        <v-list-item-title>Remove Tag</v-list-item-title>
+                                    </v-list-item>
+                                    <v-list-item @click="openConfirmDialog('markActive')">
+                                        <v-list-item-title>Mark as Active</v-list-item-title>
+                                    </v-list-item>
+                                    <v-list-item @click="openConfirmDialog('markDraft')">
+                                        <v-list-item-title>Mark as Draft</v-list-item-title>
+                                    </v-list-item>
+                                </v-list>
+                            </v-menu>
+                        </v-col>
+                    </v-row>
+
                     <v-data-table  dense v-model="selected" :show-select="true" item-key="mproduct_id" :headers="mprosHeaders"  :items="filteredMpros"  :search="msearch" :footer-props="{
                         'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
                         <template v-slot:item.mproduct_image="{ item }">
@@ -55,9 +94,13 @@
                             <a :href="'/admin/product/' + item.mproduct_id" class="link-dark"> {{ item.mproduct_title }} </a>
                         </template>
                         <template v-slot:item.status="{ item }">
-                            <v-btn :color="item.status === 'Active' ? 'green lighten-2' : 'cyan lighten-5'" rounded x-small elevation="0" class="text-none">
-                                {{ item.status }} 
-                            </v-btn>
+                            <v-chip :color="item.status === 'Active' ? 'green' : 'blue'" class="ma-1" outlined pill small>
+                                {{
+                                item.status === 'Active'
+                                    ? 'Active'
+                                    : 'Draft'
+                                }}
+                            </v-chip>
                         </template>
                         <template v-slot:item.minventory="{ item }">
                             <span>
@@ -93,27 +136,93 @@
         </v-dialog>
 
         <!-- Bulk-delete confirmation -->
-        <v-dialog v-model="bulkDeleteDialog" max-width="400">
+        <v-dialog v-model="confirmDialog" max-width="400">
             <v-card>
-                <v-card-title class="text-h6">Confirm Delete</v-card-title>
+                <v-card-title class="text-h6">Confirm {{ actionLabel }}</v-card-title>
                 <v-card-text>
-                Are you sure you want to delete <strong>{{ selected.length }}</strong> products?
+                Are you sure you want to <strong>{{ actionLabel.toLowerCase() }}</strong> 
+                <strong>{{ selected.length }}</strong> selected products?
                 </v-card-text>
                 <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn text color="grey" @click="bulkDeleteDialog = false">Cancel</v-btn>
-                <v-btn
-                    text
-                    color="red"
-                    :loading="bulkDeleteLoading"
-                    :disabled="bulkDeleteLoading"
-                    @click="performBulkDelete"
-                >
-                    Delete
-                </v-btn>
+                <v-btn text color="grey" @click="confirmDialog = false">Cancel</v-btn>
+                <v-btn text color="red" @click="executeBulkAction">Yes</v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
+
+        <!-- Add tag -->
+        <v-dialog v-model="addTagDialog" max-width="500">
+            <v-card class="d-flex flex-column justify-space-between" style="min-height: 340px;">
+                <v-card-title class="text-h6">Add Tags</v-card-title>
+                <v-card-text>
+                    <v-autocomplete
+  ref="tagsAutocomplete"
+  v-model="tagsToAdd"
+  :items="mtags"
+  item-text="mtag_name"
+  item-value="mtag_id"
+  label="Select Tags"
+  multiple
+  small-chips
+  deletable-chips
+  clearable
+  outlined
+  dense
+  :search-input.sync="typedTag"
+  :filter="tagFilter"
+  style="height: 38px;"
+>
+  <template v-slot:no-data>
+    <v-list-item>
+      <v-list-item-content>
+        <v-btn text small @click="addNewTag" :disabled="!typedTag?.trim()">
+          Add “{{ typedTag }}”
+        </v-btn>
+      </v-list-item-content>
+    </v-list-item>
+  </template>
+</v-autocomplete>
+
+                </v-card-text>
+                <v-spacer></v-spacer>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn text @click="addTagDialog = false">Cancel</v-btn>
+                    <v-btn color="primary" @click="submitAddTags">Add</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <!-- Remove tag -->
+        <v-dialog v-model="removeTagDialog" max-width="500">
+            <v-card class="d-flex flex-column justify-space-between" style="min-height: 340px;">
+                <v-card-title class="text-h6">Remove Tags</v-card-title>
+                <v-card-text>
+                    <v-autocomplete
+                        v-model="tagsToRemove"
+                        :items="mtags"
+                        item-text="mtag_name"
+                        item-value="mtag_id"
+                        label="Select Tags"
+                        multiple
+                        small-chips deletable-chips
+                        clearable
+                        outlined
+                        dense
+                        style="height: 38px;">
+                    </v-autocomplete>
+                </v-card-text>
+                <v-spacer></v-spacer>
+                <v-card-actions>
+                    <v-spacer />
+                    <v-btn text @click="removeTagDialog = false">Cancel</v-btn>
+                    <v-btn color="primary" @click="submitRemoveTags">Remove</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+
     </div>
 </template>
   
@@ -136,7 +245,7 @@ export default {
             selectedTags: [],
             mprosHeaders: [
                 { text: 'Image', value: 'mproduct_image', class: 'grey lighten-3', width: '100px', sortable: false },
-                { text: 'Product', value: 'mproduct_title', class: 'grey lighten-3', width: '40%'},
+                { text: 'Product', value: 'mproduct_title', class: 'grey lighten-3', width: '30%'},
                 { text: 'Status', value: 'status', class: 'grey lighten-3', width: '150px' },
                 { text: 'Inventory', value: 'minventory', class: 'grey lighten-3', width: '150px', sortable: false },
                 { text: 'Type', value: 'type_name', class: 'grey lighten-3', width: '150px' },
@@ -147,9 +256,18 @@ export default {
             productToDelete: null,
             deleteLoading: false,
 
-            selected: [],         
             bulkDeleteDialog: false,
             bulkDeleteLoading: false,
+
+            selected: [],
+            actionToConfirm: '',
+            confirmDialog: false,
+            addTagDialog: false,
+            removeTagDialog: false,
+            tagsToAdd: [],
+            tagsToRemove: [],
+            mtags: [],
+            actionLabel: '',
         }
     },
     computed: {
@@ -275,32 +393,168 @@ export default {
                 this.productToDelete = null;
             }
         },
-        confirmBulkDelete() {
-            this.bulkDeleteDialog = true;
+        openAddTagDialog() {
+            this.addTagDialog = true;
+            this.tagsToAdd = [];
+            this.fetchTags();
         },
+        tagFilter(item, queryText, itemText) {
+            this.typedTag = queryText;
+            return itemText.toLowerCase().includes(queryText.toLowerCase());
+        },
+        async addNewTag() {
+  const newName = this.typedTag?.trim();
+  if (!newName) return;
 
-        async performBulkDelete() {
-            if (!this.selected.length) return;
-            this.bulkDeleteLoading = true;
+  const alreadyExists = this.mtags.some(
+    (tag) => tag.mtag_name.toLowerCase() === newName.toLowerCase()
+  );
+  if (alreadyExists) {
+    this.typedTag = "";
+    if (this.$refs.tagsAutocomplete) {
+      this.$refs.tagsAutocomplete.internalSearch = "";
+    }
+    return;
+  }
 
-            try {
-                await axios.post('/admin/products/bulk-delete', {
-                mproduct_ids: this.selected.map((c) => c.mproduct_id),
-                });
+  try {
+    const response = await axios.post("/admin/mtags", {
+      mtag_name: newName,
+    });
 
-                this.$toast?.success('Selected products deleted!', {
+    const newId = response.data.mtag_id;
+
+    // ✅ ADD THIS RIGHT AFTER TAG CREATED
+    this.mtags.push({
+      mtag_id: newId,
+      mtag_name: newName,
+    });
+
+    this.tagsToAdd.push(newId); // ✅ select the new tag
+    this.fetchTags();
+    this.typedTag = "";
+    if (this.$refs.tagsAutocomplete) {
+      this.$refs.tagsAutocomplete.internalSearch = "";
+    }
+  } catch (err) {
+    console.error("Error adding tag:", err);
+    this.$toast?.error("Failed to add tag");
+  }
+},
+        openremoveTagDialog() {
+            this.removeTagDialog = true;
+            this.tagsToRemove = [];
+            this.fetchTags();
+        },
+        fetchTags() {
+            axios.get('/admin/mtags/vlist').then(res => {
+            this.mtags = res.data?.mtags || [];
+            }).catch(err => {
+            this.$toast?.error("Failed to load tags", {
                         timeout: 500
                     })
-                this.selected = [];        
-                this.getAllMpros();  
+            });
+        },
+
+        openConfirmDialog(action) {
+            this.actionToConfirm = action;
+            this.actionLabel = {
+            delete: 'Delete',
+            markActive: 'Mark as Active',
+            markDraft: 'Mark as Draft'
+            }[action] || '';
+            this.confirmDialog = true;
+        },
+
+        async openAddTagDialog() {
+            this.actionToConfirm = 'addTag';
+            this.addTagDialog = true;
+            this.tagsToAdd = [];
+
+            const res = await axios.get('/admin/mtags/vlist');
+            this.mtags = res.data?.mtags || [];
+        },
+        async openremoveTagDialog() {
+            this.actionToConfirm = 'removeTag';
+            this.removeTagDialog = true;
+            this.tagsToRemove = [];
+
+            const res = await axios.get('/admin/mtags/vlist');
+            this.mtags = res.data?.mtags || [];
+        },
+
+        async executeBulkAction() {
+            const ids = this.selected.map(p => p.mproduct_id);
+            let url = '';
+            let payload = {};
+
+            switch (this.actionToConfirm) {
+            case 'delete':
+                url = '/admin/products-bulk/delete';
+                payload = { product_ids: ids };
+                break;
+            case 'markActive':
+            case 'markDraft':
+                url = '/admin/products-bulk/mark-status';
+                payload = {
+                product_ids: ids,
+                bulkstatus: this.actionToConfirm === 'markActive' ? 'Active' : 'Draft'
+                };
+                break;
+            }
+
+            try {
+            await axios.post(url, payload);
+            this.$toast?.success(`${this.actionLabel} successful`, {
+                        timeout: 500
+                    })
+            this.getAllMpros();
             } catch (err) {
-                console.error(err);
-                this.$toast?.error('Failed to delete selected products.', {
+            this.$toast?.error(`Failed to ${this.actionLabel.toLowerCase()}`, {
                         timeout: 500
                     })
             } finally {
-                this.bulkDeleteLoading = false;
-                this.bulkDeleteDialog   = false;
+            this.confirmDialog = false;
+            this.selected = [];
+            }
+        },
+
+        async submitAddTags() {
+            if (!this.tagsToAdd.length) return;
+
+            try {
+            await axios.post('/admin/products-bulk/add-tags', {
+                product_ids: this.selected.map(p => p.mproduct_id),
+                tag_ids: this.tagsToAdd
+            });
+            this.$toast?.success('Tags added successfully!', {
+                        timeout: 500
+                    })
+            this.addTagDialog = false;
+            this.selected = [];         
+            this.tagsToAdd = [];
+            this.getAllMpros();
+            } catch (err) {
+            this.$toast?.error('Failed to add tags', {
+                        timeout: 500
+                    })
+            }
+        },
+        async submitRemoveTags() {
+            if (!this.tagsToRemove.length) return;
+
+            try {
+                await axios.post('/admin/products-bulk/remove-tags', {
+                product_ids: this.selected.map(p => p.mproduct_id),
+                tag_ids: this.tagsToRemove
+                });
+                this.$toast?.success('Tags removed successfully!', { timeout: 500 });
+                this.removeTagDialog = false;
+                this.selected = [];
+                this.tagsToRemove = [];
+                this.getAllMpros();
+            } catch (err) {
+                this.$toast?.error('Failed to remove tags', { timeout: 500 });
             }
         },
     }

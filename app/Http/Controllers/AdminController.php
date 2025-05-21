@@ -242,6 +242,15 @@ class AdminController extends Controller
         }
     }
 
+    // Tags
+    public function mtagVlist()
+    {
+        $mtag = Mtag::orderBy('mtag_id','desc')->get();
+        return response()->json([
+            'status' => true,
+            'mtags' => $mtag,
+        ],200);
+    }
 
     // Product Offer 
     public function productofferlist()
@@ -882,6 +891,87 @@ class AdminController extends Controller
         }
 
         return $sku;
+    }
+
+
+    // product bulk actions
+    public function productsBulkmarkStatus(Request $req)
+    {
+        $req->validate([
+            'product_ids' => 'required|array',
+            'bulkstatus' => 'required|string|in:Active,Draft'
+        ]);
+
+        $updated = Mproduct::whereIn('mproduct_id', $req->product_ids)
+            ->update(['status' => $req->bulkstatus]);
+
+        return response()->json([
+            'message' => 'Status updated',
+            'updated_count' => $updated
+        ]);
+    }
+
+    public function productsBulkDelete(Request $req)
+    {
+        $req->validate([
+            'product_ids' => 'required|array'
+        ]);
+
+        Mproduct::whereIn('mproduct_id', $req->product_ids)->delete();
+
+        return response()->json(['message' => 'Products deleted']);
+    }
+
+    public function productsBulkAddTags(Request $req)
+{
+    $req->validate([
+        'product_ids' => 'required|array',
+        'tag_ids' => 'required|array'
+    ]);
+
+    foreach ($req->product_ids as $id) {
+        $product = Mproduct::find($id);
+        if ($product) {
+            // Properly get array from existing field
+            $existing = is_array($product->mtags)
+                ? $product->mtags
+                : json_decode($product->mtags, true) ?? [];
+
+            // Merge and clean up tag_ids
+            $merged = array_unique(array_merge($existing, $req->tag_ids));
+            $product->mtags = array_values(array_map('intval', $merged));
+            $product->save();
+        }
+    }
+
+    return response()->json(['message' => 'Tags added']);
+}
+
+
+    public function productsBulkRemoveTags(Request $req)
+    {
+        $req->validate([
+            'product_ids' => 'required|array',
+            'tag_ids' => 'required|array'
+        ]);
+
+        foreach ($req->product_ids as $id) {
+            $product = Mproduct::find($id);
+            if ($product) {
+                $existing = is_array($product->mtags)
+                    ? $product->mtags
+                    : json_decode($product->mtags, true) ?? [];
+
+                $filtered = array_values(array_filter($existing, function ($tag) use ($req) {
+                    return !in_array($tag, $req->tag_ids);
+                }));
+
+                $product->mtags = $filtered;
+                $product->save();
+            }
+        }
+
+        return response()->json(['message' => 'Tags removed']);
     }
 
 }
