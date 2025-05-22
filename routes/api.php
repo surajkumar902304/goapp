@@ -45,7 +45,11 @@ Route::middleware(['auth.api'])->group(function () {
     // Categories
     Route::get('/categories', [CategoryController::class, 'index']);
 
-    // Browse Banner
+    // Sliders Banner
+    Route::get('/big-banner', [BannerController::class, 'largeBanner']);
+    Route::get('/small-banner', [BannerController::class, 'smallBanner']);
+    Route::get('/deals-banner', [BannerController::class, 'dealBanner']);
+    Route::get('/fruit-banner', [BannerController::class, 'fruitBanner']);
     Route::get('/browse-banner', [BannerController::class, 'browseBanner']);
 
     // Wishlist

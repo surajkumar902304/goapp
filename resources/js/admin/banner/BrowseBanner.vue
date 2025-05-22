@@ -1,6 +1,9 @@
 <template>
     <div>
       <v-row>
+        <h2 class="text-h6 mb-0">Browse Sliders</h2>
+      </v-row>
+      <v-row class="mt-0">
         <v-col cols="12" md="10">
           <v-text-field
             v-model="ssearch"
@@ -12,21 +15,21 @@
             placeholder="Search name"
           />
         </v-col>
-        <v-col cols="12" md="2" class="text-end mt-1">
-          <v-btn color="secondary" small class="text-none font-weight-bold" @click="openDialog">
-            Add Banner
+        <v-col cols="12" md="2" class="text-end">
+          <v-btn color="secondary" small class="text-none font-weight-bold" @click="openDialog" style="height: 40px;">
+            Add Slider
           </v-btn>
         </v-col>
       </v-row>
   
       <v-row>
-        <v-col cols="12">
+        <v-col cols="12" class="pt-0">
           <v-card outlined>
             <v-simple-table>
               <thead>
-                <tr>
+                <tr style="height: 20px;">
                   <th style="width:30%">Image</th>
-                  <th style="width:40%">Banner Name</th>
+                  <th style="width:40%">Slider Name</th>
                   <th style="width:20%">Actions</th>
                   <th style="width:10%">Position Drag</th> <!-- drag column -->
                 </tr>
@@ -34,7 +37,7 @@
               <draggable tag="tbody" :list="browsebanners" handle=".drag-handle" @end="onDragEnd">
                 <tr v-for="item in filteredBanners" :key="item.browsebanner_id">
                   <td class="p-2">
-                    <img :src="cdn + item.browsebanner_image || 'https://via.placeholder.com/50'" width="150" height="100" />
+                    <img :src="cdn + item.browsebanner_image || 'https://via.placeholder.com/50'" width="100" height="75" />
                   </td>
                   <td class="align-middle">
                     {{ item.browsebanner_name }}
@@ -62,7 +65,7 @@
       <v-dialog v-model="addSdialog" max-width="400" @update:model-value="onDialogToggle">
         <v-card>
           <v-card-title>
-            <span>{{ editedIndex === -1 ? 'Add Banner' : 'Edit Banner' }}</span>
+            <span>{{ editedIndex === -1 ? 'Add Slider' : 'Edit Slider' }}</span>
             <v-spacer></v-spacer>
             <v-icon @click="addSdialog = false">mdi-close</v-icon>
           </v-card-title>
@@ -110,7 +113,7 @@
               <v-text-field
                 v-model="defaultItem.browsebanner_name"
                 :rules="bannernameRule"
-                label="Banner Name"
+                label="Slider Name"
               />
               <div class="d-flex flex-column align-center">
                 <v-card-actions class="pb-0 pt-0">
@@ -207,7 +210,7 @@ export default {
 
       /* validators */
       bannernameRule : [
-        v => !!v || 'Banner name is required',
+        v => !!v || 'Slider name is required',
         v => (v && v.length >= 3) || 'Min 3 characters'
       ],
 
@@ -368,7 +371,7 @@ export default {
       try {
         await axios.post(url, fd, { headers:{'Content-Type':'multipart/form-data'} })
         await this.loadBanners()
-        this.$toast.success(isNew ? 'Banner added!' : 'Banner updated!', {
+        this.$toast.success(isNew ? 'Slider added!' : 'Slider updated!', {
                         timeout: 500
                     })
         this.addSdialog = false

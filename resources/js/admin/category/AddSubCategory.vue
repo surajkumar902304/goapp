@@ -1,7 +1,7 @@
 <template>
   <v-container fluid>
-    <v-row><h2>Add New Sub-Category</h2></v-row>
-    <v-row>
+    <v-row><h2 class="text-h6 mb-0">Add New Sub-Category</h2></v-row>
+    <v-row class="mt-0">
       <v-col cols="6" class="d-flex">
         <v-btn :loading="backLoading" :disabled="backLoading" small @click="navigateBack">
             <template v-slot:loader>
@@ -527,7 +527,7 @@ export default {
       await axios.post('/admin/msub-category/add', fd)
       .then((resp)=>{
           console.log(resp.data);
-          window.location.href = '/admin/msub-categories/list';
+          this.$router.push({ name: 'subcat-list' });
           this.$toast.success('Sub-Category added successfully!', {
                         timeout: 500
                     })
@@ -537,7 +537,7 @@ export default {
           if (this.backLoading) return;
           this.backLoading = true;
           setTimeout(() => {
-              window.location.href = '/admin/msub-categories/list';
+              this.$router.push({ name: 'subcat-list' });
           }, 500); 
     },
     discard () {

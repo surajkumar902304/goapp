@@ -1,9 +1,9 @@
 <template>
   <v-container fluid>
     <!-- ===== header / toolbar ===== -->
-    <v-row><h2>Edit Sub-Category</h2></v-row>
+    <v-row><h2 class="text-h6 mb-0">Edit Sub-Category</h2></v-row>
 
-    <v-row>
+    <v-row class="mt-0">
       <v-col cols="6" class="d-flex">
         <v-btn :loading="backLoading" :disabled="backLoading" small @click="navigateBack">
           <template #loader>
@@ -381,7 +381,7 @@ data () {
       {text:'Image', value:'mproduct_image', sortable: false },
       {text:'Name',  value:'mproduct_title'}
     ],
-
+    msubcat_id:null,
     /* manual products */
     productDialog:false, 
     productSearch:'', 
@@ -432,6 +432,11 @@ watch: {
   acondition() {
     this.loadMatchedProducts();
   }
+},   
+mounted() {
+    this.msubcat_id = this.$route.params?.msubcatid;
+    this.loadExisting();
+    this.loadMatchedProducts();
 },
 
 computed:{
@@ -441,7 +446,7 @@ computed:{
     v => (v && v.length >= 3) || 'Name must be at least 3 characters',
     v => !this.msubcats.some(s =>
       s.msubcat_name.toLowerCase().trim() === (v || '').toLowerCase().trim() &&
-      s.msubcat_id !== this.msubcatid
+      s.msubcat_id !== this.msubcat_id
     ) || 'Sub-Category already exists'
   ]
 },
@@ -451,7 +456,7 @@ computed:{
       )
     },
   saveDisabled() {
-    const isNew = !this.msubcatid  
+    const isNew = !this.msubcat_id  
     let base = !this.form.mcat_id ||
                !this.form.subcatname.trim() ||
                !!this.nameError;
@@ -505,7 +510,7 @@ methods:{
 
     if (!data || !data.categories) return;
 
-    const subcatId = this.msubcatid; // From route or prop
+    const subcatId = this.msubcat_id; // From route or prop
     let found = false;
 
     for (const main of data.categories) {
@@ -613,7 +618,7 @@ methods:{
 
   async loadExisting(){
     try{
-      const {data}=await axios.get(`/admin/vsub-category/editdata/${this.msubcatid}`)
+      const {data}=await axios.get(`/admin/vsub-category/editdata/${this.msubcat_id}`)
       const s=data.subcat
 
       this.form.mcat_id    = s.mcat_id
@@ -665,7 +670,7 @@ methods:{
     this.saveLoading=true
     const fd=new FormData()
     fd.append("msubcat_publish", JSON.stringify(this.msubcat_publish ?? []));
-    fd.append('msubcat_id', this.msubcatid);
+    fd.append('msubcat_id', this.msubcat_id);
     Object.entries(this.form).forEach(([k,v])=>fd.append(k,v??''))
     fd.append('mcattype', this.mcattype)
 
@@ -697,7 +702,7 @@ methods:{
     }
     if(this.form.image instanceof File) fd.append('image', this.form.image)
 
-    axios.post(`/admin/msub-category/${this.msubcatid}/update`, fd)
+    axios.post(`/admin/msub-category/${this.msubcat_id}/update`, fd)
       .then(()=>{
         this.$toast.success('Sub-Category updated successfully!', {
                         timeout: 500
@@ -707,14 +712,17 @@ methods:{
       .finally(()=>this.saveLoading=false)
   },
 
-  navigateBack(){
-    if(this.backLoading) return
-    this.backLoading=true
-    setTimeout(()=>window.location.href='/admin/msub-categories/list',500)
-  },
+  navigateBack() {
+  if (this.backLoading) return;
+  this.backLoading = true;
+
+  setTimeout(() => {
+    this.$router.push({ name: 'subcat-list' });
+  }, 500);
+},
   async discard(){
     try{
-      const {data}=await axios.get(`/admin/vsub-category/editdata/${this.msubcatid}`)
+      const {data}=await axios.get(`/admin/vsub-category/editdata/${this.msubcat_id}`)
       const s=data.subcat
 
       this.form.mcat_id    = s.mcat_id

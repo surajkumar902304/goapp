@@ -1,6 +1,9 @@
 <template>
 <div>
     <v-row>
+            <h2 class="text-h6 mb-0">Sub-Categories</h2>
+        </v-row>
+        <v-row class="mt-0 pt-0">
         <v-col cols="12" md="6">
             <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Sub-Categories name"
             />
@@ -14,18 +17,18 @@
                 item-text="text" item-value="value" outlined dense label="Type" hide-details @change="typeByStatus"></v-autocomplete>
         </v-col>
         <v-col cols="12" md="1" class="text-end">
-            <v-btn color="secondary" small href="/admin/msub-category/add" class="text-none font-weight-bold" style="height: 40px">
+            <v-btn color="secondary" small :to="'/admin/sub-categories/addview'" router class="text-none" style="height: 40px">
                 Sub-Category
             </v-btn>
         </v-col>
         <v-col cols="12" md="1" v-if="selected.length" class="text-end">
-                <v-btn color="red" small class="text-none font-weight-bold ma-0" style="height: 40px" :loading="bulkDeleteLoading" :disabled="bulkDeleteLoading" @click="confirmBulkDelete" >
-                    Delete ({{ selected.length }})
-                </v-btn>
+                <v-icon color="red" class="text-none" style="height: 40px" :loading="bulkDeleteLoading" :disabled="bulkDeleteLoading" @click="confirmBulkDelete" >
+                    mdi-delete
+                </v-icon>
             </v-col>
     </v-row>
 
-    <v-row>
+    <v-row class="mt-0">
         <v-col cols="12">
             <v-card outlined>
                 <v-data-table v-model="selected" :show-select="true" item-key="msubcat_id" :items="subcats" :headers="msubcatsHeaders" :search="ssearch" :footer-props="{
@@ -34,10 +37,16 @@
                         {{ item.index }}
                     </template>
                     <template #item.msubcat_image="{ item }">
-                        <img :src="cdn + item.msubcat_image || 'https://via.placeholder.com/50'" width="50" />
+                        <img :src="cdn + item.msubcat_image || 'https://via.placeholder.com/50'" width="50" height="50" class="m-1" />
                     </template>
                     <template v-slot:item.msubcat_name="{ item }">
-                        <a :href="'/admin/msub-category/' + item.msubcat_id" class="link-dark"> {{ item.msubcat_name }} </a>
+                          <router-link
+                                :to="{ name: 'edit-subcat', params: { msubcatid: item.msubcat_id } }"
+                                class="link-dark"
+                            >
+                                {{ item.msubcat_name }}
+                            </router-link>
+                       
                     </template>
                     <template #item.mcat_name="{ item }">
                         {{ item.category?.mcat_name || '—' }}
@@ -110,7 +119,7 @@ export default {
       typeFilter: null,
 
       msubcatsHeaders: [
-        { text: 'Index',             value: 'index', width: '80px', sortable: true },
+        { text: 'Index',             value: 'index', width: '120px', sortable: true },
         { text: 'Image',             value: 'msubcat_image', sortable: false },
         { text: 'Sub-Category Name', value: 'msubcat_name' },
         { text: 'Category Name',     value: 'mcat_name', sortable: false },
@@ -224,5 +233,10 @@ export default {
 <style scoped>
 .v-btn {
     font-size: 14px !important;
+}
+.v-data-table .v-simple-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  transform: scale(0.7);
 }
 </style>

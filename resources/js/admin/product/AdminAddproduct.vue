@@ -1,7 +1,8 @@
 <template>
     <div>
+        <v-row><h2 class="text-h6 mb-0">Add New Product</h2></v-row>
         <v-form @submit.prevent="saveProductData" v-model="fvalid">
-            <div class="row">
+            <div class="row mt-0">
                 <div class="col-md-6">
                     <v-btn :loading="backLoading" :disabled="backLoading" small @click="navigateBack">
                         <template v-slot:loader>
@@ -12,7 +13,7 @@
                     </v-btn>
                 </div>
                 <div class="col-md-6 text-right">
-                    <v-btn color="success" :loading="saveLoading" :disabled="saveLoading || !fvalid" @click="saveProductData">
+                    <v-btn color="success" :loading="saveLoading" style="height: 28px;" :disabled="saveLoading || !fvalid" @click="saveProductData">
                         <template v-slot:loader>
                             <v-progress-circular indeterminate size="20" color="green"></v-progress-circular>
                         </template>
@@ -703,7 +704,7 @@ export default {
             })
             .then((resp)=>{
                 console.log(resp.data);
-                window.location.href = '/admin/products/list';
+                this.$router.push({ name: 'product-list' });
                 this.$toast.success('Product added successfully!', {
                         timeout: 500
                     })
@@ -716,8 +717,8 @@ export default {
             if (!this.productname?.trim()) {
                 this.backLoading = true; 
                 setTimeout(() => {
-                    window.location.href = '/admin/products/list';
-                }, 500); 
+                this.$router.push({ name: 'product-list' });
+            }, 500); 
             } else {
                 this.unsavedDialog = true;
             }
@@ -725,7 +726,7 @@ export default {
         exitWithoutSaving() {
             this.unsavedDialog = false;
             setTimeout(() => {
-                window.location.href = '/admin/products/list';
+                this.$router.push({ name: 'product-list' });
             }, 500);
         }
     } 

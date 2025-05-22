@@ -1,5 +1,6 @@
 <template>
     <div>
+        <v-row><h2 class="text-h6 mb-0">Edit Product</h2></v-row>
         <v-form @submit.prevent="updateProductData" v-model="fvalid">
             <div class="row">
                 <div class="col-md-6">
@@ -330,6 +331,7 @@
             duplicateDialog: false,
             duplicateProductId: null,
             deleteLoading: false,
+            mproduct_id: null,
             nameRules: [
             v => !!v || "Product name is required",
             v => (v && v.length <= 255) || "Product name must be less than 50 characters"
@@ -359,9 +361,11 @@
             ]
         };
     },
-    created() {
-        this.getProductData();
-    },
+    mounted() {
+    this.mproduct_id = this.$route.params?.mproid;
+    this.getProductData();
+  
+  },
     computed: {
         filteredOptions() {
             return this.availableOptions.filter(option => {
@@ -380,7 +384,7 @@
     },
     methods: {
         getProductData() {
-            axios.get(`/admin/vproduct/editdata?mproid=${this.mproid}`).then(resp => {
+            axios.get(`/admin/vproduct/editdata?mproid=${this.mproduct_id}`).then(resp => {
             const prod = resp.data.mproduct;
             this.productname = prod.mproduct_title;
             this.productdesc = prod.mproduct_desc;
@@ -445,7 +449,7 @@
             });
         },
         openDuplicateDialog() {
-            this.duplicateProductId = this.mproid;
+            this.duplicateProductId = this.mproduct_id;
             this.duplicateDialog = true;
         },
 
@@ -798,7 +802,7 @@
             this.backLoading = true;
 
             setTimeout(() => {
-                window.location.href = '/admin/products/list';
+                this.$router.push({ name: 'product-list' });
             }, 500); 
         },
     
@@ -806,7 +810,7 @@
             this.isSubmitting = true;
             const pdata = new FormData();
 
-            pdata.append("mproduct_id", this.mproid);
+            pdata.append("mproduct_id", this.mproduct_id);
             pdata.append("ptype", this.pro.ptype ?? "");
             pdata.append("pbrand", this.pro.brand ?? "");
             pdata.append("ptags", JSON.stringify(this.pro.tags ?? []));

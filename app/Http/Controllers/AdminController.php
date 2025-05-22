@@ -37,7 +37,7 @@ class AdminController extends Controller
             ['email' => $request->email, 'password' => $request->password],
             $request->remember
         )) {
-            return redirect()->route('admin.index');
+            return redirect('/admin/dashboard');
         }
         else{
 
@@ -923,29 +923,29 @@ class AdminController extends Controller
     }
 
     public function productsBulkAddTags(Request $req)
-{
-    $req->validate([
-        'product_ids' => 'required|array',
-        'tag_ids' => 'required|array'
-    ]);
+    {
+        $req->validate([
+            'product_ids' => 'required|array',
+            'tag_ids' => 'required|array'
+        ]);
 
-    foreach ($req->product_ids as $id) {
-        $product = Mproduct::find($id);
-        if ($product) {
-            // Properly get array from existing field
-            $existing = is_array($product->mtags)
-                ? $product->mtags
-                : json_decode($product->mtags, true) ?? [];
+        foreach ($req->product_ids as $id) {
+            $product = Mproduct::find($id);
+            if ($product) {
+                // Properly get array from existing field
+                $existing = is_array($product->mtags)
+                    ? $product->mtags
+                    : json_decode($product->mtags, true) ?? [];
 
-            // Merge and clean up tag_ids
-            $merged = array_unique(array_merge($existing, $req->tag_ids));
-            $product->mtags = array_values(array_map('intval', $merged));
-            $product->save();
+                // Merge and clean up tag_ids
+                $merged = array_unique(array_merge($existing, $req->tag_ids));
+                $product->mtags = array_values(array_map('intval', $merged));
+                $product->save();
+            }
         }
-    }
 
-    return response()->json(['message' => 'Tags added']);
-}
+        return response()->json(['message' => 'Tags added']);
+    }
 
 
     public function productsBulkRemoveTags(Request $req)

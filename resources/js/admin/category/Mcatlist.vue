@@ -1,6 +1,9 @@
 <template>
     <div>
         <v-row>
+            <h2 class="text-h6 mb-0">Categories</h2>
+        </v-row>
+        <v-row class="mt-0 pt-0">
             <v-col cols="12" md="10">
                 <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Category name"/>
             </v-col>
@@ -10,13 +13,13 @@
                 </v-btn>
             </v-col>
             <v-col cols="12" md="1" v-if="selected.length" class="text-end">
-                <v-btn color="red" small class="text-none font-weight-bold ma-0" style="height: 40px" :loading="bulkDeleteLoading" :disabled="bulkDeleteLoading" @click="confirmBulkDelete" >
-                    Delete ({{ selected.length }})
-                </v-btn>
+                <v-icon color="red" class="text-none" style="height: 40px" :loading="bulkDeleteLoading" :disabled="bulkDeleteLoading" @click="confirmBulkDelete" >
+                    mdi-delete
+                </v-icon>
             </v-col>
         </v-row>
       
-        <v-row>
+        <v-row class="mt-0">
             <v-col cols="12">
                 <v-card outlined>
                     <v-data-table

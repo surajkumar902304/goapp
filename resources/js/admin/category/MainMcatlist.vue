@@ -1,17 +1,20 @@
 <template>
     <div>
         <v-row>
+            <h2 class="text-h6 mb-0">Main Categories</h2>
+        </v-row>
+        <v-row class="mt-0 pt-0">
             <v-col cols="12" md="10">
                 <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Main Category name"/>
             </v-col>
-            <v-col cols="12" md="2" class="text-end mt-1">
-                <v-btn color="secondary" small class="text-none font-weight-bold" style="font-size:14px" @click="openDialog">
+            <v-col cols="12" md="2" class="text-end">
+                <v-btn color="secondary" small class="text-none" style="font-size:14px; height: 40px;" @click="openDialog">
                     Add Main Category
                 </v-btn>
             </v-col>
         </v-row>
 
-        <v-row>
+        <v-row class="mt-0">
             <v-col cols="12">
                 <v-card outlined>
                     <v-simple-table>

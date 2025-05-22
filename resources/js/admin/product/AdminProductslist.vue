@@ -1,6 +1,9 @@
 <template>
     <div>
         <v-row>
+            <h2 class="text-h6 mb-0">Products</h2>
+        </v-row>
+        <v-row class="mt-0 pt-0">
             <v-col cols="12" md="5">
                 <v-text-field v-model="msearch" clearable dense outlined prepend-inner-icon="mdi-magnify" placeholder="Search all products" hide-details></v-text-field>
             </v-col>
@@ -20,19 +23,13 @@
                 </v-autocomplete>
             </v-col>
             <v-col cols="12" md="1">
-                <v-btn color="secondary" small href="/admin/product/addview" class="text-none" style="height: 40px; padding: 7px; margin-left: -5px;">
+                <v-btn color="secondary" small :to="'/admin/product/addview'" router class="text-none" style="height: 40px; padding: 6px; margin-left: -15px;">
                     Add Product
                 </v-btn>
             </v-col>
-            <!-- <v-col cols="12" md="1" v-if="selected.length" class="text-end">
-                <v-icon small class="text-none" style="height: 40px" :loading="bulkDeleteLoading" :disabled="bulkDeleteLoading" @click="confirmBulkDelete">
-                    mdi-menu
-                </v-icon>
-                
-            </v-col> -->
         </v-row>
         
-        <v-row>
+        <v-row  class="mt-0 pt-0">
             <v-col cols="12">
                 <v-card outlined>
                     <v-row class="align-center">
@@ -91,7 +88,12 @@
                             </v-img>
                         </template>
                         <template v-slot:item.mproduct_title="{ item }">
-                            <a :href="'/admin/product/' + item.mproduct_id" class="link-dark"> {{ item.mproduct_title }} </a>
+                          <router-link
+                                :to="{ name: 'edit-product', params: { mproid: item.mproduct_id } }"
+                                class="link-dark"
+                            >
+                                {{ item.mproduct_title }}
+                            </router-link>
                         </template>
                         <template v-slot:item.status="{ item }">
                             <v-chip :color="item.status === 'Active' ? 'green' : 'blue'" class="ma-1" outlined pill small>
@@ -157,33 +159,32 @@
                 <v-card-title class="text-h6">Add Tags</v-card-title>
                 <v-card-text>
                     <v-autocomplete
-  ref="tagsAutocomplete"
-  v-model="tagsToAdd"
-  :items="mtags"
-  item-text="mtag_name"
-  item-value="mtag_id"
-  label="Select Tags"
-  multiple
-  small-chips
-  deletable-chips
-  clearable
-  outlined
-  dense
-  :search-input.sync="typedTag"
-  :filter="tagFilter"
-  style="height: 38px;"
->
-  <template v-slot:no-data>
-    <v-list-item>
-      <v-list-item-content>
-        <v-btn text small @click="addNewTag" :disabled="!typedTag?.trim()">
-          Add “{{ typedTag }}”
-        </v-btn>
-      </v-list-item-content>
-    </v-list-item>
-  </template>
-</v-autocomplete>
-
+                        ref="tagsAutocomplete"
+                        v-model="tagsToAdd"
+                        :items="mtags"
+                        item-text="mtag_name"
+                        item-value="mtag_id"
+                        label="Select Tags"
+                        multiple
+                        small-chips
+                        deletable-chips
+                        clearable
+                        outlined
+                        dense
+                        :search-input.sync="typedTag"
+                        :filter="tagFilter"
+                        style="height: 38px;"
+                        >
+                        <template v-slot:no-data>
+                            <v-list-item>
+                            <v-list-item-content>
+                                <v-btn text small @click="addNewTag" :disabled="!typedTag?.trim()">
+                                Add “{{ typedTag }}”
+                                </v-btn>
+                            </v-list-item-content>
+                            </v-list-item>
+                        </template>
+                    </v-autocomplete>
                 </v-card-text>
                 <v-spacer></v-spacer>
                 <v-card-actions>
@@ -244,13 +245,13 @@ export default {
             selectedBrand: null,
             selectedTags: [],
             mprosHeaders: [
-                { text: 'Image', value: 'mproduct_image', class: 'grey lighten-3', width: '100px', sortable: false },
-                { text: 'Product', value: 'mproduct_title', class: 'grey lighten-3', width: '30%'},
-                { text: 'Status', value: 'status', class: 'grey lighten-3', width: '150px' },
-                { text: 'Inventory', value: 'minventory', class: 'grey lighten-3', width: '150px', sortable: false },
-                { text: 'Type', value: 'type_name', class: 'grey lighten-3', width: '150px' },
-                { text: 'Brand', value: 'brand_name', class: 'grey lighten-3', width: '150px' },
-                { text: 'Actions', value: 'actions', class: 'grey lighten-3', width: '150px', sortable: false }
+                { text: 'Image', value: 'mproduct_image', width: '100px', sortable: false },
+                { text: 'Product', value: 'mproduct_title', width: '30%'},
+                { text: 'Status', value: 'status', width: '150px' },
+                { text: 'Inventory', value: 'minventory', width: '150px', sortable: false },
+                { text: 'Type', value: 'type_name', width: '150px' },
+                { text: 'Brand', value: 'brand_name', width: '150px' },
+                { text: 'Actions', value: 'actions', width: '150px', sortable: false }
             ],
             deleteDialog: false,
             productToDelete: null,
@@ -267,6 +268,7 @@ export default {
             tagsToAdd: [],
             tagsToRemove: [],
             mtags: [],
+            typedTag: "",
             actionLabel: '',
         }
     },
@@ -403,44 +405,44 @@ export default {
             return itemText.toLowerCase().includes(queryText.toLowerCase());
         },
         async addNewTag() {
-  const newName = this.typedTag?.trim();
-  if (!newName) return;
+            const newName = this.typedTag?.trim();
+            if (!newName) return;
 
-  const alreadyExists = this.mtags.some(
-    (tag) => tag.mtag_name.toLowerCase() === newName.toLowerCase()
-  );
-  if (alreadyExists) {
-    this.typedTag = "";
-    if (this.$refs.tagsAutocomplete) {
-      this.$refs.tagsAutocomplete.internalSearch = "";
-    }
-    return;
-  }
+            const alreadyExists = this.mtags.some(
+                (tag) => tag.mtag_name.toLowerCase() === newName.toLowerCase()
+            );
+            if (alreadyExists) {
+                this.typedTag = "";
+                if (this.$refs.tagsAutocomplete) {
+                this.$refs.tagsAutocomplete.internalSearch = "";
+                }
+                return;
+            }
 
-  try {
-    const response = await axios.post("/admin/mtags", {
-      mtag_name: newName,
-    });
+            try {
+                const response = await axios.post("/admin/mtags", {
+                mtag_name: newName,
+                });
 
-    const newId = response.data.mtag_id;
+                const newId = response.data.mtag_id;
 
-    // ✅ ADD THIS RIGHT AFTER TAG CREATED
-    this.mtags.push({
-      mtag_id: newId,
-      mtag_name: newName,
-    });
+                // ✅ ADD THIS RIGHT AFTER TAG CREATED
+                this.mtags.push({
+                mtag_id: newId,
+                mtag_name: newName,
+                });
 
-    this.tagsToAdd.push(newId); // ✅ select the new tag
-    this.fetchTags();
-    this.typedTag = "";
-    if (this.$refs.tagsAutocomplete) {
-      this.$refs.tagsAutocomplete.internalSearch = "";
-    }
-  } catch (err) {
-    console.error("Error adding tag:", err);
-    this.$toast?.error("Failed to add tag");
-  }
-},
+                this.tagsToAdd.push(newId); // ✅ select the new tag
+                this.fetchTags();
+                this.typedTag = "";
+                if (this.$refs.tagsAutocomplete) {
+                this.$refs.tagsAutocomplete.internalSearch = "";
+                }
+            } catch (err) {
+                console.error("Error adding tag:", err);
+                this.$toast?.error("Failed to add tag");
+            }
+        },
         openremoveTagDialog() {
             this.removeTagDialog = true;
             this.tagsToRemove = [];

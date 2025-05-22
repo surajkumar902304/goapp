@@ -151,8 +151,8 @@ class BannerController extends Controller
         try {
             $browsebanner = Browsebanner::findOrFail($request->browsebanner_id);
 
-            if ($browsebanner->msubcat_image && Storage::disk('s3')->exists($browsebanner->msubcat_image)) {
-                Storage::disk('s3')->delete($browsebanner->msubcat_image);
+            if ($browsebanner->browsebanner_image && Storage::disk('s3')->exists($browsebanner->browsebanner_image)) {
+                Storage::disk('s3')->delete($browsebanner->browsebanner_image);
             }
 
             $browsebanner->delete();
@@ -172,9 +172,7 @@ class BannerController extends Controller
         $mainCategories = MainCategory::with([
             'categories' => function ($q) {
                 $q->select('*')->with([
-                    'subcategories' => function ($subQ) {
-                        $subQ->whereJsonContains('msubcat_publish', 'Online Store');
-                    }
+                    'subcategories' 
                 ]);
             }
         ])->get();

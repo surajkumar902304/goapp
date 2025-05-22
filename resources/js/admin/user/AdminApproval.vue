@@ -1,6 +1,9 @@
 <template>
   <div>
     <v-row>
+            <h2 class="text-h6 mb-0">Customers</h2>
+        </v-row>
+        <v-row class="mt-0 pt-0">
       <v-col cols="12">
         <v-text-field
           v-model="ssearch"
@@ -15,11 +18,11 @@
     </v-row>
 
     <v-row> 
-      <v-col cols="12">
+      <v-col cols="12" class="pt-0">
         <v-card outlined>
           <v-tabs v-model="activeTab" class="mb-2" active-class="grey lighten-3" height="30">
-            <v-tab class="text-none">Pending</v-tab>
             <v-tab class="text-none">Approved</v-tab>
+            <v-tab class="text-none">Pending</v-tab>
             <v-tab class="text-none">Declined</v-tab>
           </v-tabs>
             <v-data-table :items="filteredUsers" :headers="userHeaders" :search="ssearch" :footer-props="{
@@ -103,8 +106,8 @@ export default {
     filteredUsers() {
         return this.users.filter(user => {
         switch (this.activeTab) {
-            case 0: return user.admin_approval === 'Pending';
-            case 1: return user.admin_approval === 'Approved';
+            case 0: return user.admin_approval === 'Approved';
+            case 1: return user.admin_approval === 'Pending';
             case 2: return user.admin_approval === 'Declined';
             default: return true;
         }

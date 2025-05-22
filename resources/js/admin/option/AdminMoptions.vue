@@ -1,15 +1,18 @@
 <template>
     <div>
         <v-row>
+            <h2 class="text-h6 mb-0">Product-Options</h2>
+        </v-row>
+        <v-row class="mt-0 pt-0">
             <v-col cols="12" md="10">
                 <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search name"/>
             </v-col>
-            <v-col cols="12" md="2" class="text-end mt-1">
-                <v-btn color="secondary" small @click="addDialog = true" class="text-none">
+            <v-col cols="12" md="2" class="text-end">
+                <v-btn color="secondary" small @click="addDialog = true" style="height: 40px" class="text-none">
                     Add Option Name</v-btn>
             </v-col>
         </v-row>
-        <v-row>
+        <v-row class="mt-0">
             <v-col cols="12" md="12">
                 <v-card outlined>
                     <v-data-table :items="moptions" :headers="moptionHeaders" :search="ssearch" :footer-props="{

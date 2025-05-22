@@ -1,64 +1,32 @@
 require('./vbootstrap');
 
-window.Vue = require('vue').default;
-
-// ✅ Toast
-import Toast from "vue-toastification";
-import "vue-toastification/dist/index.css";
-
-// ✅ Vuetify
+import Vue from 'vue';
+import VueRouter from 'vue-router';
 import Vuetify from 'vuetify';
+import Toast from 'vue-toastification';
+
 import 'vuetify/dist/vuetify.min.css';
+import 'vue-toastification/dist/index.css';
 import '@mdi/font/css/materialdesignicons.css';
 
+// Import router & root component
+import App from './App.vue';
+import router from './router';
+
+Vue.use(VueRouter);
 Vue.use(Vuetify);
 Vue.use(Toast);
 
 const vuetify = new Vuetify({
   icons: {
     iconfont: 'mdi',
-  },
+  }
 });
 
-// Dashboard
-Vue.component('admin-dashboard', require('./admin/AdminDashboard.vue').default);
-
-// Product
-Vue.component('admin-productslist',require('./admin/product/AdminProductslist.vue').default);
-Vue.component('admin-addproduct', require('./admin/product/AdminAddproduct.vue').default);
-Vue.component('admin-editproduct', require('./admin/product/AdminEditproduct.vue').default);
-Vue.component('admin-productcreateoffer', require('./admin/product/ProductCreateOffer.vue').default);
-
-// Option
-Vue.component('admin-moptions', require('./admin/option/AdminMoptions.vue').default);
-
-// Brand
-Vue.component('admin-brandlist',require('./admin/brand/AdminBrandlist.vue').default);
-
-// Main Category
-Vue.component('admin-mainmcatlist',require('./admin/category/MainMcatlist.vue').default);
-
-// Category
-Vue.component('admin-mcatlist',require('./admin/category/Mcatlist.vue').default);
-
-// Sub-Category
-Vue.component('admin-addsubcat',require('./admin/category/AddSubCategory.vue').default);
-Vue.component('admin-msubcatlist',require('./admin/category/Msubcatlist.vue').default);
-Vue.component('admin-editmsubcat', require('./admin/category/EditSubCategory.vue').default);
-
-// Home Banner
-Vue.component('admin-homelargebanner',require('./admin/banner/HomeLargeBanner.vue').default);
-Vue.component('admin-homesmallbanner',require('./admin/banner/HomeSmallBanner.vue').default);
-Vue.component('admin-homeexploredealbanner',require('./admin/banner/HomeExploreDealBanner.vue').default);
-Vue.component('admin-homefruitbanner',require('./admin/banner/HomeFruitBanner.vue').default);
-
-// Browse Banner
-Vue.component('admin-browsebanner',require('./admin/banner/BrowseBanner.vue').default);
-
-// User
-Vue.component('admin-adminapproval',require('./admin/user/AdminApproval.vue').default);
-
-const app = new Vue({
-    el: '#app',
-    vuetify: new Vuetify(),
-})
+// Mount the Vue App
+new Vue({
+  el: '#app',
+  router,
+  vuetify,
+  render: h => h(App)
+});
