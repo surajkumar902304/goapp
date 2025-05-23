@@ -20,7 +20,7 @@
                     <v-simple-table>
                         <thead>
                             <tr>
-                            <th style="width:50%">Main Category Name</th>
+                            <th style="width:50%;">Main Category Name</th>
                             <th style="width:25%">Actions</th>
                             <th style="width:25%">Position Drag</th>
                             </tr>
@@ -40,7 +40,7 @@
                                 mdi-delete
                                 </v-icon>
                             </td>
-                            <td class="text-center drag-handle" style="cursor: grab">
+                            <td class="drag-handle" style="cursor: grab">
                                 <v-icon small>mdi-drag</v-icon>
                             </td>
                             </tr>
@@ -100,11 +100,6 @@
             return {
                 ssearch: '',
                 mainmcats: [],
-                mainmcatsHeaders: [
-                    { text: 'ID', value: 'main_mcat_id' },
-                    { text: 'Main Category Name', value: 'main_mcat_name' },
-                    { text: 'Actions', value: 'actions', sortable: false }
-                ],
                 addSdialog: false,
                 editedIndex: -1,
                 fsvalid: false,
