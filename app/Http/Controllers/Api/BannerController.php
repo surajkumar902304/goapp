@@ -68,7 +68,7 @@ class BannerController extends Controller
             'status' => true,
             'message'     => 'Fetch all Browse Sliders Successfully',
             'cdnURL'     => config('cdn.url'),
-            'browseSliders' => $browseSliders
+            'browseBanners' => $browseSliders
         ]);
     }
 }

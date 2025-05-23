@@ -1,6 +1,7 @@
 <template>
   <v-app>
     <v-navigation-drawer app permanent expand-on-hover fixed class="grey lighten-3" elevation="16">
+      
       <v-list dense nav shaped>
         <v-list-item-group>
           <!-- Dashboard -->
