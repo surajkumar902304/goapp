@@ -1,9 +1,9 @@
 <template>
-  <v-container fluid>
-    <v-row><h2 class="text-h6 mb-0">Add New Sub-Category</h2></v-row>
+  <div>
+    <v-row><h2 class="text-h6">Add New Sub-Category</h2></v-row>
     <v-row class="mt-0">
       <v-col cols="6" class="d-flex">
-        <v-btn :loading="backLoading" :disabled="backLoading" small @click="navigateBack">
+        <v-btn :loading="backLoading" :disabled="backLoading" small style="height: 32px;" @click="navigateBack">
             <template v-slot:loader>
                 <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
             </template>
@@ -13,8 +13,8 @@
       </v-col>
 
       <v-col cols="6" class="text-end">
-        <v-btn small outlined @click="discard" class="mr-2">Discard</v-btn>
-        <v-btn small color="success" :loading="saveLoading" :disabled="saveDisabled" @click="saveSubCategory">
+        <v-btn small outlined @click="discard" class="mr-2" style="height: 32px; font-size: 12px !important;">Discard</v-btn>
+        <v-btn small color="success" :loading="saveLoading" :disabled="saveDisabled" @click="saveSubCategory" style="height: 32px; font-size: 12px !important;">
           <template v-slot:loader>
                 <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
             </template>
@@ -55,11 +55,11 @@
           <v-card-text>
             <v-row>
               <v-col cols="6">
-                <v-text-field dense outlined prepend-inner-icon="mdi-magnify" v-model="productSearch" 
+                <v-text-field dense outlined prepend-inner-icon="mdi-magnify mb-2" v-model="productSearch" 
                   placeholder="Search Product"/>
               </v-col>
               <v-col cols="2">
-                <v-btn outlined @click="productDialog=true">Browse</v-btn>
+                <v-btn outlined @click="productDialog=true" style="height: 32px !important;">Browse</v-btn>
               </v-col>
               <v-col cols="4">
                 <v-select dense outlined prefix="Sort:" :items="sorts" v-model="sortMethod" @change="sortSelected"/>
@@ -273,7 +273,7 @@
         </v-card-title>
 
         <v-card-text>
-          <v-text-field dense outlined prepend-inner-icon="mdi-magnify" v-model="productSearch" placeholder="Search Product"/>
+          <v-text-field dense outlined prepend-inner-icon="mdi-magnify mb-2" v-model="productSearch" placeholder="Search Product"/>
         </v-card-text>
 
         <v-data-table v-model="productSelection" :items="allProducts" :headers="productHeaders" :search="productSearch" show-select 
@@ -291,7 +291,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+  </div>
 </template>
 
 <script>
@@ -579,7 +579,7 @@ export default {
   justify-content: center;
   overflow: hidden;
 }
-.v-btn {
-    font-size: 14px !important;
+.v-input {
+  font-size: 12px !important;
 }
 </style>

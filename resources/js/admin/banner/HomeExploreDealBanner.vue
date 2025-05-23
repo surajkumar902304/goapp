@@ -1,7 +1,7 @@
 <template>
     <div>
       <v-row>
-        <h2 class="text-h6 mb-0">Deals Sliders</h2>
+        <h2 class="text-h6 mb-1">Deals Sliders</h2>
       </v-row>
       <v-row class="mt-0">
         <v-col cols="12" md="10">
@@ -11,12 +11,12 @@
             dense
             hide-details
             outlined
-            prepend-inner-icon="mdi-magnify"
+            prepend-inner-icon="mdi-magnify mb-2"
             placeholder="Search name"
           />
         </v-col>
         <v-col cols="12" md="2" class="text-end">
-          <v-btn color="secondary" small class="text-none font-weight-bold" @click="openDialog" style="height: 40px;">
+          <v-btn color="secondary" small class="text-none" style="height: 32px;" @click="openDialog">
             Add Slider
           </v-btn>
         </v-col>
@@ -462,8 +462,8 @@ export default {
     justify-content: center;
     overflow: hidden;
   }
-  .v-btn {
-    font-size: 14px !important;
+.v-input {
+  font-size: 12px !important;
 }
   </style>
   

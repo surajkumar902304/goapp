@@ -1,14 +1,14 @@
 <template>
 <div>
     <v-row>
-        <h2 class="text-h6 mb-0">Brands</h2>
+        <h2 class="text-h6 mb-1">Brands</h2>
     </v-row>
     <v-row class="mt-0 pt-0">
         <v-col cols="12" md="10">
-            <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search name"/>
+            <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify mb-2" placeholder="Search name"/>
         </v-col>
         <v-col cols="12" md="2" class="text-end">
-            <v-btn color="secondary" small class="text-none font-weight-bold" style="height: 40px" @click="openDialog">
+            <v-btn color="secondary" small class="text-none" style="height: 32px;" @click="openDialog">
                 Add Brand
             </v-btn>
         </v-col>
@@ -263,7 +263,7 @@ export default {
 };
 </script>
   
-<style scoped>
+<style>
 .uploader-box {
     max-width: 200px;
     max-height: 200px;
@@ -275,7 +275,7 @@ export default {
     justify-content: center;
     overflow: hidden;
 }
-.v-btn {
-    font-size: 14px !important;
+.v-input {
+  font-size: 12px !important;
 }
 </style>

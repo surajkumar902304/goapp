@@ -1,10 +1,10 @@
 <template>
     <div>
-        <v-row><h2 class="text-h6 mb-0">Add New Product</h2></v-row>
+        <v-row><h2 class="text-h6">Add New Product</h2></v-row>
         <v-form @submit.prevent="saveProductData" v-model="fvalid">
             <div class="row mt-0">
                 <div class="col-md-6">
-                    <v-btn :loading="backLoading" :disabled="backLoading" small @click="navigateBack">
+                    <v-btn :loading="backLoading" :disabled="backLoading" small style="height: 32px;" @click="navigateBack">
                         <template v-slot:loader>
                             <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
                         </template>
@@ -13,7 +13,7 @@
                     </v-btn>
                 </div>
                 <div class="col-md-6 text-right">
-                    <v-btn color="success" :loading="saveLoading" style="height: 28px;" :disabled="saveLoading || !fvalid" @click="saveProductData">
+                    <v-btn color="success" :loading="saveLoading" style="height: 32px; font-size: 12px !important;" :disabled="saveLoading || !fvalid" @click="saveProductData">
                         <template v-slot:loader>
                             <v-progress-circular indeterminate size="20" color="green"></v-progress-circular>
                         </template>
@@ -153,7 +153,7 @@
                             </v-col>
                         </v-row>   
                         <v-card-text class="mb-5">
-                            <v-btn v-if="!showVariantForm && Object.keys(variants).length < 1" color="primary" @click="showVariantForm = true" class="mb-3">
+                            <v-btn v-if="!showVariantForm && Object.keys(variants).length < 1" color="primary" @click="showVariantForm = true" class="mb-3" style="height: 30px;">
                                 <v-icon left>mdi-plus</v-icon>Add Variation
                             </v-btn>
                             <v-btn v-if="Object.keys(variants).length > 0 && Object.keys(variants).length < 3 && !showVariantForm" color="secondary" @click="showVariantForm = true" class="mt-3">
@@ -733,7 +733,7 @@ export default {
 };
 </script>
 <style scoped>
-.v-btn {
-    font-size: 14px !important;
+.v-input {
+  font-size: 12px !important;
 }
 </style>

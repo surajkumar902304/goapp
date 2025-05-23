@@ -1,11 +1,11 @@
 <template>
-  <v-container fluid>
+  <div>
     <!-- ===== header / toolbar ===== -->
-    <v-row><h2 class="text-h6 mb-0">Edit Sub-Category</h2></v-row>
+    <v-row><h2 class="text-h6">Edit Sub-Category</h2></v-row>
 
     <v-row class="mt-0">
       <v-col cols="6" class="d-flex">
-        <v-btn :loading="backLoading" :disabled="backLoading" small @click="navigateBack">
+        <v-btn :loading="backLoading" :disabled="backLoading" small style="height: 32px;" @click="navigateBack">
           <template #loader>
             <v-progress-circular indeterminate size="20" color="white"/>
           </template>
@@ -15,8 +15,8 @@
       </v-col>
 
       <v-col cols="6" class="text-end">
-        <v-btn small outlined class="mr-2" @click="discard">Discard</v-btn>
-        <v-btn small color="success" :loading="saveLoading"
+        <v-btn small outlined class="mr-2" style="height: 32px; font-size: 12px !important;" @click="discard">Discard</v-btn>
+        <v-btn small color="success" :loading="saveLoading" style="height: 32px; font-size: 12px !important;"
                :disabled="saveDisabled" @click="updateSubCategory">
           <template #loader>
             <v-progress-circular indeterminate size="20" color="white"/>
@@ -68,10 +68,10 @@
           <v-card-text>
             <v-row>
               <v-col cols="6">
-                <v-text-field dense outlined prepend-inner-icon="mdi-magnify"
+                <v-text-field dense outlined prepend-inner-icon="mdi-magnify mb-2"
                               v-model="productSearch" placeholder="Search Product"/>
               </v-col>
-              <v-col cols="2"><v-btn outlined @click="productDialog=true">Browse</v-btn></v-col>
+              <v-col cols="2"><v-btn outlined @click="productDialog=true"  style="height: 32px !important;">Browse</v-btn></v-col>
               <v-col cols="4">
                 <v-select dense outlined prefix="Sort:"
                           :items="sorts" v-model="sortMethod" @change="sortSelected"/>
@@ -329,7 +329,7 @@
         </v-card-title>
 
         <v-card-text>
-          <v-text-field dense outlined prepend-inner-icon="mdi-magnify"
+          <v-text-field dense outlined prepend-inner-icon="mdi-magnify mb-2"
                         v-model="productSearch" placeholder="Search Product"/>
         </v-card-text>
 
@@ -354,7 +354,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-container>
+  </div>
 </template>
 
 <script>
@@ -758,7 +758,7 @@ methods:{
 </script>
 
 <style scoped>
-.v-btn {
-    font-size: 14px !important;
+.v-input {
+  font-size: 12px !important;
 }
 </style>

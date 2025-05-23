@@ -1,10 +1,10 @@
 <template>
     <div>
-        <v-row><h2 class="text-h6 mb-0">Edit Product</h2></v-row>
+        <v-row><h2 class="text-h6">Edit Product</h2></v-row>
         <v-form @submit.prevent="updateProductData" v-model="fvalid">
             <div class="row">
                 <div class="col-md-6">
-                    <v-btn :loading="backLoading" :disabled="backLoading" small @click="navigateBack">
+                    <v-btn :loading="backLoading" :disabled="backLoading" small style="height: 32px;" @click="navigateBack">
                         <template v-slot:loader>
                             <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
                         </template>
@@ -13,8 +13,8 @@
                     </v-btn>
                 </div>
                 <div class="col-md-6 text-right">
-                    <v-btn color="secondary" :loading="deleteLoading" :disabled="deleteLoading" @click="openDuplicateDialog">Duplicate</v-btn>
-                    <v-btn type="submit" color="success" :disabled="!fvalid || isSubmitting" :loading="isSubmitting">Update</v-btn>
+                    <v-btn color="secondary" :loading="deleteLoading" :disabled="deleteLoading" @click="openDuplicateDialog" style="height: 32px; font-size: 12px !important;">Duplicate</v-btn>
+                    <v-btn type="submit" color="success" :disabled="!fvalid || isSubmitting" :loading="isSubmitting" style="height: 32px; font-size: 12px !important;">Update</v-btn>
                 </div>
             </div>
     
@@ -866,7 +866,7 @@
   };
   </script>
 <style scoped>
-.v-btn {
-    font-size: 14px !important;
+.v-input {
+  font-size: 12px !important;
 }
 </style>

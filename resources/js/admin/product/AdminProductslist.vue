@@ -1,14 +1,14 @@
 <template>
     <div>
         <v-row>
-            <h2 class="text-h6 mb-0">Products</h2>
+            <h2 class="text-h6 mb-1">Products</h2>
         </v-row>
         <v-row class="mt-0 pt-0">
             <v-col cols="12" md="5">
-                <v-text-field v-model="msearch" clearable dense outlined prepend-inner-icon="mdi-magnify" placeholder="Search all products" hide-details></v-text-field>
+                <v-text-field v-model="msearch" clearable dense outlined prepend-inner-icon="mdi-magnify mb-2" placeholder="Search all products" hide-details></v-text-field>
             </v-col>
             <v-col cols="12" md="2">
-                <v-autocomplete v-model="selectedType" :items="mptypes" item-text="mproduct_type_name" item-value="mproduct_type_id" 
+                <v-autocomplete  v-model="selectedType" :items="mptypes" item-text="mproduct_type_name" item-value="mproduct_type_id" 
                     dense hide-details outlined label="Type" clearable>
                 </v-autocomplete>
             </v-col>
@@ -19,11 +19,11 @@
             </v-col>
             <v-col cols="12" md="2">
                 <v-autocomplete v-model="selectedTags" :items="mtags" item-text="mtag_name" item-value="mtag_id" dense hide-details outlined label="Tags" 
-                    clearable multiple small-chips deletable-chips>
+                    clearable multiple small-chips>
                 </v-autocomplete>
             </v-col>
             <v-col cols="12" md="1">
-                <v-btn color="secondary" small :to="'/admin/product/addview'" router class="text-none" style="height: 40px; padding: 6px; margin-left: -15px;">
+                <v-btn color="secondary" small :to="'/admin/product/addview'" router class="text-none" style="height: 32px; padding: 8px; margin-left: -7px;">
                     Add Product
                 </v-btn>
             </v-col>
@@ -32,12 +32,12 @@
         <v-row  class="mt-0 pt-0">
             <v-col cols="12">
                 <v-card outlined>
-                    <v-row class="align-center">
+                    <v-row class="align-center" >
                         <v-col>
-                            <v-tabs v-model="activeTab" active-class="grey lighten-3" height="40" class="text-none">
-                            <v-tab>All</v-tab>
-                            <v-tab>Active</v-tab>
-                            <v-tab>Draft</v-tab>
+                            <v-tabs v-model="activeTab" active-class="grey lighten-3" height="30" class="text-none">
+                            <v-tab class="text-none" style="font-size: 12px;">All</v-tab>
+                            <v-tab class="text-none" style="font-size: 12px;">Active</v-tab>
+                            <v-tab class="text-none" style="font-size: 12px;">Draft</v-tab>
                             </v-tabs>
                         </v-col>
 
@@ -562,8 +562,44 @@ export default {
     }
 }
 </script>
-<style scoped>
-.v-btn {
-    font-size: 14px !important;
+<style>
+.v-input {
+  font-size: 12px !important;
+}
+
+ .v-input__control {
+    display: flex;
+    flex-wrap: nowrap !important;
+  min-height: 32px !important;
+ 
+}
+/*.v-input__control{
+   min-height: 32px !important;
+ } */
+  .v-select__selections{
+    display: flex;
+    flex-wrap: nowrap !important;
+    min-height: 32px !important;
+    height: 32px !important;
+  }
+.v-input input {
+  font-size: 12px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  margin: 0 !important;
+  align-self: center !important;
+}
+
+.v-label {
+  display: flex !important;
+  align-items: center !important;  /* Align label vertically */
+  font-size: 12px !important;
+  height: 100% !important;
+  padding-bottom: 20px !important;
+}
+.v-input__append-inner{
+    margin-top: 4px !important;
 }
 </style>

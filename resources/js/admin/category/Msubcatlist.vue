@@ -1,11 +1,11 @@
 <template>
 <div>
     <v-row>
-            <h2 class="text-h6 mb-0">Sub-Categories</h2>
+            <h2 class="text-h6 mb-1">Sub-Categories</h2>
         </v-row>
         <v-row class="mt-0 pt-0">
         <v-col cols="12" md="6">
-            <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Sub-Categories name"
+            <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Sub-Categories name"
             />
         </v-col>
         <v-col cols="12" md="2">
@@ -17,12 +17,12 @@
                 item-text="text" item-value="value" outlined dense label="Type" hide-details @change="typeByStatus"></v-autocomplete>
         </v-col>
         <v-col cols="12" md="1" class="text-end">
-            <v-btn color="secondary" small :to="'/admin/sub-categories/addview'" router class="text-none" style="height: 40px">
+            <v-btn color="secondary" small :to="'/admin/sub-categories/addview'" router class="text-none" style="height: 32px">
                 Sub-Category
             </v-btn>
         </v-col>
         <v-col cols="12" md="1" v-if="selected.length" class="text-end">
-                <v-icon color="red" class="text-none" style="height: 40px" :loading="bulkDeleteLoading" :disabled="bulkDeleteLoading" @click="confirmBulkDelete" >
+                <v-icon color="red" class="text-none" style="height: 32px;" :loading="bulkDeleteLoading" :disabled="bulkDeleteLoading" @click="confirmBulkDelete" >
                     mdi-delete
                 </v-icon>
             </v-col>
@@ -231,8 +231,8 @@ export default {
 };
 </script>
 <style scoped>
-.v-btn {
-    font-size: 14px !important;
+.v-input {
+  font-size: 12px !important;
 }
 .v-data-table .v-simple-checkbox input[type="checkbox"] {
   width: 16px;

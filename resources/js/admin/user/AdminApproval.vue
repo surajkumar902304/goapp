@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-row>
-            <h2 class="text-h6 mb-0">Customers</h2>
+            <h2 class="text-h6 mb-1">Customers</h2>
         </v-row>
         <v-row class="mt-0 pt-0">
       <v-col cols="12">
@@ -11,7 +11,7 @@
           dense
           hide-details
           outlined
-          prepend-inner-icon="mdi-magnify"
+          prepend-inner-icon="mdi-magnify mb-2"
           placeholder="Search name"
         />
       </v-col>
@@ -20,10 +20,10 @@
     <v-row> 
       <v-col cols="12" class="pt-0">
         <v-card outlined>
-          <v-tabs v-model="activeTab" class="mb-2" active-class="grey lighten-3" height="30">
-            <v-tab class="text-none">Approved</v-tab>
-            <v-tab class="text-none">Pending</v-tab>
-            <v-tab class="text-none">Declined</v-tab>
+          <v-tabs v-model="activeTab" active-class="grey lighten-3" height="30">
+            <v-tab class="text-none" style="font-size: 12px;">Approved</v-tab>
+            <v-tab class="text-none" style="font-size: 12px;">Pending</v-tab>
+            <v-tab class="text-none" style="font-size: 12px;">Declined</v-tab>
           </v-tabs>
             <v-data-table :items="filteredUsers" :headers="userHeaders" :search="ssearch" :footer-props="{
                       'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
@@ -149,6 +149,11 @@ export default {
 }
 </script>
 
-<style scoped>
-
+<style>
+.v-input__slot {
+    min-height: 30px !important;
+}
+.v-input {
+  font-size: 12px !important;
+}
 </style>

@@ -1,14 +1,14 @@
 <template>
     <div>
         <v-row>
-            <h2 class="text-h6 mb-0">Product-Options</h2>
+            <h2 class="text-h6 mb-1">Product-Options</h2>
         </v-row>
         <v-row class="mt-0 pt-0">
             <v-col cols="12" md="10">
-                <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search name"/>
+                <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify mb-2" placeholder="Search name"/>
             </v-col>
             <v-col cols="12" md="2" class="text-end">
-                <v-btn color="secondary" small @click="addDialog = true" style="height: 40px" class="text-none">
+                <v-btn color="secondary" small @click="addDialog = true" class="text-none" style="height: 32px;">
                     Add Option Name</v-btn>
             </v-col>
         </v-row>
@@ -112,6 +112,10 @@ export default {
                 (v) => !!v || "Name is required",
                 (v) => (v && v.length >= 3) || "Name must be at least 3 characters",
                 (v) => /^[a-zA-Z\s]+$/.test(v) || "Name can only contain letters and spaces",
+                v => !this.moptions.some(s =>
+                    s.moption_name.toLowerCase().trim() === (v || '').toLowerCase().trim() &&
+                    s.moption_id !== this.moption_id
+                ) || 'Option already exists'
             ],
             deleteDialog: false,
             optionToDelete: null,
@@ -139,6 +143,14 @@ export default {
                     this.defaultItem.moption_name = '';
                     this.$toast?.success('Option added successfully!');
                 })
+                .catch(() => {
+                this.$toast.error('Something went wrong while saving the brand.', {
+                            timeout: 500
+                        })
+                })
+                .finally(() => {
+                this.submitting = false;
+                });
         },
         editMoption(){
             const emop = {
@@ -153,6 +165,14 @@ export default {
                         timeout: 500
                     })
                 })
+                .catch(() => {
+                this.$toast.error('Something went wrong while saving the brand.', {
+                            timeout: 500
+                        })
+                })
+                .finally(() => {
+                this.submitting = false;
+                });
         },
         editItem(item){
             this.editedIndex = this.moptions.indexOf(item);
@@ -187,7 +207,7 @@ export default {
 </script>
 
 <style scoped>
-.v-btn {
-    font-size: 14px !important;
+.v-input {
+  font-size: 12px !important;
 }
 </style>

@@ -1,14 +1,14 @@
 <template>
     <div>
         <v-row>
-            <h2 class="text-h6 mb-0">Main Categories</h2>
+            <h2 class="text-h6 mb-1">Main Categories</h2>
         </v-row>
         <v-row class="mt-0 pt-0">
             <v-col cols="12" md="10">
-                <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify" placeholder="Search Main Category name"/>
+                <v-text-field v-model="ssearch" clearable dense hide-details outlined prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Main Category name"/>
             </v-col>
             <v-col cols="12" md="2" class="text-end">
-                <v-btn color="secondary" small class="text-none" style="font-size:14px; height: 40px;" @click="openDialog">
+                <v-btn color="secondary" small class="text-none" style="height: 32px;" @click="openDialog">
                     Add Main Category
                 </v-btn>
             </v-col>
@@ -254,7 +254,7 @@
     </script>
       
     <style scoped>
-.v-btn {
-    font-size: 14px !important;
+.v-input {
+  font-size: 12px !important;
 }
     </style>
