@@ -1,0 +1,1116 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Mbrand;
+use App\Models\Mlocation;
+use App\Models\Moption;
+use App\Models\Mproduct;
+use App\Models\Mproduct_type;
+use App\Models\Mstock;
+use App\Models\Mtag;
+use App\Models\Mvariant;
+use App\Models\Mvariant_detail;
+use App\Models\Product_Offer;
+use App\Models\User;
+use App\Models\Order;
+use App\Models\Wallet;
+use App\Models\WalletTransaction;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use App\Mail\UserApprovalMail;
+use Illuminate\Support\Facades\Mail;
+
+class AdminController extends Controller
+{
+    public function adminlogin(Request $request)
+    {
+        $this->validate($request, [
+            'email'    => 'required|email',
+            'password' => 'required|min:6',
+        ]);
+
+        if (Auth::guard('admin')->attempt(
+            ['email' => $request->email, 'password' => $request->password],
+            $request->remember
+        )) {
+            return redirect('/admin/dashboard');
+        }
+        else{
+
+            return redirect()->back()->withInput($request->only('email', 'remember'))->withErrors([
+                'email' => 'Credentials do not match our records.',
+            ]);
+        }
+    }
+
+    public function adminlogout()
+    {
+        Auth::guard('admin')->logout();
+        return redirect()->route('admin.login');
+    }
+
+    // User
+    public function userVlist()
+    {
+        $users = User::with('repcustomer:rep_id,rep_code','wallet:user_id,balance')->get();
+
+        foreach ($users as $user) {
+            $user->total_order = Order::where('user_id', $user->id)->count();
+            $user->total_spend = Order::where('user_id', $user->id)->sum('total_paid');
+        }
+
+        return response()->json([
+            'status' => true,
+            'total_users' => $users->count(),
+            'users' => $users,
+        ],200);
+    }
+
+    public function updateUserApproval(Request $request)
+    {
+        $request->validate([
+            'user_ids' => 'required|array',
+            'bulkstatus' => 'required|in:Pending,Approved,Declined',
+        ]);
+
+        $users = User::whereIn('id', $request->user_ids)->get();
+
+        foreach ($users as $user) {
+            $user->admin_approval = $request->bulkstatus;
+            $user->save();
+
+            if ($request->bulkstatus === 'Approved') {
+                Mail::to($user->email)->send(new UserApprovalMail($user));
+            }
+        }
+        return response()->json(['success' => true]);
+    }
+
+    public function checkEmail(Request $request)
+    {
+        $email = $request->email;
+        $userId = $request->id;
+
+        $exists = User::where('email', $email)
+            ->when($userId, fn($q) => $q->where('id', '!=', $userId))
+            ->exists();
+
+        return response()->json(['exists' => $exists]);
+    }
+
+    public function updateUserProfile(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'name'         => ['required','string','max:255'],
+            'email'        => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'mobile'       => ['required','string','max:20'],
+            'company_name' => ['required','string','max:255'],
+            'address1'     => ['required','string','max:255'],
+            'address2'     => ['nullable','string','max:255'],
+            'city'         => ['required','string','max:100'],
+            'country'      => ['required','string','max:100'],
+            'postcode'     => ['required','string','max:20'],
+        ]);
+
+        $user->update($data);
+
+        return response()->json(['status' => true, 'message' => 'Profile updated']);
+    }
+
+    public function updateUserWallet(Request $request)
+    {
+        $request->validate([
+            'user_id'       => 'required|exists:users,id',
+            'balancekey'    => 'required',
+            'balancevalue'  => 'nullable|numeric|min:0',
+            'reference'     => 'nullable|string|max:255',
+        ]);
+
+        $wallet = Wallet::firstOrCreate(
+            ['user_id' => $request->user_id],
+            ['balance' => 0]
+        );
+
+        if($request->balancekey === 'add')
+        {
+            $wallet->balance += $request->balancevalue;
+            $wallet->save();
+
+            WalletTransaction::create([
+                'wallet_id'   => $wallet->wallet_id, 
+                'type'        => 'credit',
+                'amount'      => $request->balancevalue,
+                'reference'   => $request->reference,
+                'description' => 'Wallet credited by Admin via panel',
+            ]);
+        }else{
+            $wallet->balance -= $request->balancevalue;
+            $wallet->save();
+
+            WalletTransaction::create([
+                'wallet_id'   => $wallet->wallet_id, 
+                'type'        => 'debit',
+                'amount'      => $request->balancevalue,
+                'reference'   => $request->reference,
+                'description' => 'Wallet debited by Admin via panel',
+            ]);
+        }
+
+        return response()->json(['status' => true, 'message' => 'Wallet updated successfully']);
+    }
+
+
+    // product options
+    public function moptionsVlist()
+    {
+        $moptions = Moption::orderBy('moption_id', 'desc')->get();
+        return response()->json([
+            'status' => true,
+            'moptions' => $moptions,
+        ],200);
+    }
+
+    public function addMoption(Request $request)
+    {
+        $moption = new Moption();
+        $moption->moption_name = $request->moption_name;
+        $moption->save();
+
+        return response()->json([
+            'status' => true,
+            'moption' => $moption,
+        ]);
+    }
+
+    public function editMoption(Request $request)
+    {
+        $moption = Moption::Find($request->moption_id);
+        $moption->moption_name = $request->moption_name;
+        $moption->update();
+        return response()->json([
+            'status' => true,
+            'moption' => $moption,
+        ]);
+    }
+
+    public function deleteMoption(Request $request)
+    {
+        $request->validate([
+            'moption_id' => 'required|exists:moptions,moption_id',
+        ]);
+
+        try {
+            $Moption = Moption::findOrFail($request->moption_id);
+
+            $Moption->delete();
+
+            return response()->json(['status' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // Brands 
+    public function mbrandVlist()
+    {
+        $mbrand = Mbrand::orderBy('mbrand_id','desc')->get();
+        return response()->json([
+            'status' => true,
+            'mbrands' => $mbrand,
+        ],200);
+    }
+
+    public function addBrand(Request $request)
+    {
+        $request->validate([
+            'mbrand_name'  => 'required|string|max:50',
+            'mbrand_image' => 'required|image|max:2048',
+        ]);
+
+        $bimagepath = null;
+        if ($request->hasFile('mbrand_image')) {
+            $image  = $request->file('mbrand_image');
+            $filename = 'mbrand_' . uniqid() . '.png';
+            $img = Image::make($image->getRealPath())->resize(600, 800, function ($constraint) {
+                $constraint->aspectRatio();
+            });
+            $bimagepath      = 'goapp/images/mbrands/' . $filename;
+            Storage::disk('s3')->put($bimagepath, (string) $img->encode());
+        }
+
+        $brand                 = new Mbrand();
+        $brand->mbrand_name    = $request->mbrand_name;
+        $brand->mbrand_image   = $bimagepath;
+        $brand->save();
+
+        return response()->json(['status' => true]);
+    }
+
+    public function editBrand(Request $request)
+    {
+        $request->validate([
+            'mbrand_id'    => 'required|exists:mbrands,mbrand_id',
+            'mbrand_name'  => 'required|string|max:255',
+            'mbrand_image' => 'nullable|image|max:2048',
+        ]);
+
+        $brand = Mbrand::find($request->mbrand_id);
+        $brand->mbrand_name  = $request->mbrand_name;
+        $bimagepath = $brand->mbrand_image;
+
+        if ($request->hasFile('mbrand_image')) {
+            if (!empty($bimagepath) && Storage::disk('s3')->exists($bimagepath)) {
+                Storage::disk('s3')->delete($bimagepath);
+            }
+            $image = $request->file('mbrand_image');
+            $filename = 'mbrand_' . uniqid() . '.png';
+            $img = Image::make($image->getRealPath())->resize(600, 800, function ($constraint) {
+                $constraint->aspectRatio();
+            });
+            
+            $bimagepath      = "goapp/images/mbrands/$filename";
+            Storage::disk('s3')->put($bimagepath, (string) $img->encode());
+
+            $brand->mbrand_image = $bimagepath;
+        }
+
+        $brand->save();
+
+        return response()->json(['status' => true]);
+    }
+
+    public function deleteBrand(Request $request)
+    {
+        $request->validate([
+            'mbrand_id' => 'required|exists:mbrands,mbrand_id',
+        ]);
+
+        try {
+            $brand = Mbrand::findOrFail($request->mbrand_id);
+
+            if ($brand->mbrand_image && Storage::disk('s3')->exists($brand->mbrand_image)) {
+                Storage::disk('s3')->delete($brand->mbrand_image);
+            }
+
+            $brand->delete();
+
+            return response()->json(['status' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function bulkDeleteMbrand(Request $request)
+    {
+        $data = $request->validate([
+            'mbrand_ids'   => 'required|array',
+            'mbrand_ids.*' => 'integer|exists:mbrands,mbrand_id',
+        ]);
+
+        DB::transaction(function () use ($data) {
+            Mbrand::whereIn('mbrand_id', $data['mbrand_ids'])->delete();
+
+        });
+
+        return response()->json(['status' => true]);
+    }
+
+
+    // Tags
+    public function mtagVlist()
+    {
+        $mtag = Mtag::orderBy('mtag_id','desc')->get();
+        return response()->json([
+            'status' => true,
+            'mtags' => $mtag,
+        ],200);
+    }
+
+    // Product Offer 
+    public function productofferVlist()
+    {
+        $productoffer = Product_Offer::orderBy('product_offer_id', 'desc')->get();
+        $product = Mproduct::where('status','active')->with('mvariants')
+        ->get();
+
+        return response()->json([
+            'status' => true,
+            'productoffers' => $productoffer,
+            'products' => $product,
+        ],200);
+    }
+
+    public function addProductoffer(Request $request)
+    {
+        $request->validate([
+            'product_ids'        => 'required|array',
+            'product_ids.*'      => 'exists:mproducts,mproduct_id',
+            'variant_ids'        => 'required|array',
+            'variant_ids.*'      => 'exists:mvariants,mvariant_id',
+            'product_deal_tag'   => 'nullable|string|max:255',
+            'product_offer'      => 'nullable|string|max:255',
+        ]);
+
+        foreach ($request->variant_ids as $variantId) {
+            Product_Offer::updateOrCreate(
+                ['mvariant_id' => $variantId],
+                [
+                    'product_offer'     => $request->product_offer,
+                    'product_deal_tag'  => $request->product_deal_tag,
+                ]
+            );
+        }
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Offers added successfully'
+        ]);
+    }
+
+    public function editProductoffer(Request $request)
+    {
+        $data = $request->validate([
+            'product_offer_id'  => ['required', 'integer', 'exists:product__offers,product_offer_id'],
+            'mvariant_id'       => ['required', 'integer', 'exists:mvariants,mvariant_id'],
+            'product_deal_tag'  => ['nullable', 'string', 'max:255'],
+            'product_offer'     => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $offer = Product_Offer::find($data['product_offer_id']);
+        
+        $offer->update([
+            'mvariant_id'      => $data['mvariant_id'],
+            'product_deal_tag' => $data['product_deal_tag'],
+            'product_offer'    => $data['product_offer'],
+        ]);
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Offer updated',
+        ], 200);
+    }
+
+    public function deleteProductoffer(Request $request)
+    {
+        $request->validate([
+            'product_offer_id' => 'required|exists:product__offers,product_offer_id',
+        ]);
+    
+        Product_Offer::where('product_offer_id', $request->product_offer_id)->delete();
+    
+        return response()->json(['status' => true, 'message' => 'Offer deleted']);
+    }
+
+
+    public function bulkDeleteProductoffer(Request $request)
+    {
+        $request->validate([
+            'product_offer_ids' => 'required|array',
+        ]);
+        
+        Product_Offer::whereIn('product_offer_id', $request->product_offer_ids)->delete();
+
+        return response()->json(['status' => true, 'message' => 'Offer deleted']);
+    }
+
+    public function bulkAddProductoffer(Request $request)
+    {
+        $request->validate([
+            'product_offer_ids' => 'required|array',
+            'bulk_product_tag' => 'nullable',
+        ]);
+
+        Product_Offer::whereIn('product_offer_id', $request->product_offer_ids)
+        ->update(['product_deal_tag' => $request->bulk_product_tag]);
+    
+        return response()->json(['status' => true, 'message' => 'Offer deleted']);
+    }
+
+    public function bulkRemoveProductoffer(Request $request)
+    {
+        $request->validate([
+            'product_offer_ids' => 'required|array',
+            'bulk_product_tag' => 'nullable',
+        ]);
+    
+        Product_Offer::whereIn('product_offer_id', $request->product_offer_ids)
+        ->update(['product_deal_tag' => $request->bulk_product_tag]);
+    
+        return response()->json(['status' => true, 'message' => 'Offer deleted']);
+    }
+
+    // admin product list
+    public function adminProductlist()
+    {
+        $mproducts = Mproduct::with('mvariants')
+        ->orderBy('mproduct_id', 'desc')
+        ->get();
+
+        $mptypes  = Mproduct_type::all();
+        $mbrands  = Mbrand::all();
+        $mtags    = Mtag::all();
+        return response()->json([
+            'status' => true,
+            'mproducts' => $mproducts,
+            'mptypes'  => $mptypes,
+            'mbrands'  => $mbrands,
+            'mtags'    => $mtags,
+        ]);
+    }
+
+    // Product functionalty 
+    public function productAddData()
+    {
+        $mptypes = Mproduct_type::orderBy('mproduct_type_id', 'desc')->get();
+        $mbrands = Mbrand::orderBy('mbrand_id', 'desc')->get();
+        $mtags = Mtag::orderBy('mtag_id', 'desc')->get();
+        $availableOptions = Moption::get();
+
+        return response()->json([
+            'status' => true,
+            'ptypes'=> $mptypes,
+            'brands' => $mbrands,
+            'tags' => $mtags,
+            'selectedOption'=> $availableOptions,
+        ]);
+    }
+    
+    public function storeProductType(Request $request)
+    {
+        try {
+            $name = $request->input('mproduct_type_name');
+
+            $type = new Mproduct_type();
+            $type->mproduct_type_name = $name;
+            $type->save();
+
+            return response()->json([
+                'success' => true,
+                'mproduct_type_id' => $type->mproduct_type_id
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Could not insert product type'], 500);
+        }
+    }
+    
+    public function storeBrand(Request $request)
+    {
+        try {
+            $name = $request->input('mbrand_name');
+            $brand = new Mbrand();
+            $brand->mbrand_name = $name;
+            $brand->save();
+    
+            return response()->json([
+                'success' => true,
+                'mbrand_id' => $brand->mbrand_id
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Could not insert brand'], 500);
+        }
+    }
+    
+    public function storeTag(Request $request)
+    {
+        try {
+            $name = $request->input('mtag_name');
+            $tag = new Mtag();
+            $tag->mtag_name = $name;
+            $tag->save();
+    
+            return response()->json([
+                'success' => true,
+                'mtag_id' => $tag->mtag_id
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Could not insert tag'], 500);
+        }
+    }
+
+    public function productStoreData(Request $request)
+    {
+        try {
+            $pimagepath = null;
+            if ($request->hasFile('pimage')) {
+                $image = $request->file('pimage');
+                $filename = 'mproduct_' . uniqid() . '.png';
+
+                $img = Image::make($image->getRealPath())->resize(600, 800, function ($constraint) {
+                    $constraint->aspectRatio();
+                });
+
+                $pimagepath = 'goapp/images/mproduct/' . $filename;
+                Storage::disk('s3')->put($pimagepath, (string)$img->encode());
+            }
+
+            $mproduct = Mproduct::create([
+                'mproduct_title'   => $request->ptitle,
+                'mproduct_slug'    => Str::slug(strtolower($request->ptitle), '-') . "-" . uniqid(),
+                'mproduct_image'   => $pimagepath,
+                'mproduct_desc'    => $request->pdesc ?? "",
+                'status'           => $request->pstatus ?? 'Draft',
+                'saleschannel'     => json_decode($request->pchannel, true) ?? [],
+                'mproduct_type_id' => $request->ptype ?? null,
+                'mbrand_id'        => $request->pbrand ?? null,
+                'mtags'            => json_decode($request->ptags, true) ?? [],
+            ]);
+
+            if ($request->has('variants')) {
+                foreach ($request->variants as $index => $variant) {
+                    $vimagepath = null;
+                    if ($request->hasFile("variants.$index.variantImage")) {
+                        $file = $request->file("variants.$index.variantImage");
+                        $filename = 'mvproduct_' . uniqid() . '.png';
+
+                        $img = Image::make($file->getRealPath())->resize(600, 800, function ($constraint) {
+                            $constraint->aspectRatio();
+                        });
+
+                        $vimagepath = 'goapp/images/mvproduct/' . $filename;
+                        Storage::disk('s3')->put($vimagepath, (string)$img->encode());
+                    }
+
+                    $mvariant = Mvariant::create([
+                        'mproduct_id'       => $mproduct->mproduct_id,
+                        'sku'               => $variant['sku'] ?? '',
+                        'mvariant_image'    => $vimagepath,
+                        'price'             => $variant['price'] ?? 0,
+                        'compare_price'     => $variant['compareprice'] ?? 0,
+                        'cost_price'        => $request->pcostprice ?? 0,
+                        'taxable'           => $request->taxable ?? 0,
+                        'barcode'           => $variant['barcode'] ?? '',
+                        'weight'            => $request->pweight ?? 0,
+                        'weightunit'        => $request->pweightunit ?? 'kg',
+                        'isvalidatedetails' => 1,
+                    ]);
+
+                    Mvariant_detail::create([
+                        'mvariant_id'  => $mvariant->mvariant_id,
+                        'options'      => json_decode($variant['optname'],true),
+                        'option_value' => json_decode($variant['optvalue'],true),
+                    ]);
+
+                    $mlocation = Mlocation::firstOrCreate(
+                        ['name' => "default", 'is_default' => true],
+                        ['adresss' => "default location"]
+                    );
+
+                    Mstock::create([
+                        'quantity'     => $variant['stock'] ?? 0,
+                        'mlocation_id' => $mlocation->mlocation_id,
+                        'mvariant_id'  => $mvariant->mvariant_id,
+                    ]);
+                }
+            } else {
+                $mvariant = Mvariant::create([
+                    'sku'           => $request->psku ?? '',
+                    'variantImage'  => null,
+                    'price'         => $request->pprice ?? 0,
+                    'compare_price' => $request->pcompareprice ?? 0,
+                    'cost_price'    => $request->pcostprice ?? 0,
+                    'taxable'        => $request->taxable ?? 0,
+                    'barcode'       => $request->barcode ?? '',
+                    'weight'        => $request->pweight ?? 0,
+                    'weightunit'    => $request->pweightunit ?? 'kg',
+                    'mproduct_id'   => $mproduct->mproduct_id,
+                    'isvalidatedetails' => 0,
+                ]);
+
+                Mvariant_detail::create([
+                    'mvariant_id'  => $mvariant->mvariant_id,
+                    'options'      => [],
+                    'option_value' => [],
+                ]);
+
+                $mlocation = Mlocation::firstOrCreate(
+                    ['name' => "default", 'is_default' => true],
+                    ['adresss' => "default location"]
+                );
+
+                Mstock::create([
+                    'quantity'     => $request->pstock ?? 0,
+                    'mlocation_id' => $mlocation->mlocation_id,
+                    'mvariant_id'  => $mvariant->mvariant_id,
+                ]);
+            }
+
+            return response()->json(['success' => true, 'message' => 'Product saved successfully']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function productEditData(Request $request)
+    {
+        $mproduct = Mproduct::with('mvariants')->find($request->mproid);
+
+        if (!$mproduct) {
+            return response()->json(['status' => false, 'message' => 'Product not found'], 404);
+        }
+
+        foreach ($mproduct->mvariants as $mvars) {
+            $mvars->options = json_decode($mvars->options, true);
+            $mvars->option_value = json_decode($mvars->option_value, true);
+        }
+
+        $mptypes  = Mproduct_type::orderBy('mproduct_type_id', 'desc')->get();
+        $mbrands  = Mbrand::orderBy('mbrand_id', 'desc')->get();
+        $mtags    = Mtag::orderBy('mtag_id', 'desc')->get();
+        $moptions = Moption::all();
+
+        return response()->json([
+            'status'   => true,
+            'mproduct' => $mproduct,
+            'mptypes'  => $mptypes,
+            'mbrands'  => $mbrands,
+            'mtags'    => $mtags,
+            'moptions' => $moptions,
+        ]);
+    }
+
+    public function updateProductData(Request $request)
+    {
+        try {
+            $mproduct = Mproduct::findOrFail($request->mproduct_id);
+
+            $pimagepath = $mproduct->mproduct_image;
+            if ($request->hasFile('pimage')) {
+                if (!empty($pimagepath) && Storage::disk('s3')->exists($pimagepath)) {
+                    Storage::disk('s3')->delete($pimagepath);
+                }
+                $image = $request->file('pimage');
+                $filename = 'mproduct_' . uniqid() . '.png';
+                $img = Image::make($image->getRealPath())->resize(600, 800, function ($constraint) {
+                    $constraint->aspectRatio();
+                });
+                $pimagepath = 'goapp/images/mproduct/' . $filename;
+                Storage::disk('s3')->put($pimagepath, (string)$img->encode());
+            }
+
+            $inputTags = json_decode($request->ptags, true) ?? [];
+            $validTags = Mtag::whereIn('mtag_id', $inputTags)->pluck('mtag_id')->toArray();
+            
+            $mproduct->update([
+                'mproduct_title'   => $request->ptitle,
+                'mproduct_slug'    => Str::slug(strtolower($request->ptitle), '-') . "-" . uniqid(),
+                'mproduct_image'   => $pimagepath,
+                'mproduct_desc'    => $request->pdesc ?? "",
+                'status'           => $request->pstatus ?? 'Draft',
+                'saleschannel'     => json_decode($request->pchannel, true) ?? [],
+                'mproduct_type_id' => $request->ptype ?? null,
+                'mbrand_id'        => $request->pbrand ?? null,
+                'mtags'            => $validTags,
+            ]);
+
+            if ($request->has('variants') && !empty(json_decode($request->variants[0]['optname'], true))) {
+                $incomingVariantIds = [];
+
+                foreach ($request->variants as $index => $variantData) {
+                    if (!empty($variantData['mvariant_id'])) {
+                        $incomingId = (int)$variantData['mvariant_id'];
+                        $incomingVariantIds[] = $incomingId;
+
+                        $mvariant = Mvariant::find($incomingId);
+                        if ($mvariant) {
+                            $vimagepath = $mvariant->mvariant_image;
+                            if ($request->hasFile("variants.$index.variantImage")) {
+                                if (!empty($vimagepath) && Storage::disk('s3')->exists($vimagepath)) {
+                                    Storage::disk('s3')->delete($vimagepath);
+                                }
+                                $file = $request->file("variants.$index.variantImage");
+                                $filename = 'mvproduct_' . uniqid() . '.png';
+                                $img = Image::make($file->getRealPath())->resize(600, 800, function ($constraint) {
+                                    $constraint->aspectRatio();
+                                });
+                                $vimagepath = 'goapp/images/mvproduct/' . $filename;
+                                Storage::disk('s3')->put($vimagepath, (string)$img->encode());
+                            }
+                            $mvariant->update([
+                                'sku'           => $variantData['sku'] ?? '',
+                                'mvariant_image'=> $vimagepath,
+                                'price'         => $variantData['price'] ?? 0,
+                                'compare_price' => $variantData['compareprice'] ?? 0,
+                                'cost_price'    => $request->pcostprice ?? 0,
+                                'taxable'       => $request->taxable ?? 0,
+                                'barcode'       => $variantData['barcode'] ?? '',
+                                'weight'        => $request->pweight ?? 0,
+                                'weightunit'    => $request->pweightunit ?? 'kg',
+                                'isvalidatedetails' => 1,
+                            ]);
+
+                            $mvariantDetail = Mvariant_detail::where('mvariant_id', $mvariant->mvariant_id)->first();
+                            $options = json_decode($variantData['optname'], true);
+                            $optionValue = json_decode($variantData['optvalue'], true);
+                            if ($mvariantDetail) {
+                                $mvariantDetail->update([
+                                    'options'      => $options,
+                                    'option_value' => $optionValue,
+                                ]);
+                            } else {
+                                Mvariant_detail::create([
+                                    'mvariant_id'  => $mvariant->mvariant_id,
+                                    'options'      => $options,
+                                    'option_value' => $optionValue,
+                                ]);
+                            }
+
+                            $mlocation = Mlocation::firstOrCreate(
+                                ['name' => "default", 'is_default' => true],
+                                ['adresss' => "default location"]
+                            );
+                            $mstock = Mstock::where('mvariant_id', $mvariant->mvariant_id)->first();
+                            if ($mstock) {
+                                $mstock->update([
+                                    'quantity'     => $variantData['stock'] ?? 0,
+                                    'mlocation_id' => $mlocation->mlocation_id,
+                                ]);
+                            } else {
+                                Mstock::create([
+                                    'quantity'     => $variantData['stock'] ?? 0,
+                                    'mlocation_id' => $mlocation->mlocation_id,
+                                    'mvariant_id'  => $mvariant->mvariant_id,
+                                ]);
+                            }
+                        }
+                    }
+                    else {
+                        $vimagepath = null;
+                        if ($request->hasFile("variants.$index.variantImage")) {
+                            $file = $request->file("variants.$index.variantImage");
+                            $filename = 'mvproduct_' . uniqid() . '.png';
+                            $img = Image::make($file->getRealPath())->resize(600, 800, function ($constraint) {
+                                $constraint->aspectRatio();
+                            });
+                            $vimagepath = 'goapp/images/mvproduct/' . $filename;
+                            Storage::disk('s3')->put($vimagepath, (string)$img->encode());
+                        }
+                        $mvariant = Mvariant::create([
+                            'mproduct_id'    => $mproduct->mproduct_id,
+                            'sku'            => $variantData['sku'] ?? '',
+                            'mvariant_image' => $vimagepath,
+                            'price'          => $variantData['price'] ?? 0,
+                            'compare_price'  => $variantData['compareprice'] ?? 0,
+                            'cost_price'     => $request->pcostprice ?? 0,
+                            'taxable'        => $request->taxable ?? 0,
+                            'barcode'        => $variantData['barcode'] ?? '',
+                            'weight'         => $request->pweight ?? 0,
+                            'weightunit'     => $request->pweightunit ?? 'kg',
+                            'isvalidatedetails' => 1,
+                        ]);
+
+                        $incomingVariantIds[] = $mvariant->mvariant_id;
+
+                        Mvariant_detail::create([
+                            'mvariant_id'  => $mvariant->mvariant_id,
+                            'options'      => json_decode($variantData['optname'], true),
+                            'option_value' => json_decode($variantData['optvalue'], true),
+                        ]);
+                        $mlocation = Mlocation::firstOrCreate(
+                            ['name' => "default", 'is_default' => true],
+                            ['adresss' => "default location"]
+                        );
+                        Mstock::create([
+                            'quantity'     => $variantData['stock'] ?? 0,
+                            'mlocation_id' => $mlocation->mlocation_id,
+                            'mvariant_id'  => $mvariant->mvariant_id,
+                        ]);
+                    }
+                }
+
+                $allExistingVariants = Mvariant::where('mproduct_id', $mproduct->mproduct_id)->get();
+                foreach ($allExistingVariants as $oldVariant) {
+                    if (!in_array($oldVariant->mvariant_id, $incomingVariantIds)) {
+                        if (!empty($oldVariant->mvariant_image) && Storage::disk('s3')->exists($oldVariant->mvariant_image)) {
+                            Storage::disk('s3')->delete($oldVariant->mvariant_image);
+                        }
+                        Mvariant_detail::where('mvariant_id', $oldVariant->mvariant_id)->delete();
+                        Mstock::where('mvariant_id', $oldVariant->mvariant_id)->delete();
+                        $oldVariant->delete();
+                    }
+                }
+            }
+            else {
+                $existingVariants = Mvariant::where('mproduct_id', $mproduct->mproduct_id)->get();
+
+                foreach ($existingVariants as $variant) {
+                    if (!empty($variant->mvariant_image) && Storage::disk('s3')->exists($variant->mvariant_image)) {
+                        Storage::disk('s3')->delete($variant->mvariant_image);
+                    }
+                    Mvariant_detail::where('mvariant_id', $variant->mvariant_id)->delete();
+                    Mstock::where('mvariant_id', $variant->mvariant_id)->delete();
+                    $variant->delete();
+                }
+
+                $mvariant = Mvariant::create([
+                    'mproduct_id'       => $mproduct->mproduct_id,
+                    'sku'               => $request->psku ?? '',
+                    'mvariant_image'    => null,
+                    'price'             => $request->pprice ?? 0,
+                    'compare_price'     => $request->pcompareprice ?? 0,
+                    'cost_price'        => $request->pcostprice ?? 0,
+                    'taxable'           => $request->taxable ?? 0,
+                    'barcode'           => $request->pbarcode ?? '',
+                    'weight'            => $request->pweight ?? 0,
+                    'weightunit'        => $request->pweightunit ?? 'kg',
+                    'isvalidatedetails' => 0,
+                ]);
+
+                Mvariant_detail::create([
+                    'mvariant_id'  => $mvariant->mvariant_id,
+                    'options'      => [],
+                    'option_value' => [],
+                ]);
+
+                $mlocation = Mlocation::firstOrCreate(
+                    ['name' => "default", 'is_default' => true],
+                    ['adresss' => "default location"]
+                );
+
+                Mstock::create([
+                    'quantity'     => $request->pstock ?? 0,
+                    'mlocation_id' => $mlocation->mlocation_id,
+                    'mvariant_id'  => $mvariant->mvariant_id,
+                ]);
+            }
+            return response()->json(['success' => true, 'message' => 'Product updated successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function deleteProduct(Request $request)
+    {
+        $request->validate([
+            'mproduct_id' => 'required|exists:mproducts,mproduct_id',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            $product = Mproduct::findOrFail($request->mproduct_id);
+
+            $variants = $product->mvariants;
+
+            foreach ($variants as $variant) {
+                if ($variant->mvariant_image && Storage::disk('s3')->exists($variant->mvariant_image)) {
+                    Storage::disk('s3')->delete($variant->mvariant_image);
+                }
+                $variant->delete();
+            }
+
+            if ($product->mproduct_image && Storage::disk('s3')->exists($product->mproduct_image)) {
+                Storage::disk('s3')->delete($product->mproduct_image);
+            }
+
+            $product->delete();
+
+            DB::commit();
+
+            return response()->json(['status' => true, 'message' => 'Product and variants deleted successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function bulkDeleteProduct(Request $request)
+    {
+        $data = $request->validate([
+            'mproduct_ids'   => 'required|array',
+            'mproduct_ids.*' => 'integer|exists:mproducts,mproduct_id',
+        ]);
+
+        DB::transaction(function () use ($data) {
+            $products = Mproduct::with('mvariants')->whereIn('mproduct_id', $data['mproduct_ids'])->get();
+
+            foreach ($products as $product) {
+                if ($product->mproduct_image && Storage::disk('s3')->exists($product->mproduct_image)) {
+                    Storage::disk('s3')->delete($product->mproduct_image);
+                }
+
+                foreach ($product->mvariants as $variant) {
+                    if ($variant->mvariant_image && Storage::disk('s3')->exists($variant->mvariant_image)) {
+                        Storage::disk('s3')->delete($variant->mvariant_image);
+                    }
+                    $variant->delete(); 
+                }
+
+                $product->delete();
+            }
+        });
+
+        return response()->json(['status' => true, 'message' => 'Products and related variants deleted.']);
+    }
+
+
+    public function productDuplicate(Request $request)
+    {
+        $mproduct_id = $request->mproduct_id;
+
+        $originalMproduct = Mproduct::with(['mvariants.mvariantDetail', 'mvariants.mstock'])->findOrFail($mproduct_id);
+
+        $newMproduct = Mproduct::create([
+            'mproduct_title'     => $originalMproduct->mproduct_title,
+            'mproduct_image'     => $originalMproduct->mproduct_image,
+            'mproduct_slug'      => Str::slug(strtolower($originalMproduct->mproduct_title), '-') . '-' . uniqid(),
+            'status'             => $originalMproduct->status,
+            'saleschannel'       => $originalMproduct->saleschannel,
+            'mproduct_type_id'   => $originalMproduct->mproduct_type_id,
+            'mbrand_id'          => $originalMproduct->mbrand_id,
+            'mtags'              => $originalMproduct->mtags,
+            'mproduct_desc'      => $originalMproduct->mproduct_desc,
+        ]);
+
+        $variants = $originalMproduct->mvariants;
+        $baseSku = $this->generateBaseSku();
+
+        foreach ($variants as $i => $variant) {
+            $newSku = $this->generateUniqueSku($baseSku, $i);
+
+            $newVariant = Mvariant::create([
+                'mproduct_id'     => $newMproduct->mproduct_id,
+                'sku'             => $newSku,
+                'mvariant_image'  => $variant->mvariant_image,
+                'price'           => $variant->price,
+                'compare_price'   => $variant->compare_price,
+                'cost_price'      => $variant->cost_price,
+                'barcode'         => $variant->barcode,
+                'weight'          => $variant->weight,
+                'weightunit'      => $variant->weightunit,
+                'taxable'         => $variant->taxable,
+                'isvalidatedetails' => $variant->isvalidatedetails,
+            ]);
+
+            // Copy variant detail
+            $detail = optional($variant->mvariantDetail);
+            Mvariant_detail::create([
+                'mvariant_id'  => $newVariant->mvariant_id,
+                'options'      => $detail->options ?? [],
+                'option_value' => $detail->option_value ?? [],
+            ]);
+
+            // Copy stock
+            $stockQty = optional($variant->mstock)->quantity ?? 0;
+            $mlocation = Mlocation::firstOrCreate(
+                ['name' => 'default', 'is_default' => true],
+                ['adresss' => 'default location']
+            );
+
+            Mstock::create([
+                'quantity'     => $stockQty,
+                'mlocation_id' => $mlocation->mlocation_id,
+                'mvariant_id'  => $newVariant->mvariant_id,
+            ]);
+        }
+
+        return response()->json(['status' => true, 'message' => 'Product duplicated successfully']);
+    }
+
+    private function generateBaseSku(): string
+    {
+        do {
+            $base = strtoupper(Str::random(5));
+        } while (Mvariant::where('sku', $base)->exists());
+
+        return $base;
+    }
+
+    private function generateUniqueSku(string $baseSku, int $index): string
+    {
+        $sku = $index === 0 ? $baseSku : "{$baseSku}-{$index}";
+
+        while (Mvariant::where('sku', $sku)->exists()) {
+            $index++;
+            $sku = "{$baseSku}-{$index}";
+        }
+
+        return $sku;
+    }
+
+
+    // product bulk actions
+    public function productsBulkmarkStatus(Request $req)
+    {
+        $req->validate([
+            'product_ids' => 'required|array',
+            'bulkstatus' => 'required|string|in:Active,Draft'
+        ]);
+
+        $updated = Mproduct::whereIn('mproduct_id', $req->product_ids)
+            ->update(['status' => $req->bulkstatus]);
+
+        return response()->json([
+            'message' => 'Status updated',
+            'updated_count' => $updated
+        ]);
+    }
+
+    public function productsBulkDelete(Request $req)
+    {
+        $req->validate([
+            'product_ids' => 'required|array'
+        ]);
+
+        Mproduct::whereIn('mproduct_id', $req->product_ids)->delete();
+
+        return response()->json(['message' => 'Products deleted']);
+    }
+
+    public function productsBulkAddTags(Request $req)
+    {
+        $req->validate([
+            'product_ids' => 'required|array',
+            'tag_ids' => 'required|array'
+        ]);
+
+        foreach ($req->product_ids as $id) {
+            $product = Mproduct::find($id);
+            if ($product) {
+                $existing = is_array($product->mtags)
+                    ? $product->mtags
+                    : json_decode($product->mtags, true) ?? [];
+
+                $merged = array_unique(array_merge($existing, $req->tag_ids));
+                $product->mtags = array_values(array_map('intval', $merged));
+                $product->save();
+            }
+        }
+
+        return response()->json(['message' => 'Tags added']);
+    }
+
+
+    public function productsBulkRemoveTags(Request $req)
+    {
+        $req->validate([
+            'product_ids' => 'required|array',
+            'tag_ids' => 'required|array'
+        ]);
+
+        foreach ($req->product_ids as $id) {
+            $product = Mproduct::find($id);
+            if ($product) {
+                $existing = is_array($product->mtags)
+                    ? $product->mtags
+                    : json_decode($product->mtags, true) ?? [];
+
+                $filtered = array_values(array_filter($existing, function ($tag) use ($req) {
+                    return !in_array($tag, $req->tag_ids);
+                }));
+
+                $product->mtags = $filtered;
+                $product->save();
+            }
+        }
+
+        return response()->json(['message' => 'Tags removed']);
+    }
+
+}

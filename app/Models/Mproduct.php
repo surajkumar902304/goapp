@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Mproduct extends Model
+{
+    use HasFactory;
+    protected $primaryKey = 'mproduct_id';
+    protected $table = 'mproducts';
+
+    protected $fillable = [
+        'mproduct_title', 
+        'mproduct_image', 
+        'mproduct_slug', 
+        'status',
+        'saleschannel',
+        'mproduct_type_id',
+        'mbrand_id',
+        'mtags',
+        'mproduct_desc'
+    ];
+
+    protected $casts = [
+        'mtags'=> 'array',
+        'saleschannel'=> 'array',
+    ];
+
+    public function mvariantsApi()
+    {
+        return $this->hasMany(Mvariant::class, 'mproduct_id', 'mproduct_id');
+    }
+    public function mvariants()
+    {
+        return $this->hasMany(Mvariant::class, 'mproduct_id', 'mproduct_id')
+        ->join('mvariant_details', 'mvariant_details.mvariant_id','=','mvariants.mvariant_id')
+        ->join('mstocks', 'mstocks.mvariant_id','=','mvariants.mvariant_id')
+        ->select( 'mvariants.*', 'mvariant_details.options', 'mvariant_details.option_value', 'mstocks.quantity', 'mstocks.mlocation_id');
+    }
+
+    public function variants()
+    {
+        return $this->hasMany(Mvariant::class, 'mproduct_id', 'mproduct_id');
+    }
+    public function type()  { 
+        return $this->belongsTo(Mproduct_type::class, 'mproduct_type_id'); 
+    }
+    public function brand() { 
+        return $this->belongsTo(Mbrand::class,        'mbrand_id'); 
+    }
+
+}
