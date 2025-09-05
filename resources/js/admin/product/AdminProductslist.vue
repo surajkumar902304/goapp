@@ -61,18 +61,18 @@
                             <v-row dense class="mx-1 pb-1">
                                 <v-col cols="12" md="6" class="pa-0 pr-3">
                                     <v-text-field class="px-2 py-1" v-model="msearch" dense outlined clearable hide-details prepend-inner-icon="mdi-magnify mb-2" 
-                                        placeholder="Search Product, Type, Brand"/>
+                                        placeholder="Search Products"/>
                                 </v-col>
                                 <v-col cols="6" md="2" class="pa-0 pr-3">
-                                    <v-autocomplete class="m-2" v-model="selectedType" :items="mptypes" item-text="mproduct_type_name" item-value="mproduct_type_id" 
+                                    <v-autocomplete class="px-2 py-1" v-model="selectedType" :items="mptypes" item-text="mproduct_type_name" item-value="mproduct_type_id" 
                                         dense outlined hide-details label="Type"/>
                                 </v-col>
-                                <v-col cols="6" md="2" class="pa-0">
-                                    <v-autocomplete class="m-2" v-model="selectedBrand" :items="mbrands" item-text="mbrand_name" item-value="mbrand_id" 
+                                <v-col cols="6" md="2" class="pa-0 pr-3">
+                                    <v-autocomplete class="px-2 py-1" v-model="selectedBrand" :items="mbrands" item-text="mbrand_name" item-value="mbrand_id" 
                                         dense hide-details outlined label="Brand" clearable/>
                                 </v-col>
-                                <v-col cols="6" md="2" class="pa-0">
-                                    <v-autocomplete class="m-2 tag-text-area" v-model="selectedTags" :items="mtags" item-text="mtag_name" item-value="mtag_id" dense hide-details outlined 
+                                <v-col cols="6" md="2" class="pa-0 pr-3">
+                                    <v-autocomplete class="px-2 py-1 tag-text-area" v-model="selectedTags" :items="mtags" item-text="mtag_name" item-value="mtag_id" dense hide-details outlined 
                                         label="Tags" clearable deletable-chips multiple small-chips/>
                                 </v-col>
                             </v-row>
@@ -604,13 +604,13 @@ export default {
 
 /* Custom css for all page */
 thead tr th {
-    background-color: #dbdbdb;
+    background-color: #e8e8e8;
 }
 .page-margin-20-40{
     /* margin: 20px 40px !important; */
 }
 .btn-32-text-12{
-    height: 32px !important;
+    height: 26px !important;
     font-size: 12px !important;
 }
 .v-tabs .v-item-group {

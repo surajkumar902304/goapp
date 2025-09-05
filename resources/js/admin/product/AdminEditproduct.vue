@@ -15,7 +15,7 @@
                     </v-btn>
                 </div>
                 <div class="col-md-6 text-right">
-                    <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="deleteLoading" :disabled="deleteLoading || !fvalid" @click="openDuplicateDialog" class="btn-32-text-12">Duplicate</v-btn>
+                    <v-btn style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" :loading="deleteLoading" :disabled="deleteLoading || !fvalid" @click="openDuplicateDialog" class="btn-32-text-12">Duplicate</v-btn>
                     <v-btn type="submit" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :disabled="!fvalid || isSubmitting" :loading="isSubmitting" class="btn-32-text-12">Update</v-btn>
                 </div>
             </div>
@@ -69,9 +69,9 @@
                         <v-card-title>Inventory</v-card-title>
                         <v-card-text>
                             <v-row>
-                            <v-col cols="12" md="4">
+                            <!-- <v-col cols="12" md="4">
                                 <v-text-field v-model="barcode" placeholder="Barcode" dense outlined label="Barcode" :rules="barcodeRules" />
-                            </v-col>
+                            </v-col> -->
                             <v-col cols="12" md="4">
                                 <v-text-field v-model="sku" dense outlined label="SKU" append-icon="mdi-plus-circle-outline" :rules="skuRules" @click:append="regenerateSKU" />
                             </v-col>
@@ -111,7 +111,7 @@
                                             <v-col cols="8" class="d-flex flex-wrap align-center gap-2">
                                                 <span class="font-weight-bold mr-2">{{ key }}:</span>
                                                 <v-chip v-for="(opvalue, idx) in variantList" :key="idx" outlined close @click:close="removeValue(key, opvalue)" 
-                                                    close-icon="mdi-close-circle" color="primary"><span class="text-capitalize" style="font-size: 12px !important;">
+                                                    close-icon="mdi-close-circle" style="height: 22px !important;" color="primary"><span class="text-capitalize" style="font-size: 12px !important;">
                                                         {{ opvalue }}</span></v-chip>
                                             </v-col>
                                             <v-col cols="4" class="d-flex justify-end">
@@ -173,9 +173,9 @@
                             <template v-slot:item.sku="{ item }">
                                 <v-text-field v-model="item.sku" small dense outlined hide-details />
                             </template>
-                            <template v-slot:item.barcode="{ item }">
+                            <!-- <template v-slot:item.barcode="{ item }">
                                 <v-text-field v-model="item.barcode" small dense outlined hide-details />
-                            </template>
+                            </template> -->
                         </v-data-table>
                     </v-card>
                 </v-col>
@@ -320,7 +320,7 @@ export default {
                 { text: "Compare Price", value: "compareprice", editable: true, sortable: false },
                 { text: "Available Stock", value: "stock", editable: true, sortable: false },
                 { text: "SKU", value: "sku", sortable: false },
-                { text: "Barcode", value: "barcode", editable: true, sortable: false },
+                // { text: "Barcode", value: "barcode", editable: true, sortable: false },
             ],
             pro: {
                 selectedSalesChannel: [],

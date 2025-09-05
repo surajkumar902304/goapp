@@ -20,7 +20,7 @@
         :footer-props="{ 'items-per-page-options':[10,25,50] }">
         <template v-slot:top>
           <v-row dense class="mx-1 pb-1">
-            <v-text-field v-model="mainSearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Product, Variant"/>
+            <v-text-field v-model="mainSearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Top Seller Sliders"/>
           </v-row>
         </template>
         <template #item.img="{ item }">
@@ -62,7 +62,7 @@
         </v-card-title>
 
         <v-card-text>
-          <v-text-field dense outlined prepend-inner-icon="mdi-magnify" v-model="modalSearch" placeholder="Search Product, Variant"/>
+          <v-text-field dense outlined prepend-inner-icon="mdi-magnify" v-model="modalSearch" placeholder="Search Top Seller Sliders"/>
           <v-data-table v-model="modalSel" :items="allVariants" :headers="modalHdr" :search="modalSearch" item-key="mvariant_id" show-select return-object
             :footer-props="{ 'items-per-page-options':[10,25,50] }">
             <template #item.img="{ item }">
@@ -72,7 +72,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer/>
-          <v-btn class="btn-32-text-12" style="font-weight: bold; color: #1976d2; background-color: white !important;" @click="save">Add</v-btn>
+          <v-btn class="btn-32-text-12" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="save">Add</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

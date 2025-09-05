@@ -23,7 +23,7 @@
             <template v-slot:top>
               <v-row dense class="mx-1 pb-1">
                 <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details
-                  prepend-inner-icon="mdi-magnify mb-2" placeholder="Search all" />
+                  prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Reps" />
               </v-row>
             </template>
             <template v-slot:item.total_commission="{ item }">
@@ -77,7 +77,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer />
-            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" :disabled="!valid">
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;border: 1px solid #1976d2 !important;" :disabled="!valid">
               {{ editMode ? 'Update' : 'Save' }}
             </v-btn>
           </v-card-actions>

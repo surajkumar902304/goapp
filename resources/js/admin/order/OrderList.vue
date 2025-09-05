@@ -52,7 +52,7 @@
             :footer-props="{ 'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:' }">
             <template v-slot:top>
               <v-text-field v-model="ssearch" class="px-2 py-1" clearable dense outlined hide-details
-                prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Order Id, Date, Customer, Total amount" />
+                prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Orders" />
             </template>
             <template v-slot:item.order_id="{ item }">
               <router-link :to="{ name: 'order-detail', params: { orderid: item.order_id } }" class="link-dark">

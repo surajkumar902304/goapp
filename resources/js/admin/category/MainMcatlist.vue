@@ -23,7 +23,7 @@
                             <tr>
                                 <th :colspan="5" class="pa-2" style="background-color: white !important;">
                                     <v-text-field v-model="ssearch" class="ma-0" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" 
-                                        placeholder="Search Main category name"/>
+                                        placeholder="Search Main Category"/>
                                 </th> 
                             </tr>
                             <tr style="background:#b6b6b6;">
@@ -80,7 +80,7 @@
                     </v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!fsvalid || submitting">
+                        <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small :disabled="!fsvalid || submitting">
                             {{ editedIndex === -1 ? 'Add' : 'Update' }}
                         </v-btn>
                     </v-card-actions>

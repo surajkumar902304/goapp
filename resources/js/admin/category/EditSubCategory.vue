@@ -16,7 +16,7 @@
       </v-col>
 
       <v-col cols="6" class="text-end">
-        <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" class="btn-32-text-12 mr-2" small outlined @click="discard">Discard</v-btn>
+        <v-btn style="color: #ef0b0b; background-color: white !important; border: 1px solid #ef0b0b !important;" class="btn-32-text-12 mr-2" small outlined @click="discard">Discard</v-btn>
         <v-btn class="btn-32-text-12" small style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="saveLoading" :disabled="saveDisabled" @click="updateSubCategory">
           <template #loader>
             <v-progress-circular indeterminate size="20" color="white"/>
@@ -247,7 +247,7 @@
 
         <v-card-actions>
           <v-spacer/>
-          <v-btn class="btn-32-text-12" style="font-weight: bold; color: #1976d2; background-color: white !important;" @click="confirmProducts">Done</v-btn>
+          <v-btn class="btn-32-text-12" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="confirmProducts">Done</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

@@ -1,13 +1,14 @@
 <template>
-  <div v-if="order" style="margin: 20px 60px !important;">
+  <div v-if="order" class="page-margin-20-40 page-order-detail" style="margin: 20px 60px !important;">
     <v-row class="mb-2 align-center justify-space-between">
       <v-col cols="12" md="6">
         <div class="d-flex align-center">
-          <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" class="btn-32-text-12 mr-2" :loading="backLoading" :disabled="backLoading" small elevation="0" @click="navigateBack">
+          <v-btn class="btn-32-text-12 mr-2" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="backLoading" :disabled="backLoading" small elevation="0" @click="navigateBack">
             <template #loader>
               <v-progress-circular indeterminate size="16" color="white" />
             </template>
-            <v-icon v-if="!backLoading" small style="font-size: 18px !important;">mdi-arrow-left</v-icon>
+            <v-icon v-if="!backLoading" small>mdi-arrow-left</v-icon>
+            <span v-if="!backLoading">Back</span>
           </v-btn>
 
           <h3 class="text-h6 font-weight-bold mb-0 mr-2">#TR00{{ order.order_id }}</h3>
@@ -29,11 +30,11 @@
           Refund
         </v-btn> -->
 
-        <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled'" class="btn-32-text-12 ml-1" small outlined style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="dialogCancel = true">
+        <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled'" class="btn-32-text-12 ml-1" small outlined style="color: red; background-color: white !important; border: 1px solid red !important;" @click="dialogCancel = true">
           Cancel
         </v-btn>
 
-        <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" class="btn-32-text-12 ml-1" small outlined @click="printPackingSlip">
+        <v-btn class="btn-32-text-12 ml-1" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small outlined @click="printPackingSlip">
           Print Packing Slip
         </v-btn>
       </v-col>
@@ -43,16 +44,26 @@
       <span class="text-caption grey--text">{{ order.order_date | niceDate }}</span>
     </div>
 
-    <v-row class="mt-4" dense>
+    <v-row>
       <v-col cols="12" md="8">
-        <v-card v-if="unfulfilledItems.length" elevation="5" class="mb-4">
-          <v-card-title class="py-2 pb-0">
-            <div class="subtitle-2 font-weight-bold">Unfulfilled ({{ unfulfilledItems.length }})</div>
-          </v-card-title>
-          <v-divider/>
-
+        <v-card v-if="unfulfilledItems.length" elevation="5" class="rounded-3">
+          <v-row class="m-0">
+            <v-col cols="12" md="6">
+            <v-card-title class="py-2 pb-0">
+              <div class="subtitle-2 font-weight-bold">Unfulfilled ({{ unfulfilledItems.length }})</div>
+            </v-card-title>
+            </v-col>
+            <v-col cols="12" md="6">
+              <v-card-actions class="justify-end">
+                <v-btn class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small @click="openFulfilDialog">
+                  Fulfill Item
+                </v-btn>
+              </v-card-actions>
+            </v-col>
+          </v-row>
           <v-list one-line>
-            <v-list-item v-for="item in unfulfilledItems" :key="item.order_item_id">
+            <v-list-item v-for="item in unfulfilledItems" :key="item.order_item_id" class="mt-2">
+              <div class="order-wrap">
               <v-list-item-avatar size="50">
                 <v-img :src="imgSrc(item.variant?.image, item.product?.mproduct_image)" contain/>
               </v-list-item-avatar>
@@ -77,39 +88,46 @@
                   £{{ (item.variant.price * (item.quantity - (item.fulfilled_quantity || 0))).toFixed(2) }}
                 </v-col>
               </v-row>
+            </div>
             </v-list-item>
           </v-list>
-
-          <v-card-actions class="justify-end">
-            <v-btn class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small @click="openFulfilDialog">
-              Fulfill Item
-            </v-btn>
-          </v-card-actions>
         </v-card>
 
-        <v-card v-for="f in (order.fulfillments || [])" :key="f.order_fulfillment_id" elevation="5" class="mb-4">
-          <v-card-title class="py-2 pb-0">
-            <div class="subtitle-2 font-weight-bold">Fulfilled ({{ f.items.length }})</div>
-          </v-card-title>
-
-          <v-divider />
-          <div v-if="f.tracking_id" class="px-4 py-2 grey--text text--darken-1 caption">
-            <div>{{ f.fulfilled_at | niceDate }}</div>
-            <div>
-              {{ f.shipping_courier || 'Royal Mail' }} tracking: {{ f.tracking_id }}
-              <!-- <a
-                :href="`https://www.royalmail.com/track-your-item#/tracking-results/${f.tracking_id}`"
-                target="_blank"
-                class="blue--text text-decoration-underline"
-              >
-                {{ f.tracking_id }}
-              </a> -->
-            </div>
-            <v-divider />
-          </div>
+        <v-card v-for="f in (order.fulfillments || [])" :key="f.order_fulfillment_id" elevation="5" class="mb-4 mt-4 rounded-3">
+          <v-row class="m-0">
+            <v-col cols="12" md="6">
+              <v-card-title class="py-2 pb-0">
+                <div class="subtitle-2 font-weight-bold">Fulfilled ({{ f.items.length }})</div>
+              </v-card-title>
+            </v-col>
+            <v-col v-if="!f.tracking_id" cols="12" md="6">
+              <v-card-actions class="justify-end">
+                <v-btn class="btn-32-text-12" style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" small @click="openTrackingDialog(f)">
+                  + Add Tracking
+                </v-btn>
+              </v-card-actions>
+            </v-col>
+            <v-col v-if="f.tracking_id" cols="12" md="6">
+              <div class="py-2 pb-0 me-2">
+                <div class="subtitle-2 text-end">
+                  {{ f.shipping_courier || 'Royal Mail' }} tracking: {{ f.tracking_id }}
+                  <!-- <a
+                    :href="`https://www.royalmail.com/track-your-item#/tracking-results/${f.tracking_id}`"
+                    target="_blank"
+                    class="blue--text text-decoration-underline"
+                  >
+                    {{ f.tracking_id }}
+                  </a> -->
+                </div>
+              </div>
+            </v-col>
+          </v-row>
+          
+          
 
           <v-list dense>
-            <v-list-item v-for="itm in f.items" :key="f.order_fulfillment_id + '-' + itm.order_item_id" class="py-2">
+            <v-list-item v-for="itm in f.items" :key="f.order_fulfillment_id + '-' + itm.order_item_id" class="mt-2">
+              <div class="order-wrap">
               <v-list-item-avatar size="50">
                 <v-img :src="imgSrc(itm.variant?.image, itm.product?.mproduct_image)" contain/>
               </v-list-item-avatar>
@@ -136,24 +154,18 @@
                   £{{ (itm.variant.price * itm.quantity).toFixed(2) }}
                 </v-col>
               </v-row>
+            </div>
             </v-list-item>
           </v-list>
-
-          <v-card-actions class="justify-end">
-            <v-btn v-if="!f.tracking_id" class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small @click="openTrackingDialog(f)">
-              + Add Tracking
-            </v-btn>
-          </v-card-actions>
         </v-card>
 
-        <v-card elevation="5">
+        <v-card elevation="5" class="mt-4 rounded-3 px-4">
           <v-card-title class="py-2">
             <div class="subtitle-1 font-weight-bold">
               {{ order.payment_status.toLowerCase() === 'paid' ? 'Paid' : 'Pending' }}
             </div>
           </v-card-title>
-          <v-divider/>
-
+          <div class="pp-table-wrap border border-1 rounded-3 overflow-hidden p-2">
           <v-simple-table dense>
             <template #default>
               <tbody>
@@ -201,13 +213,14 @@
               </tbody>
             </template>
           </v-simple-table>
+          </div>
 
           <v-card-actions class="justify-end">
-            <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" class="btn-32-text-12 mr-2" small outlined :loading="loadingInvoice" :disabled="loadingInvoice" @click="sendInvoice">
+            <v-btn class="btn-32-text-12 mr-2" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small outlined :loading="loadingInvoice" :disabled="loadingInvoice" @click="sendInvoice">
               Send Invoice
             </v-btn>
 
-            <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" class="btn-32-text-12" v-if="order.payment_status.toLowerCase() !== 'paid'" small :loading="loadingPaid" :disabled="loadingPaid" 
+            <v-btn class="btn-32-text-12" v-if="order.payment_status.toLowerCase() !== 'paid'" small style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" :loading="loadingPaid" :disabled="loadingPaid" 
               @click="markAsPaid">
               <template #loader>
                 <v-progress-circular indeterminate size="16" color="white" />
@@ -218,30 +231,32 @@
         </v-card>
       </v-col>
 
+
+
+
+
       <v-col cols="12" md="4">
-        <v-card elevation="5" class="mb-4">
-          <v-card-title class="py-2 subtitle-2 font-weight-bold pb-0">Notes</v-card-title>
-          <v-divider/>
-          <v-card-text class="body-2 pt-0">
+        <v-card elevation="5" class="mb-4 p-3 rounded-3">
+          <v-card-title class="subtitle-2 font-weight-bold p-0 mb-2">Notes</v-card-title>
+          <v-card-text class="body-2 p-3 rounded-2 text-center d-flex align-items-center justify-content-center" style="background-color: #eee; min-height: 100px;">
             {{ order.delivery_instructions || 'No notes from customer' }}
           </v-card-text>
         </v-card>
 
-        <v-card elevation="5">
-          <v-card-title class="py-2 subtitle-2 font-weight-bold pb-0">Customer</v-card-title>
-          <v-divider/>
-          <v-card-text class="body-2 pt-0">
-            <div class="mb-2 font-weight-medium">{{ order.user.name }}</div>
-
-            <div class="subtitle-2 font-weight-bold mb-1">Customer Information</div>
-            <div class="mb-2">
-              <div>{{ order.user.email }}</div>
-              <div>{{ order.user.mobile || '—' }}</div>
+        <v-card elevation="5" class="rounded-3 p-3">
+          <v-card-title class="py-2 subtitle-2 font-weight-bold p-0 mb-2">Customer</v-card-title>
+          <v-card-text class="body-2 p-3 rounded-2" style="background-color: #eee;">
+            <div class="mb-3 font-weight-medium pb-3" style="border-bottom: 1px solid #c4c4c4;">{{ order.user.name }}</div>
+            <div class="subtitle-2 font-weight-bold mb-1 text-dark">Customer Information</div>
+            <div class="mb-3 pb-3" style="border-bottom: 1px solid #c4c4c4;">
+              <div class="d-flex justify-content-between">E-mail Id <span>{{ order.user.email }}</span></div>
+              <div class="d-flex justify-content-between">Phone Number <span>{{ order.user.mobile || '—' }}</span></div>
             </div>
 
-            <div class="subtitle-2 font-weight-bold mb-1">Shipping Address</div>
+            <div class="subtitle-2 font-weight-bold mb-1 text-dark">Shipping Address</div>
             <div class="mb-2 font-weight-medium">{{ order.user.name }}</div>
-            <div>{{ order.delivery.address }}</div>
+            <div style="max-width: 50%;">{{ order.delivery.address }}</div>
+            <div>{{ order.user.mobile }}</div>
           </v-card-text>
         </v-card>
       </v-col>
@@ -584,6 +599,13 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
 .subtitle-2 { font-size: 14px; }
+.order-wrap {
+    width: 100%;
+    display: flex;
+    background-color: #eee;
+    border-radius: 10px;
+    padding-right: 15px;
+}
 </style>

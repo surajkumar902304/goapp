@@ -27,7 +27,7 @@
                             <v-row dense class="mx-1 pb-1">
                                 <v-col cols="12" md="8" class="pa-0 pr-3">
                                     <v-text-field class="m-2" v-model="ssearch" dense outlined clearable hide-details
-                                        prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Sub-category name" />
+                                        prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Sub-Category" />
                                 </v-col>
                                 <v-col cols="6" md="2" class="pa-0 pr-3">
                                     <v-autocomplete class="m-2" v-model="publishFilter"

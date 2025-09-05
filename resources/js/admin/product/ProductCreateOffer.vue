@@ -3,7 +3,7 @@
     <v-container fluid class="pt-0">
       <v-row class="mt-0 pt-0">
         <v-col cols="12" md="11" class="p-0">
-          <h2 class="text-h6 mb-1">Product-Offers</h2> 
+          <h2 class="text-h6 mb-1">Product Offers</h2> 
         </v-col>
 
         <v-col cols="12" md="1" class="p-0 ps-2 text-end">
@@ -21,7 +21,7 @@
             :footer-props="{'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
             <template v-slot:top>
               <v-row dense class="mx-1 pb-1">
-                <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search all"/>
+                <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Product Offers"/>
               </v-row>
             </template>
             <template #header.actions1>
@@ -95,7 +95,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" :disabled="!addValid">Add Offer</v-btn>
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :disabled="!addValid">Add Offer</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>
@@ -123,7 +123,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" :disabled="!editValid || saving">
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :disabled="!editValid || saving">
               Update Offer
             </v-btn>
           </v-card-actions>

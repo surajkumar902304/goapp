@@ -83,9 +83,9 @@
                         <v-card-title>Inventory</v-card-title>
                         <v-card-text>
                             <v-row>
-                                <v-col cols="12" md="4">
+                                <!-- <v-col cols="12" md="4">
                                     <v-text-field v-model="barcode" placeholder="Barcode" dense outlined label="Barcode" :rules="barcodeRules"></v-text-field>
-                                </v-col>
+                                </v-col> -->
                                 <v-col cols="12" md="4">
                                     <v-text-field v-model="sku" dense outlined label="SKU" append-icon="mdi-plus-circle-outline" :rules="skuRules" @click:append="regenerateSKU"></v-text-field>
                                 </v-col>
@@ -123,7 +123,7 @@
                                             <v-col cols="8" class="d-flex flex-wrap align-center gap-2">
                                                 <span class="font-weight-bold mr-2">{{ key }}:</span>
                                                 <v-chip v-for="(opvalue, index) in variant" :key="index" outlined close @click:close="removeValue(key, opvalue)" 
-                                                    close-icon="mdi-close-circle" color="primary" style="font-size: 12px !important;">
+                                                    close-icon="mdi-close-circle" color="primary" style="font-size: 12px !important; height: 22px !important;">
                                                     <span class="text-capitalize">{{ opvalue }}</span>
                                                 </v-chip>
                                             </v-col>
@@ -195,9 +195,9 @@
                             <template v-slot:item.sku="{ item }">
                                 <v-text-field v-model="item.sku" small dense outlined hide-details></v-text-field>
                             </template>
-                            <template v-slot:item.barcode="{ item }">
+                            <!-- <template v-slot:item.barcode="{ item }">
                                 <v-text-field v-model="item.barcode" small dense outlined hide-details></v-text-field>
-                            </template>
+                            </template> -->
                             <!-- <template v-slot:item.actions="{ item, index }">
                                 <v-btn icon class="btn-32-text-12" color="red" @click="removeVariantCombination(index)">
                                     <v-icon>mdi-delete</v-icon>
@@ -420,7 +420,7 @@ export default {
                 { text: "Compare Price", value: "compareprice", editable: true, sortable: false },
                 { text: "Available Stock", value: "stock", editable: true, sortable: false },
                 { text: "SKU", value: "sku", sortable: false },
-                { text: "Barcode", value: "barcode", editable: true, sortable: false },
+                // { text: "Barcode", value: "barcode", editable: true, sortable: false },
                 // { text: "Action", value: "actions", sortable: false },
             ];
         },

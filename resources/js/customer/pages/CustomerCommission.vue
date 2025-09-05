@@ -15,7 +15,7 @@
                         'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
                     <template v-slot:top>
                       <v-row dense class="mx-1 pb-1">
-                        <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Name"/>
+                        <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Commissions"/>
                       </v-row>
                     </template>
                     <template v-slot:item.name="{ item }">

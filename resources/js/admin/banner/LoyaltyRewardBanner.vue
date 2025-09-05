@@ -19,7 +19,7 @@
               <v-icon v-else size="56" color="grey lighten-1">mdi-image-area</v-icon>
             </div>
             <div v-if="imageName" class="text-caption mb-2">{{ imageName }}</div>
-            <v-btn class="btn-32-text-12" style="font-weight: bold; color: #1976d2; background-color: white !important;" :loading="submitting"
+            <v-btn class="btn-32-text-12" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="submitting"
               :disabled="submitting || !imageSelected || saved" @click="saveBanner">
               {{ isNew ? 'UPLOAD' : 'UPDATE' }}
             </v-btn>

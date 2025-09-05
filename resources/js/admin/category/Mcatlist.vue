@@ -22,7 +22,7 @@
                         <template v-slot:top>
                             <v-row dense class="mx-1 pb-1">
                                 <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" 
-                                    placeholder="Search Category name, Main category name"/>
+                                    placeholder="Search Category"/>
                             </v-row>
                         </template>
                         <template #item.mcat_name="{ item }">
@@ -90,7 +90,7 @@
                     </v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!fsvalid || submitting">
+                        <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small :disabled="!fsvalid || submitting">
                             {{ editedIndex === -1 ? 'Add' : 'Update' }}
                         </v-btn>
                     </v-card-actions>
