@@ -16,14 +16,12 @@
           <h3 class="text-h6 font-weight-bold mb-0 mr-2">#TR00{{ order.order_id }}</h3>
 
           <v-chip small class="ma-1" :color="order.payment_status.toLowerCase() === 'paid' ? '#e0e0e0' : '#ffd6a4'" text-color="black">
-            <v-icon left small>mdi-currency-usd</v-icon>
             {{ order.payment_status }}
           </v-chip>
 
           <v-chip small class="ma-1"
             :color="order.fulfillment_status.toLowerCase() === 'fulfilled' ? '#e0e0e0' : '#ffeb78'"
             text-color="black">
-            <v-icon left small>mdi-checkbox-blank-circle</v-icon>
             {{ order.fulfillment_status }}
           </v-chip>
         </div>
@@ -58,7 +56,7 @@
           <v-row class="m-0">
             <v-col cols="12" md="6">
               <v-card-title class="py-2 pb-0">
-                <div class="subtitle-2 font-weight-bold">Unfulfilled ({{ unfulfilledItems.length }})</div>
+                <div class="subtitle-2 font-weight-bold"><span style="background-color: #ffeb78; font-size: 14px; font-weight: 700;" class="rounded-pill px-2 py-1">Unfulfilled ({{ unfulfilledItems.length }})</span></div>
               </v-card-title>
             </v-col>
             <v-col cols="12" md="6">
@@ -79,7 +77,7 @@
                     <v-col cols="6">
                       <strong>{{ item.product.mproduct_title }}</strong>
                       <div class="caption" v-if="item.variant?.option_value">
-                        <div v-for="(val, key) in item.variant.option_value" :key="key"><span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1">{{ key }}: {{ val }}</span></div>
+                        <div v-for="(val, key) in item.variant.option_value" :key="key"><span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1"><span class="fw-bold">{{ key }}</span>: {{ val }}</span></div>
                       </div>
                     </v-col>
 
@@ -146,7 +144,7 @@
                   <strong>{{ itm.product.mproduct_title }}</strong>
                   <div class="caption" v-if="itm.variant?.option_value">
                     <div v-for="(val, key) in itm.variant.option_value" :key="key">
-                      <span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1">{{ key }}: {{ val }}</span>
+                      <span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1"><span class="fw-bold">{{ key }}</span>: {{ val }}</span>
                     </div>
                   </div>
                 </v-col>
@@ -252,14 +250,14 @@
         <v-card elevation="5" class="mb-4 p-3 rounded-3">
           <v-card-title class="subtitle-2 font-weight-bold p-0 mb-2">Notes</v-card-title>
           <v-card-text class="body-2 p-3 rounded-2 text-center d-flex align-items-center justify-content-center"
-            style="background-color: #eee; min-height: 100px;">
+            style="background-color: #f9f8f8; min-height: 100px;">
             {{ order.delivery_instructions || 'No notes from customer' }}
           </v-card-text>
         </v-card>
 
         <v-card elevation="5" class="rounded-3 p-3">
           <v-card-title class="py-2 subtitle-2 font-weight-bold p-0 mb-2">Customer</v-card-title>
-          <v-card-text class="body-2 p-3 rounded-2" style="background-color: #eee;">
+          <v-card-text class="body-2 p-3 rounded-2" style="background-color: #f9f8f8;">
             <div class="mb-3 font-weight-medium pb-3" style="border-bottom: 1px solid #c4c4c4;">{{ order.user.name }}
             </div>
             <div class="subtitle-2 font-weight-bold mb-1 text-dark">Customer Information</div>
