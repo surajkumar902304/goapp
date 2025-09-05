@@ -8,7 +8,7 @@
 
                 <v-col cols="12" md="2" class="p-0 ps-2 text-end">
                     <v-btn color="secondary" small class="text-none w-100 btn-32-text-12" style="color: #1976d2; font-weight: bold; background-color: white !important; 
-                        border: 1px solid #1976d2 !important;" @click="openDialog">
+                        border: 1px solid #1976d2 !important; width: auto!important;" @click="openDialog">
                         Add Main Category
                     </v-btn>
                 </v-col>
@@ -23,7 +23,7 @@
                             <tr>
                                 <th :colspan="5" class="pa-2" style="background-color: white !important;">
                                     <v-text-field v-model="ssearch" class="ma-0" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" 
-                                        placeholder="Search Main Category"/>
+                                        placeholder="Search Main Category" style="font-weight: 400 !important;"/>
                                 </th> 
                             </tr>
                             <tr style="background:#b6b6b6;">

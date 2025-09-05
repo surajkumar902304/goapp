@@ -21,7 +21,8 @@
               <thead>
                 <tr>
                   <th :colspan="5" class="pa-2" style="background-color: white !important;">
-                    <v-text-field v-model="ssearch" class="ma-0" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Browse Sliders"/>
+                    <v-text-field v-model="ssearch" class="ma-0" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Browse Sliders"
+                      style="font-weight: 400 !important;"/>
                   </th> 
                 </tr>
                 <tr style="height: 20px; background:#b6b6b6;">

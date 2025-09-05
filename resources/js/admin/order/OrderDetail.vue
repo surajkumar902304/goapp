@@ -55,9 +55,7 @@
             </v-col>
             <v-col cols="12" md="6">
               <v-card-actions class="justify-end">
-                <v-btn class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small @click="openFulfilDialog">
-                  Fulfill Item
-                </v-btn>
+                
               </v-card-actions>
             </v-col>
           </v-row>
@@ -91,6 +89,11 @@
             </div>
             </v-list-item>
           </v-list>
+          <v-card-actions class="justify-end">
+            <v-btn class="btn-32-text-12 me-2" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small @click="openFulfilDialog">
+              Fulfill Item
+            </v-btn>
+          </v-card-actions>
         </v-card>
 
         <v-card v-for="f in (order.fulfillments || [])" :key="f.order_fulfillment_id" elevation="5" class="mb-4 mt-4 rounded-3">
@@ -102,25 +105,23 @@
             </v-col>
             <v-col v-if="!f.tracking_id" cols="12" md="6">
               <v-card-actions class="justify-end">
-                <v-btn class="btn-32-text-12" style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" small @click="openTrackingDialog(f)">
-                  + Add Tracking
-                </v-btn>
+                
               </v-card-actions>
             </v-col>
-            <v-col v-if="f.tracking_id" cols="12" md="6">
+            <!-- <v-col v-if="f.tracking_id" cols="12" md="6">
               <div class="py-2 pb-0 me-2">
                 <div class="subtitle-2 text-end">
                   {{ f.shipping_courier || 'Royal Mail' }} tracking: {{ f.tracking_id }}
-                  <!-- <a
+                  <a
                     :href="`https://www.royalmail.com/track-your-item#/tracking-results/${f.tracking_id}`"
                     target="_blank"
                     class="blue--text text-decoration-underline"
                   >
                     {{ f.tracking_id }}
-                  </a> -->
+                  </a>
                 </div>
               </div>
-            </v-col>
+            </v-col> -->
           </v-row>
           
           
@@ -157,6 +158,11 @@
             </div>
             </v-list-item>
           </v-list>
+          <v-card-actions class="justify-end">
+            <v-btn class="btn-32-text-12 me-2" style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" small @click="openTrackingDialog(f)">
+              + Add Tracking
+            </v-btn>
+          </v-card-actions>
         </v-card>
 
         <v-card elevation="5" class="mt-4 rounded-3 px-4">
@@ -325,7 +331,8 @@
         <v-card-actions>
           <v-spacer/>
           <v-btn class="btn-32-text-12" text @click="trackingDialog = false">Close</v-btn>
-          <v-btn class="btn-32-text-12" color="primary" :loading="loadingTracking" :disabled="loadingTracking" @click="saveTracking">
+          <!-- <v-btn class="btn-32-text-12" color="primary" :loading="loadingTracking" :disabled="loadingTracking" @click="saveTracking"> -->
+          <v-btn class="btn-32-text-12" color="primary" :loading="loadingTracking" :disabled="true" @click="saveTracking">
             <template #loader>
               <v-progress-circular indeterminate size="16" color="white" />
             </template>
