@@ -3,7 +3,9 @@
     <v-row class="mb-2 align-center justify-space-between">
       <v-col cols="12" md="6">
         <div class="d-flex align-center">
-          <v-btn class="btn-32-text-12 mr-2" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="backLoading" :disabled="backLoading" small elevation="0" @click="navigateBack">
+          <v-btn class="btn-32-text-12 mr-2"
+            style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"
+            :loading="backLoading" :disabled="backLoading" small elevation="0" @click="navigateBack">
             <template #loader>
               <v-progress-circular indeterminate size="16" color="white" />
             </template>
@@ -13,12 +15,14 @@
 
           <h3 class="text-h6 font-weight-bold mb-0 mr-2">#TR00{{ order.order_id }}</h3>
 
-          <v-chip small class="ma-1" color="grey lighten-2" text-color="black" outlined>
+          <v-chip small class="ma-1" :color="order.payment_status.toLowerCase() === 'paid' ? '#e0e0e0' : '#ffd6a4'" text-color="black">
             <v-icon left small>mdi-currency-usd</v-icon>
             {{ order.payment_status }}
           </v-chip>
 
-          <v-chip small class="ma-1" :color="order.fulfillment_status.toLowerCase() === 'fulfilled' ? 'green lighten-4' : 'orange lighten-4'" text-color="black" outlined>
+          <v-chip small class="ma-1"
+            :color="order.fulfillment_status.toLowerCase() === 'fulfilled' ? '#e0e0e0' : '#ffeb78'"
+            text-color="black">
             <v-icon left small>mdi-checkbox-blank-circle</v-icon>
             {{ order.fulfillment_status }}
           </v-chip>
@@ -30,11 +34,15 @@
           Refund
         </v-btn> -->
 
-        <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled'" class="btn-32-text-12 ml-1" small outlined style="color: red; background-color: white !important; border: 1px solid red !important;" @click="dialogCancel = true">
+        <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled'" class="btn-32-text-12 ml-1" small outlined
+          style="color: red; background-color: white !important; border: 1px solid red !important;"
+          @click="dialogCancel = true">
           Cancel
         </v-btn>
 
-        <v-btn class="btn-32-text-12 ml-1" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small outlined @click="printPackingSlip">
+        <v-btn class="btn-32-text-12 ml-1"
+          style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small
+          outlined @click="printPackingSlip">
           Print Packing Slip
         </v-btn>
       </v-col>
@@ -49,54 +57,55 @@
         <v-card v-if="unfulfilledItems.length" elevation="5" class="rounded-3">
           <v-row class="m-0">
             <v-col cols="12" md="6">
-            <v-card-title class="py-2 pb-0">
-              <div class="subtitle-2 font-weight-bold">Unfulfilled ({{ unfulfilledItems.length }})</div>
-            </v-card-title>
+              <v-card-title class="py-2 pb-0">
+                <div class="subtitle-2 font-weight-bold">Unfulfilled ({{ unfulfilledItems.length }})</div>
+              </v-card-title>
             </v-col>
             <v-col cols="12" md="6">
               <v-card-actions class="justify-end">
-                
+
               </v-card-actions>
             </v-col>
           </v-row>
-          <v-list one-line>
-            <v-list-item v-for="item in unfulfilledItems" :key="item.order_item_id" class="mt-2">
-              <div class="order-wrap">
-              <v-list-item-avatar size="50">
-                <v-img :src="imgSrc(item.variant?.image, item.product?.mproduct_image)" contain/>
-              </v-list-item-avatar>
+          <div class="list-wrap px-3">
+            <div class="list-container border border-1 rounded-2 overflow-hidden">
+              <v-list one-line class="p-0">
+                <v-list-item v-for="item in unfulfilledItems" :key="item.order_item_id" class="py-2">
+                  <v-list-item-avatar size="50">
+                    <v-img :src="imgSrc(item.variant?.image, item.product?.mproduct_image)" contain />
+                  </v-list-item-avatar>
 
-              <v-row no-gutters align="center" class="w-100">
-                <v-col cols="4">
-                  <strong>{{ item.product.mproduct_title }}</strong>
-                  <div class="caption grey--text">SKU: {{ item.variant.sku }}</div>
-                </v-col>
+                  <v-row no-gutters align="center" class="w-100">
+                    <v-col cols="6">
+                      <strong>{{ item.product.mproduct_title }}</strong>
+                      <div class="caption" v-if="item.variant?.option_value">
+                        <div v-for="(val, key) in item.variant.option_value" :key="key"><span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1">{{ key }}: {{ val }}</span></div>
+                      </div>
+                    </v-col>
 
-                <v-col cols="4">
-                  <div class="caption grey--text" v-if="item.variant?.option_value">
-                    <div v-for="(val,key) in item.variant.option_value" :key="key">{{ key }}: {{ val }}</div>
-                  </div>
-                </v-col>
+                    <v-col cols="3" class="text-right">
+                      £{{ item.variant.price | money }} × <span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1">{{ item.quantity - (item.fulfilled_quantity || 0) }}</span>
+                    </v-col>
 
-                <v-col cols="2" class="text-right">
-                  £{{ item.variant.price | money }} × {{ item.quantity - (item.fulfilled_quantity || 0) }}
-                </v-col>
-
-                <v-col cols="2" class="text-right font-weight-medium">
-                  £{{ (item.variant.price * (item.quantity - (item.fulfilled_quantity || 0))).toFixed(2) }}
-                </v-col>
-              </v-row>
+                    <v-col cols="3" class="text-right font-weight-medium">
+                      £{{ (item.variant.price * (item.quantity - (item.fulfilled_quantity || 0))).toFixed(2) }}
+                    </v-col>
+                  </v-row>
+                </v-list-item>
+              </v-list>
             </div>
-            </v-list-item>
-          </v-list>
+          </div>
           <v-card-actions class="justify-end">
-            <v-btn class="btn-32-text-12 me-2" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small @click="openFulfilDialog">
+            <v-btn class="btn-32-text-12 me-2"
+              style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small
+              @click="openFulfilDialog">
               Fulfill Item
             </v-btn>
           </v-card-actions>
         </v-card>
 
-        <v-card v-for="f in (order.fulfillments || [])" :key="f.order_fulfillment_id" elevation="5" class="mb-4 mt-4 rounded-3">
+        <v-card v-for="f in (order.fulfillments || [])" :key="f.order_fulfillment_id" elevation="5"
+          class="mb-4 mt-4 rounded-3">
           <v-row class="m-0">
             <v-col cols="12" md="6">
               <v-card-title class="py-2 pb-0">
@@ -105,7 +114,7 @@
             </v-col>
             <v-col v-if="!f.tracking_id" cols="12" md="6">
               <v-card-actions class="justify-end">
-                
+
               </v-card-actions>
             </v-col>
             <!-- <v-col v-if="f.tracking_id" cols="12" md="6">
@@ -123,43 +132,41 @@
               </div>
             </v-col> -->
           </v-row>
-          
-          
 
-          <v-list dense>
-            <v-list-item v-for="itm in f.items" :key="f.order_fulfillment_id + '-' + itm.order_item_id" class="mt-2">
-              <div class="order-wrap">
+          <div class="list-wrap px-3">
+            <div class="list-container border border-1 rounded-2 overflow-hidden">
+          <v-list dense class="p-0">
+            <v-list-item v-for="itm in f.items" :key="f.order_fulfillment_id + '-' + itm.order_item_id" class="py-2">
               <v-list-item-avatar size="50">
-                <v-img :src="imgSrc(itm.variant?.image, itm.product?.mproduct_image)" contain/>
+                <v-img :src="imgSrc(itm.variant?.image, itm.product?.mproduct_image)" contain />
               </v-list-item-avatar>
 
               <v-row no-gutters align="center" class="w-100">
-                <v-col cols="4">
+                <v-col cols="6">
                   <strong>{{ itm.product.mproduct_title }}</strong>
-                  <div class="caption grey--text">SKU: {{ itm.variant.sku }}</div>
-                </v-col>
-
-                <v-col cols="4">
-                  <div class="caption grey--text" v-if="itm.variant?.option_value">
+                  <div class="caption" v-if="itm.variant?.option_value">
                     <div v-for="(val, key) in itm.variant.option_value" :key="key">
-                      {{ key }}: {{ val }}
+                      <span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1">{{ key }}: {{ val }}</span>
                     </div>
                   </div>
                 </v-col>
 
-                <v-col cols="2" class="text-right">
-                  £{{ itm.variant.price | money }} × {{ itm.quantity }}
+                <v-col cols="3" class="text-right">
+                  £{{ itm.variant.price | money }} × <span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1">{{ itm.quantity }}</span>
                 </v-col>
 
-                <v-col cols="2" class="text-right font-weight-medium">
+                <v-col cols="3" class="text-right font-weight-medium">
                   £{{ (itm.variant.price * itm.quantity).toFixed(2) }}
                 </v-col>
               </v-row>
-            </div>
             </v-list-item>
           </v-list>
+          </div>
+          </div>
           <v-card-actions class="justify-end">
-            <v-btn class="btn-32-text-12 me-2" style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" small @click="openTrackingDialog(f)">
+            <v-btn class="btn-32-text-12 me-2"
+              style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" small
+              @click="openTrackingDialog(f)">
               + Add Tracking
             </v-btn>
           </v-card-actions>
@@ -172,62 +179,65 @@
             </div>
           </v-card-title>
           <div class="pp-table-wrap border border-1 rounded-3 overflow-hidden p-2">
-          <v-simple-table dense>
-            <template #default>
-              <tbody>
-                <tr>
-                  <td>Subtotal</td>
-                  <td class="text-right">{{ order.units }} item</td>
-                  <td class="text-right">£{{ order.summary.subtotal | money }}</td>
-                </tr>
-                <tr>
-                  <td>Vat</td>
-                  <td></td>
-                  <td class="text-right">£{{ order.summary.vat | money }}</td>
-                </tr>
-                <tr>
-                  <td>Shipping</td>
-                  <td class="text-right">{{ order.delivery.method }}</td>
-                  <td class="text-right">£{{ order.summary.delivery_cost | money }}</td>
-                </tr>
-                <tr>
-                  <td>Discount</td>
-                  <td></td>
-                  <td class="text-right">-£{{ order.summary.coupon_discount | money }}</td>
-                </tr>
-                <tr class="font-weight-bold">
-                  <td>Total</td>
-                  <td></td>
-                  <td class="text-right">£{{ order.summary.total_paid | money }}</td>
-                </tr>
+            <v-simple-table dense>
+              <template #default>
+                <tbody>
+                  <tr>
+                    <td>Subtotal</td>
+                    <td class="text-right">{{ order.units }} item</td>
+                    <td class="text-right">£{{ order.summary.subtotal | money }}</td>
+                  </tr>
+                  <tr>
+                    <td>Vat</td>
+                    <td></td>
+                    <td class="text-right">£{{ order.summary.vat | money }}</td>
+                  </tr>
+                  <tr>
+                    <td>Shipping</td>
+                    <td class="text-right">{{ order.delivery.method }}</td>
+                    <td class="text-right">£{{ order.summary.delivery_cost | money }}</td>
+                  </tr>
+                  <tr>
+                    <td>Discount</td>
+                    <td></td>
+                    <td class="text-right">-£{{ order.summary.coupon_discount | money }}</td>
+                  </tr>
+                  <tr class="font-weight-bold">
+                    <td>Total</td>
+                    <td></td>
+                    <td class="text-right">£{{ order.summary.total_paid | money }}</td>
+                  </tr>
 
-                <tr v-if="order.payment_status.toLowerCase() === 'pending'">
-                  <td>Wallet</td>
-                  <td></td>
-                  <td class="text-right">-£{{ order.summary.wallet_discount | money }}</td>
-                </tr>
-                <tr v-if="order.payment_status.toLowerCase() === 'paid'">
-                  <td>Paid</td>
-                  <td></td>
-                  <td class="text-right">£{{ order.summary.total_paid | money }}</td>
-                </tr>
-                <tr v-if="order.payment_status.toLowerCase() === 'pending'">
-                  <td>Balance</td>
-                  <td></td>
-                  <td class="text-right">£{{ order.summary.payment_total | money }}</td>
-                </tr>
-              </tbody>
-            </template>
-          </v-simple-table>
+                  <tr v-if="order.payment_status.toLowerCase() === 'pending'">
+                    <td>Wallet</td>
+                    <td></td>
+                    <td class="text-right">-£{{ order.summary.wallet_discount | money }}</td>
+                  </tr>
+                  <tr v-if="order.payment_status.toLowerCase() === 'paid'">
+                    <td>Paid</td>
+                    <td></td>
+                    <td class="text-right">£{{ order.summary.total_paid | money }}</td>
+                  </tr>
+                  <tr v-if="order.payment_status.toLowerCase() === 'pending'">
+                    <td>Balance</td>
+                    <td></td>
+                    <td class="text-right">£{{ order.summary.payment_total | money }}</td>
+                  </tr>
+                </tbody>
+              </template>
+            </v-simple-table>
           </div>
 
           <v-card-actions class="justify-end">
-            <v-btn class="btn-32-text-12 mr-2" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small outlined :loading="loadingInvoice" :disabled="loadingInvoice" @click="sendInvoice">
+            <v-btn class="btn-32-text-12 mr-2"
+              style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small
+              outlined :loading="loadingInvoice" :disabled="loadingInvoice" @click="sendInvoice">
               Send Invoice
             </v-btn>
 
-            <v-btn class="btn-32-text-12" v-if="order.payment_status.toLowerCase() !== 'paid'" small style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" :loading="loadingPaid" :disabled="loadingPaid" 
-              @click="markAsPaid">
+            <v-btn class="btn-32-text-12" v-if="order.payment_status.toLowerCase() !== 'paid'" small
+              style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;"
+              :loading="loadingPaid" :disabled="loadingPaid" @click="markAsPaid">
               <template #loader>
                 <v-progress-circular indeterminate size="16" color="white" />
               </template>
@@ -238,13 +248,11 @@
       </v-col>
 
 
-
-
-
       <v-col cols="12" md="4">
         <v-card elevation="5" class="mb-4 p-3 rounded-3">
           <v-card-title class="subtitle-2 font-weight-bold p-0 mb-2">Notes</v-card-title>
-          <v-card-text class="body-2 p-3 rounded-2 text-center d-flex align-items-center justify-content-center" style="background-color: #eee; min-height: 100px;">
+          <v-card-text class="body-2 p-3 rounded-2 text-center d-flex align-items-center justify-content-center"
+            style="background-color: #eee; min-height: 100px;">
             {{ order.delivery_instructions || 'No notes from customer' }}
           </v-card-text>
         </v-card>
@@ -252,7 +260,8 @@
         <v-card elevation="5" class="rounded-3 p-3">
           <v-card-title class="py-2 subtitle-2 font-weight-bold p-0 mb-2">Customer</v-card-title>
           <v-card-text class="body-2 p-3 rounded-2" style="background-color: #eee;">
-            <div class="mb-3 font-weight-medium pb-3" style="border-bottom: 1px solid #c4c4c4;">{{ order.user.name }}</div>
+            <div class="mb-3 font-weight-medium pb-3" style="border-bottom: 1px solid #c4c4c4;">{{ order.user.name }}
+            </div>
             <div class="subtitle-2 font-weight-bold mb-1 text-dark">Customer Information</div>
             <div class="mb-3 pb-3" style="border-bottom: 1px solid #c4c4c4;">
               <div class="d-flex justify-content-between">E-mail Id <span>{{ order.user.email }}</span></div>
@@ -273,17 +282,17 @@
         <v-card-title class="headline grey lighten-2">
           Fulfil&nbsp;Item&nbsp;Details
         </v-card-title>
-        <v-divider/>
+        <v-divider />
 
         <v-card-text>
           <v-container>
             <v-row v-for="itm in selectableItems" :key="itm.order_item_id" class="align-center mb-2">
               <v-col cols="1" class="text-center">
-                <v-checkbox v-model="itm.fulfil" dense hide-details/>
+                <v-checkbox v-model="itm.fulfil" dense hide-details />
               </v-col>
 
               <v-col cols="2">
-                <v-img height="46" :src="itm.thumb" contain class="rounded"/>
+                <v-img height="46" :src="itm.thumb" contain class="rounded" />
               </v-col>
 
               <v-col cols="5">
@@ -300,22 +309,24 @@
               </v-col>
 
               <v-col cols="2" class="text-right">
-                <v-text-field v-model.number="itm.qtyToFulfil" type="number" dense outlined hide-details class="mr-0" :min="1" :max="itm.remaining" style="width: 70px"/>
+                <v-text-field v-model.number="itm.qtyToFulfil" type="number" dense outlined hide-details class="mr-0"
+                  :min="1" :max="itm.remaining" style="width: 70px" />
                 <span class="caption grey--text">of&nbsp;{{ itm.remaining }}</span>
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
 
-        <v-divider/>
+        <v-divider />
         <v-card-actions>
-          <v-spacer/>
+          <v-spacer />
           <v-btn class="btn-32-text-12" text @click="fulfilDialog = false">Close</v-btn>
-          <v-btn class="btn-32-text-12" :loading="loadingFulfil" :disabled="loadingFulfil || fulfilCount === 0" color="primary" @click="saveFulfil">
+          <v-btn class="btn-32-text-12" :loading="loadingFulfil" :disabled="loadingFulfil || fulfilCount === 0"
+            color="primary" @click="saveFulfil">
             <template #loader>
               <v-progress-circular indeterminate size="16" color="white" />
             </template>
-            Fulfil&nbsp;{{ fulfilCount }} item<span v-if="fulfilCount>1">s</span>
+            Fulfil&nbsp;{{ fulfilCount }} item<span v-if="fulfilCount > 1">s</span>
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -329,10 +340,11 @@
           <v-text-field v-model="courier" label="Shipping Courier" />
         </v-card-text>
         <v-card-actions>
-          <v-spacer/>
+          <v-spacer />
           <v-btn class="btn-32-text-12" text @click="trackingDialog = false">Close</v-btn>
           <!-- <v-btn class="btn-32-text-12" color="primary" :loading="loadingTracking" :disabled="loadingTracking" @click="saveTracking"> -->
-          <v-btn class="btn-32-text-12" color="primary" :loading="loadingTracking" :disabled="true" @click="saveTracking">
+          <v-btn class="btn-32-text-12" color="primary" :loading="loadingTracking" :disabled="true"
+            @click="saveTracking">
             <template #loader>
               <v-progress-circular indeterminate size="16" color="white" />
             </template>
@@ -347,9 +359,10 @@
         <v-card-title class="headline">Confirm Cancellation</v-card-title>
         <v-card-text>Are you sure you want to cancel this order?</v-card-text>
         <v-card-actions>
-          <v-spacer/>
+          <v-spacer />
           <v-btn class="btn-32-text-12" color="blue darken-1" text @click="dialogCancel = false">Close</v-btn>
-          <v-btn class="btn-32-text-12" color="red darken-1" text :loading="loadingCancel" :disabled="loadingCancel" @click="cancelOrder">
+          <v-btn class="btn-32-text-12" color="red darken-1" text :loading="loadingCancel" :disabled="loadingCancel"
+            @click="cancelOrder">
             Yes, Cancel
           </v-btn>
         </v-card-actions>
@@ -358,7 +371,7 @@
   </div>
 
   <div v-else class="pa-10 text-center">
-    <v-progress-circular indeterminate/>
+    <v-progress-circular indeterminate />
   </div>
 </template>
 
@@ -371,15 +384,15 @@ export default {
     orderid: { type: Number, required: true }
   },
 
-  data () {
+  data() {
     return {
       cdn: 'https://cdn.truewebpro.com/',
       order: null,
 
       backLoading: false,
 
-      fulfilDialog   : false,
-      loadingFulfil  : false,
+      fulfilDialog: false,
+      loadingFulfil: false,
       selectableItems: [],
 
       isEditing: false,
@@ -396,32 +409,32 @@ export default {
 
       dialogCancel: false,
       loadingCancel: false,
-      dialogRefund: false, 
+      dialogRefund: false,
     }
   },
 
   computed: {
-    unfulfilledItems () {
+    unfulfilledItems() {
       if (!this.order) return []
       return this.order.items.filter(i =>
         (i.fulfilled_quantity ?? 0) < (i.quantity ?? 0)
       )
     },
-    totalDiscount () {
+    totalDiscount() {
       const s = this.order?.summary || {}
       return (parseFloat(s.wallet_discount) || 0) + (parseFloat(s.coupon_discount) || 0)
     },
-    fulfilCount () {
+    fulfilCount() {
       return this.selectableItems.filter(itm => itm.fulfil).length
     }
   },
 
   filters: {
-    money (v) {
+    money(v) {
       const n = parseFloat(v || 0)
       return isNaN(n) ? '0.00' : n.toFixed(2)
     },
-    niceDate (v) {
+    niceDate(v) {
       if (!v) return ''
       const d = new Date(String(v).replace(' ', 'T'))
       const datePart = d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -430,50 +443,50 @@ export default {
     }
   },
 
-  mounted () {
+  mounted() {
     this.loadOrder()
   },
 
   methods: {
-    async loadOrder () {
+    async loadOrder() {
       const { data } = await axios.get(`/admin/vorder/editdata/${this.orderid}`)
       this.order = data.order
     },
 
-    navigateBack () {
+    navigateBack() {
       if (this.backLoading) return
       this.backLoading = true
       setTimeout(() => this.$router.push({ name: 'order-list' }), 400)
     },
 
-    imgSrc (variantImg, productImg) {
+    imgSrc(variantImg, productImg) {
       if (variantImg) return this.cdn + variantImg
       if (productImg) return this.cdn + productImg
       return '/images/no-image-available.png'
     },
 
-    openFulfilDialog () {
+    openFulfilDialog() {
       this.selectableItems = this.unfulfilledItems.map(itm => {
         const remaining = (itm.quantity || 0) - (itm.fulfilled_quantity || 0)
         return {
           ...itm,
           remaining,
-          fulfil     : true,
+          fulfil: true,
           qtyToFulfil: remaining,
-          weight     : itm.variant?.weight ?? 0,
-          thumb      : this.imgSrc(itm.variant?.image, itm.product?.mproduct_image),
+          weight: itm.variant?.weight ?? 0,
+          thumb: this.imgSrc(itm.variant?.image, itm.product?.mproduct_image),
         }
       })
       this.fulfilDialog = true
     },
 
-    async saveFulfil () {
+    async saveFulfil() {
       if (this.fulfilCount === 0) return;
 
       this.loadingFulfil = true;
       try {
         const lines = this.selectableItems
-          .filter(itm => itm.fulfil)                                  
+          .filter(itm => itm.fulfil)
           .map(itm => {
             const remaining = (itm.quantity || 0) - (itm.fulfilled_quantity || 0);
             let q = parseInt(itm.qtyToFulfil, 10);
@@ -481,7 +494,7 @@ export default {
             q = Math.max(1, Math.min(remaining, q));
             return {
               order_item_id: Number(itm.order_item_id),
-              quantity: q,                                              
+              quantity: q,
             };
           })
           .filter(l => l.quantity > 0);
@@ -508,14 +521,14 @@ export default {
       }
     },
 
-    openTrackingDialog (f) {
+    openTrackingDialog(f) {
       this.currentFulfillment = f
       this.trackingId = f.tracking_id || ''
       this.courier = f.shipping_courier || ''
       this.trackingDialog = true
     },
 
-    async saveTracking () {
+    async saveTracking() {
       if (!this.currentFulfillment) return
       this.loadingTracking = true
       try {
@@ -535,7 +548,7 @@ export default {
       }
     },
 
-    async markAsPaid () {
+    async markAsPaid() {
       this.loadingPaid = true
       try {
         const res = await axios.post('/admin/orders/mark-as-paid', {
@@ -555,7 +568,7 @@ export default {
       }
     },
 
-    async cancelOrder () {
+    async cancelOrder() {
       this.loadingCancel = true
       try {
         const { data } = await axios.post('/admin/order/cancel', {
@@ -576,7 +589,7 @@ export default {
       }
     },
 
-    async sendInvoice () {
+    async sendInvoice() {
       this.loadingInvoice = true
       try {
         const { data } = await axios.post('/admin/order/send-invoice', {
@@ -596,23 +609,29 @@ export default {
       }
     },
 
-    printPackingSlip () {
+    printPackingSlip() {
       const url = `/admin/order/packing-slip/${this.order.order_id}`
       const w = window.open(url, '_blank')
       if (w) w.focus()
     },
-    sendRefund () { this.$toast.info('Not implemented yet', { timeout: 500 }) }
+    sendRefund() { this.$toast.info('Not implemented yet', { timeout: 500 }) }
   }
 }
 </script>
 
 <style>
-.subtitle-2 { font-size: 14px; }
+.subtitle-2 {
+  font-size: 14px;
+}
+
 .order-wrap {
-    width: 100%;
-    display: flex;
-    background-color: #eee;
-    border-radius: 10px;
-    padding-right: 15px;
+  width: 100%;
+  display: flex;
+  background-color: #eee;
+  border-radius: 10px;
+  padding-right: 15px;
+}
+.list-wrap .v-list-item + .v-list-item {
+  border-top: 1px solid #dee2e6;
 }
 </style>
