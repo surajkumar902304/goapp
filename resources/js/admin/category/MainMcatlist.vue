@@ -18,7 +18,7 @@
         <v-row class="mt-0">
             <v-col cols="12">
                 <v-card elevation="5">
-                    <v-simple-table>
+                    <v-simple-table style="border-radius: 5px; overflow: hidden;">
                         <thead>
                             <tr>
                                 <th :colspan="5" class="pa-2" style="background-color: white !important;">
@@ -27,11 +27,11 @@
                                 </th> 
                             </tr>
                             <tr style="background:#b6b6b6;">
-                                <th style="width:12%; text-align: center;">Position drag</th>
-                                <th style="width:40%;">Main category name</th>
-                                <th style="width:8%;">Status</th>
-                                <th style="width:20%; text-align: center;">Action</th>
-                                <th style="width:20%; text-align: center;">Action</th>
+                                <th style="text-align: center;">Position drag</th>
+                                <th>Main category name</th>
+                                <th>Status</th>
+                                <th style="text-align: center;">Action</th>
+                                <th style="text-align: center;">Action</th>
                             </tr>
                         </thead>
 
@@ -79,7 +79,8 @@
                         <v-text-field v-model="defaultItem.main_mcat_name" :rules="mcategorynameRule" label="Main Category Name"/>
                     </v-card-text>
                     <v-card-actions>
-                        <v-btn class="btn-32-text-12" type="submit" color="success" small :disabled="!fsvalid || submitting">
+                        <v-spacer></v-spacer>
+                        <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!fsvalid || submitting">
                             {{ editedIndex === -1 ? 'Add' : 'Update' }}
                         </v-btn>
                     </v-card-actions>

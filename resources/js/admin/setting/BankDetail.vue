@@ -1,5 +1,5 @@
 <template>
-<div class="page-margin-20-40">
+<div class="page-margin-20-40 page-bank-detail">
     <v-container fluid class="pt-0">
       <v-row class="mt-0 pt-0">
         <v-col cols="12" md="11" class="p-0">
@@ -84,7 +84,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn class="btn-32-text-12" type="submit" color="success" small :disabled="!fsvalid || submitting">
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!fsvalid || submitting">
               {{ editedIndex === -1 ? 'Add' : 'Update' }}
             </v-btn>
           </v-card-actions>
@@ -123,13 +123,13 @@ export default {
       ssearch: '',
       bankdetails: [],
       bankdetailsHeaders: [
-        { text: 'Company name', value: 'company_name', width: '150px' },
-        { text: 'Bank name', value: 'bank_name', width: '150px' },
-        { text: 'Account no', value: 'account_number', width: '150px' },
-        { text: 'Sort code', value: 'sort_code', width: '150px' },
-        { text: 'Status', value: 'is_active', width: '100px' },
-        { text: 'Action', value: 'actions1', sortable: false, width: '100px' },
-        { text: 'Action', value: 'actions2', sortable: false, width: '100px' },
+        { text: 'Company name', value: 'company_name' },
+        { text: 'Bank name', value: 'bank_name' },
+        { text: 'Account no', value: 'account_number' },
+        { text: 'Sort code', value: 'sort_code' },
+        { text: 'Status', value: 'is_active' },
+        { text: 'Action', value: 'actions1', sortable: false },
+        { text: 'Action', value: 'actions2', sortable: false },
       ],
 
       addSdialog: false,
@@ -312,14 +312,9 @@ export default {
 .v-input {
   font-size: 12px !important;
 }
-.bank-detail-search .col-md-10 {
-  width: calc(100% - 140px)!important;
-  flex: 0 0 calc(100% - 140px)!important;
-  max-width: calc(100% - 140px)!important;
-}
-.bank-detail-search .col-md-2 {
-  width: 140px!important;
-  flex: 0 0 140px!important;
-  max-width: 140px!important;
+</style>
+<style>
+.page-bank-detail .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
+  height: 32px!important;
 }
 </style>

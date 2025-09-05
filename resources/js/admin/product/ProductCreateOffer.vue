@@ -1,5 +1,5 @@
 <template>
-  <div class="page-margin-20-40">
+  <div class="page-margin-20-40 page-product-offer">
     <v-container fluid class="pt-0">
       <v-row class="mt-0 pt-0">
         <v-col cols="12" md="11" class="p-0">
@@ -94,7 +94,8 @@
             <v-text-field v-model="addForm.product_offer" label="Product Offer"/>
           </v-card-text>
           <v-card-actions>
-            <v-btn class="btn-32-text-12" type="submit" color="success" :disabled="!addValid || saving">Add Offer</v-btn>
+            <v-spacer></v-spacer>
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" :disabled="!addValid">Add Offer</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>
@@ -121,7 +122,8 @@
                           label="Product Offer"/>
           </v-card-text>
           <v-card-actions>
-            <v-btn class="btn-32-text-12" type="submit" color="success" :disabled="!editValid || saving">
+            <v-spacer></v-spacer>
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" :disabled="!editValid || saving">
               Update Offer
             </v-btn>
           </v-card-actions>
@@ -197,13 +199,13 @@ export default {
     return {
       ssearch: '',
       offerheaders: [
-        { text: '', value: 'data-table-select', width: '10px' },
-        { text: "Product name", value: "mproduct_title", width: '250px' },
-        { text: "Product offer", value: "product_offer", width: '225px' },
-        { text: "Product deal tag", value: "product_deal_tag", width: '225px' },
-        { text: 'Action', value: 'actions1', sortable: false, width: '175px' },
-        { text: 'Action', value: 'actions2', sortable: false, width: '175px' },
-        { text: '', value: 'delete', sortable: false }
+        { text: '', value: 'data-table-select' },
+        { text: "Product name", value: "mproduct_title" },
+        { text: "Product offer", value: "product_offer" },
+        { text: "Product deal tag", value: "product_deal_tag" },
+        { text: 'Action', value: 'actions1', sortable: false },
+        { text: 'Action', value: 'actions2', sortable: false },
+        { text: '', value: 'delete', sortable: false, width: '130px' }
       ],
       products: [],    
       productOffers: [], 
@@ -563,5 +565,10 @@ export default {
 <style scoped>
 .v-input {
   font-size: 12px !important;
+}
+</style>
+<style>
+.page-product-offer .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
+  height: 32px!important;
 }
 </style>

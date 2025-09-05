@@ -1,22 +1,22 @@
 <template>
-    <div class="page-margin-20-40">
+    <div style="margin: 20px 60px !important;">
         <v-row>
             <h2 class="text-h6">Edit Product</h2>
         </v-row>
         <v-form @submit.prevent="updateProductData" v-model="fvalid">
             <div class="row">
                 <div class="col-md-6">
-                    <v-btn :loading="backLoading" :disabled="backLoading" small class="btn-32-text-12" @click="navigateBack">
+                    <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="backLoading" :disabled="backLoading" small class="btn-32-text-12" @click="navigateBack">
                         <template v-slot:loader>
                             <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
                         </template>
-                        <v-icon v-if="!backLoading">mdi-arrow-left</v-icon>
+                        <v-icon v-if="!backLoading" style="font-size: 18px !important;">mdi-arrow-left</v-icon>
                         <span v-if="!backLoading">Back</span>
                     </v-btn>
                 </div>
                 <div class="col-md-6 text-right">
-                    <v-btn color="secondary" :loading="deleteLoading" :disabled="deleteLoading || !fvalid" @click="openDuplicateDialog" class="btn-32-text-12">Duplicate</v-btn>
-                    <v-btn type="submit" color="success" :disabled="!fvalid || isSubmitting" :loading="isSubmitting" class="btn-32-text-12">Update</v-btn>
+                    <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="deleteLoading" :disabled="deleteLoading || !fvalid" @click="openDuplicateDialog" class="btn-32-text-12">Duplicate</v-btn>
+                    <v-btn type="submit" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :disabled="!fvalid || isSubmitting" :loading="isSubmitting" class="btn-32-text-12">Update</v-btn>
                 </div>
             </div>
     
@@ -124,9 +124,9 @@
                             </v-col>
                         </v-row>
                         <v-card-text>
-                            <v-btn v-if="!showVariantForm && Object.keys(variants).length < 1" color="primary" @click="showVariantForm = true" 
+                            <v-btn v-if="!showVariantForm && Object.keys(variants).length < 1" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"" @click="showVariantForm = true" 
                                 class="mb-3 btn-32-text-12"><v-icon left>mdi-plus</v-icon> Add Variation</v-btn>
-                            <v-btn v-if="Object.keys(variants).length > 0 && Object.keys(variants).length < 3 && !showVariantForm" color="secondary" @click="showVariantForm = true" 
+                            <v-btn v-if="Object.keys(variants).length > 0 && Object.keys(variants).length < 3 && !showVariantForm" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="showVariantForm = true" 
                                 class="mt-3 btn-32-text-12"><v-icon left>mdi-plus</v-icon>Add Variation</v-btn>
                             <v-row v-if="showVariantForm" class="align-center">
                                 <v-col cols="12" md="4">
@@ -136,7 +136,7 @@
                                     <v-text-field v-model="optionValues" label="Option Values (comma-separated)" dense outlined hide-details />
                                 </v-col>
                                 <v-col cols="12" md="3">
-                                    <v-btn small color="success" @click="saveVariant" class="btn-32-text-12">{{ isEditingVariant ? "UPDATE" : "DONE" }}</v-btn>
+                                    <v-btn small style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="saveVariant" class="btn-32-text-12">{{ isEditingVariant ? "UPDATE" : "DONE" }}</v-btn>
                                     <v-btn class="btn-32-text-12" icon color="red" @click="removeVariant"><v-icon>mdi-delete</v-icon></v-btn>
                                 </v-col>
                             </v-row>
@@ -222,7 +222,7 @@
                                     <v-autocomplete v-model="pro.ptype" :items="mptypes" item-text="mproduct_type_name" item-value="mproduct_type_id" 
                                         :filter="ptypeFilter" label="Type" outlined dense clearable>
                                         <template v-slot:no-data>
-                                            <v-btn @click="addNewProductType" :disabled="!typedText" class="btn-32-text-12">
+                                            <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="addNewProductType" :disabled="!typedText" class="btn-32-text-12">
                                                 Add "{{ typedText }}"
                                             </v-btn>
                                         </template>
@@ -241,7 +241,7 @@
                                     <v-autocomplete ref="tagsAutocomplete" multiple v-model="pro.tags" :items="mtags" item-text="mtag_name" item-value="mtag_id" 
                                         label="Tags" :filter="tagFilter" outlined dense small-chips deletable-chips clearable class="tag-text-area">
                                         <template v-slot:no-data>
-                                            <v-btn @click="addNewTag" :disabled="!typedTag" class="btn-32-text-12">
+                                            <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="addNewTag" :disabled="!typedTag" class="btn-32-text-12">
                                                 Add “{{ typedTag }}”
                                             </v-btn>
                                         </template>
@@ -908,6 +908,6 @@ export default {
     bottom: -18px;
 }
 .tag-text-area label {
-    height: auto !important;
+    height: 32px !important;
 }
 </style>

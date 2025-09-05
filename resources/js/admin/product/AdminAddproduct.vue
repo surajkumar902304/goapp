@@ -1,21 +1,21 @@
 <template>
-    <div class="page-margin-20-40">
+    <div style="margin: 20px 60px !important;">
         <v-row>
             <h2 class="text-h6">Add New Product</h2>
         </v-row>
         <v-form @submit.prevent="saveProductData" v-model="fvalid">
             <div class="row mt-0">
                 <div class="col-md-6">
-                    <v-btn :loading="backLoading" :disabled="backLoading" small class="btn-32-text-12" @click="navigateBack">
+                    <v-btn :loading="backLoading" :disabled="backLoading" small class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="navigateBack">
                         <template v-slot:loader>
                             <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
                         </template>
-                        <v-icon v-if="!backLoading">mdi-arrow-left</v-icon>
+                        <v-icon v-if="!backLoading" style="font-size: 18px !important;">mdi-arrow-left</v-icon>
                         <span v-if="!backLoading">Back</span>
                     </v-btn>
                 </div>
                 <div class="col-md-6 text-right">
-                    <v-btn color="success" :loading="saveLoading" class="btn-32-text-12" :disabled="saveLoading || !fvalid" @click="saveProductData">
+                    <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="saveLoading" class="btn-32-text-12" :disabled="saveLoading || !fvalid" @click="saveProductData">
                         <template v-slot:loader>
                             <v-progress-circular indeterminate size="20" color="green"></v-progress-circular>
                         </template>
@@ -141,10 +141,10 @@
                             </v-col>
                         </v-row>   
                         <v-card-text class="mb-5">
-                            <v-btn v-if="!showVariantForm && Object.keys(variants).length < 1" color="primary" @click="showVariantForm = true" class="mb-3 btn-32-text-12">
+                            <v-btn v-if="!showVariantForm && Object.keys(variants).length < 1" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="showVariantForm = true" class="mb-3 btn-32-text-12">
                                 <v-icon left>mdi-plus</v-icon>Add Variation
                             </v-btn>
-                            <v-btn v-if="Object.keys(variants).length > 0 && Object.keys(variants).length < 3 && !showVariantForm" color="secondary" @click="showVariantForm = true" class="mt-3 btn-32-text-12">
+                            <v-btn v-if="Object.keys(variants).length > 0 && Object.keys(variants).length < 3 && !showVariantForm" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="showVariantForm = true" class="mt-3 btn-32-text-12">
                                 <v-icon left>mdi-plus</v-icon>Add Variation
                             </v-btn> 
                             <v-row v-if="showVariantForm" class="align-center">
@@ -156,7 +156,7 @@
                                     <v-text-field v-model="optionValues" label="Option Values (comma-separated)" dense outlined hide-details></v-text-field>
                                 </v-col>
                                 <v-col cols="12" md="3">
-                                    <v-btn small color="success" @click="saveVariant" class="btn-32-text-12">{{ isEditingVariant ? 'UPDATE' : 'DONE' }}</v-btn>
+                                    <v-btn small  style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="saveVariant" class="btn-32-text-12">{{ isEditingVariant ? 'UPDATE' : 'DONE' }}</v-btn>
                                     <v-btn icon class="btn-32-text-12" color="red" @click="removeVariant">
                                         <v-icon>mdi-delete</v-icon>
                                     </v-btn>
@@ -247,7 +247,7 @@
                                     <v-autocomplete v-model="pro.ptype" :items="mptypes" item-text="mproduct_type_name" item-value="mproduct_type_id" 
                                         :filter="ptypeFilter" label="Type" outlined dense clearable :search-input.sync="typedText">
                                         <template v-slot:no-data>
-                                            <v-btn @click="addNewProductType" :disabled="!typedText?.trim()" class="btn-32-text-12">
+                                            <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="addNewProductType" :disabled="!typedText?.trim()" class="btn-32-text-12">
                                                 Add "{{ typedText }}"
                                             </v-btn>
                                         </template>
@@ -266,7 +266,7 @@
                                     <v-autocomplete ref="tagsAutocomplete" v-model="pro.tags" :items="mtags" item-text="mtag_name" item-value="mtag_id" label="Tags" 
                                         :filter="tagFilter" multiple outlined clearable dense small-chips deletable-chips :search-input.sync="typedTag" class="tag-text-area">
                                         <template v-slot:no-data>
-                                            <v-btn @click="addNewTag" :disabled="!typedTag?.trim()" class="btn-32-text-12">
+                                            <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="addNewTag" :disabled="!typedTag?.trim()" class="btn-32-text-12">
                                                 Add “{{ typedTag }}”
                                             </v-btn>
                                         </template>

@@ -1,5 +1,5 @@
 <template>
-<div class="page-margin-20-40">
+<div class="page-margin-20-40  page-customer-commission">
     <v-container fluid class="pt-0">
       <v-row class="mt-0 pt-0">
         <v-col cols="12" md="12" class="p-0">
@@ -14,12 +14,10 @@
                 <v-data-table :items="commissions" :headers="headers" :search="ssearch" :footer-props="{
                         'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'}">
                     <template v-slot:top>
-                      <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search name"/>
+                      <v-row dense class="mx-1 pb-1">
+                        <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Name"/>
+                      </v-row>
                     </template>
-                    <template v-slot:item.index="{ index }">
-                        {{ index + 1 }}
-                    </template>
-
                     <template v-slot:item.name="{ item }">
                         {{ item.name }}
                     </template>
@@ -50,7 +48,6 @@ export default {
         ssearch: '',
         commissions: [],
         headers: [
-          { text: '#', value: 'index' },
           { text: 'Customer Name', value: 'name' },
           { text: 'Order Amount', value: 'product_total' },
           { text: 'Commission', value: 'commission_amount' },
@@ -81,5 +78,8 @@ export default {
 }
 .v-input__slot{
   min-height: 32px !important;
+}
+.page-customer-commission .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
+  height: 32px!important;
 }
 </style>

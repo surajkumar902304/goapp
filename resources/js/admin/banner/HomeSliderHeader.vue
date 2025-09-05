@@ -1,5 +1,5 @@
 <template>
-  <div class="page-margin-20-40">
+  <div class="page-margin-20-40 page-slider-header">
     <v-container fluid class="pt-0">
       <v-row class="mt-0 pt-0">
         <v-col cols="12" md="12" class="p-0">
@@ -54,7 +54,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn class="btn-32-text-12" type="submit" color="success" small :disabled="!fsvalid || submitting">
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!fsvalid || submitting">
               Update
             </v-btn>
           </v-card-actions>
@@ -135,5 +135,7 @@ export default {
 .text-capitalize input {
   text-transform: capitalize;
 }
-
+.page-slider-header .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
+  height: 32px!important;
+}
 </style>

@@ -1,12 +1,16 @@
 <template>
   <div>
-    <v-row>
-      <h2 class="text-h6 mb-1">Orders</h2>
-    </v-row>
+    <v-container fluid class="pt-0">
+      <v-row class="mt-0 pt-0">
+        <v-col cols="12" md="10" class="p-0">
+          <h2 class="text-h6 mb-1">Orders</h2>
+        </v-col>
+      </v-row>
+    </v-container>
 
-    <v-row>
-      <v-col cols="12" class="pt-0 mt-4">
-        <v-card elevation="5">
+    <v-row class="mt-0 pt-0">
+      <v-col cols="12" class="mt-2">
+        <v-card elevation="5" style="background-color: transparent;">
           <v-row class="align-center">
             <v-col class="pt-0">
               <v-tabs v-model="activeTab" active-class="grey lighten-3" height="30">
@@ -18,44 +22,45 @@
             </v-col>
 
             <v-col class="d-flex justify-end pt-0" cols="auto" v-if="selected.length > 0">
-                <v-menu offset-y>
-                    <template v-slot:activator="{ on, attrs }">
-                        <span class="mr-2 font-weight-medium text-caption">{{ selected.length }} selected</span>
-                        <v-icon color="primary" v-bind="attrs" v-on="on" style="cursor: pointer; margin-right: 5px;">
-                            mdi-dots-vertical
-                        </v-icon>
-                    </template>
-                    <v-list dense>
-                        <v-list-item @click="openConfirmDialog('markPaid')">
-                            <v-list-item-title>Mark as Paid</v-list-item-title>
-                        </v-list-item>
-                        <v-list-item @click="openConfirmDialog('markCancle')">
-                            <v-list-item-title>Cancel Orders</v-list-item-title>
-                        </v-list-item>
-                        <v-list-item @click="openConfirmDialog('markFulfilled')">
-                            <v-list-item-title>Mark as Fulfilled</v-list-item-title>
-                        </v-list-item>
-                        <v-list-item @click="openConfirmDialog('markUnfulfilled')">
-                            <v-list-item-title>Mark as Unfulfilled</v-list-item-title>
-                        </v-list-item>
-                    </v-list>
-                </v-menu>
+              <v-menu offset-y>
+                <template v-slot:activator="{ on, attrs }">
+                  <span class="mr-2 font-weight-medium text-caption">{{ selected.length }} selected</span>
+                  <v-icon color="primary" v-bind="attrs" v-on="on" style="cursor: pointer; margin-right: 5px;">
+                    mdi-dots-vertical
+                  </v-icon>
+                </template>
+                <v-list dense>
+                  <v-list-item @click="openConfirmDialog('markPaid')">
+                    <v-list-item-title>Mark as Paid</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="openConfirmDialog('markCancle')">
+                    <v-list-item-title>Cancel Orders</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="openConfirmDialog('markFulfilled')">
+                    <v-list-item-title>Mark as Fulfilled</v-list-item-title>
+                  </v-list-item>
+                  <v-list-item @click="openConfirmDialog('markUnfulfilled')">
+                    <v-list-item-title>Mark as Unfulfilled</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
             </v-col>
           </v-row>
 
-          <v-data-table dense v-model="selected" :show-select="true" item-key="order_id" :items="filteredOrders" :headers="orderHeaders" :search="ssearch" 
+          <v-data-table dense v-model="selected" :show-select="true" item-key="order_id" :items="filteredOrders"
+            :headers="orderHeaders" :search="ssearch"
             :footer-props="{ 'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:' }">
             <template v-slot:top>
-              <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" 
-                placeholder="Search Order Id, Date, Customer, Total amount"/>
+              <v-text-field v-model="ssearch" class="px-2 py-1" clearable dense outlined hide-details
+                prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Order Id, Date, Customer, Total amount" />
             </template>
             <template v-slot:item.order_id="{ item }">
-                <router-link :to="{ name: 'order-detail', params: { orderid: item.order_id } }" class="link-dark">
-                    #TR00{{ item.order_id }}
-                </router-link>  
+              <router-link :to="{ name: 'order-detail', params: { orderid: item.order_id } }" class="link-dark">
+                #TR00{{ item.order_id }}
+              </router-link>
             </template>
             <template v-slot:item.total_paid="{ item }">
-                £{{ item.total_paid }}
+              £{{ item.total_paid }}
             </template>
             <template #item.status="{ item }">
               <v-chip :color="statusColor(item.status)" small outlined>{{ item.status }}</v-chip>
@@ -66,7 +71,7 @@
               </v-chip>
             </template>
             <template v-slot:item.total_items="{ item }">
-                {{ item.total_items }} {{ item.total_items === 1 ? 'item' : 'items' }}
+              {{ item.total_items }} {{ item.total_items === 1 ? 'item' : 'items' }}
             </template>
             <!-- <template #header.action1>
               <div class="text-center">Action</div>
@@ -93,18 +98,19 @@
       </v-col>
     </v-row>
 
-    
+
     <v-dialog v-model="confirmDialog" max-width="400">
       <v-card elevation="5">
         <v-card-title class="text-h6">Confirm {{ actionLabel }}</v-card-title>
         <v-card-text>
-            Are you sure you want to <strong>{{ actionLabel.toLowerCase() }}</strong> 
-            <strong>{{ selected.length }}</strong> selected orders?
+          Are you sure you want to <strong>{{ actionLabel.toLowerCase() }}</strong>
+          <strong>{{ selected.length }}</strong> selected orders?
         </v-card-text>
         <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn class="btn-32-text-12" text color="grey" @click="confirmDialog = false">Cancel</v-btn>
-            <v-btn class="btn-32-text-12" text color="red" :loading="loadingBulk" :disabled="loadingBulk" @click="executeBulkAction">Yes</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn class="btn-32-text-12" text color="grey" @click="confirmDialog = false">Cancel</v-btn>
+          <v-btn class="btn-32-text-12" text color="red" :loading="loadingBulk" :disabled="loadingBulk"
+            @click="executeBulkAction">Yes</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -206,25 +212,25 @@ export default {
         order_ids: [order.order_id],
         status: newStatus
       })
-      .then(() => {
-        this.$toast?.success(`Status updated to ${newStatus}.`, {
-          timeout: 500,
-          hideProgressBar: true,
-          icon: false,
+        .then(() => {
+          this.$toast?.success(`Status updated to ${newStatus}.`, {
+            timeout: 500,
+            hideProgressBar: true,
+            icon: false,
+          });
+          this.getAllOrders();
+        })
+        .catch(() => {
+          this.$toast?.error('Failed to update status.', { timeout: 500 });
         });
-        this.getAllOrders();
-      })
-      .catch(() => {
-        this.$toast?.error('Failed to update status.', { timeout: 500 });
-      });
     },
     openConfirmDialog(action) {
       this.actionToConfirm = action;
       this.actionLabel = {
-      markPaid: 'Mark as Paid',
-      markCancle: 'Mark as Cancle',
-      markFulfilled: 'Mark as Fulfilled',
-      markUnfulfilled: 'Mark as Unfulfilled'
+        markPaid: 'Mark as Paid',
+        markCancle: 'Mark as Cancle',
+        markFulfilled: 'Mark as Fulfilled',
+        markUnfulfilled: 'Mark as Unfulfilled'
       }[action] || '';
       this.confirmDialog = true;
     },
@@ -235,38 +241,38 @@ export default {
       let payload = {};
 
       switch (this.actionToConfirm) {
-      case 'markPaid':
-      case 'markCancle':
+        case 'markPaid':
+        case 'markCancle':
           url = '/admin/orders-bulk/mark-status';
-          payload = { 
+          payload = {
             order_ids: ids,
             bulkstatus: this.actionToConfirm === 'markPaid' ? 'paid' : 'cancelled'
           };
           break;
-      case 'markFulfilled':
-      case 'markUnfulfilled':
+        case 'markFulfilled':
+        case 'markUnfulfilled':
           url = '/admin/orders-bulk/mark-fulfillment';
           payload = {
-          order_ids: ids,
-          bulkfulfilled: this.actionToConfirm === 'markFulfilled' ? 'fulfilled' : 'unfulfilled'
+            order_ids: ids,
+            bulkfulfilled: this.actionToConfirm === 'markFulfilled' ? 'fulfilled' : 'unfulfilled'
           };
           break;
       }
 
       try {
-      await axios.post(url, payload);
-      this.$toast?.success(`${this.actionLabel} successful`, {
-                  timeout: 500
-              })
-      this.getAllOrders();
+        await axios.post(url, payload);
+        this.$toast?.success(`${this.actionLabel} successful`, {
+          timeout: 500
+        })
+        this.getAllOrders();
       } catch (err) {
-      this.$toast?.error(`Failed to ${this.actionLabel.toLowerCase()}`, {
-                  timeout: 500
-              })
+        this.$toast?.error(`Failed to ${this.actionLabel.toLowerCase()}`, {
+          timeout: 500
+        })
       } finally {
-      this.confirmDialog = false;
-      this.selected = [];
-      this.loadingBulk = false;
+        this.confirmDialog = false;
+        this.selected = [];
+        this.loadingBulk = false;
       }
     },
   },
@@ -277,9 +283,11 @@ export default {
 .v-input {
   font-size: 12px !important;
 }
+
 td.text-start {
-    font-size: 12px !important;
+  font-size: 12px !important;
 }
+
 .uploader-box {
   max-width: 200px;
   max-height: 200px;

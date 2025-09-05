@@ -1,5 +1,5 @@
 <template>
-<div class="page-margin-20-40">
+<div class="page-margin-20-40 page-delivery-method">
     <v-container fluid class="pt-0">
       <v-row class="mt-0 pt-0">
         <v-col cols="12" md="11" class="p-0">
@@ -73,7 +73,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn class="btn-32-text-12" type="submit" color="success" small :disabled="!fsvalid || submitting">
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!fsvalid || submitting">
               {{ editedIndex === -1 ? 'Add' : 'Update' }}
             </v-btn>
           </v-card-actions>
@@ -141,7 +141,7 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer/>
-            <v-btn class="btn-32-text-12" type="submit" color="success" small :loading="savingMin" :disabled="!minFormValid">
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :loading="savingMin" :disabled="!minFormValid">
               {{ editedMinIndex===-1 ? 'Add' : 'Update' }}
             </v-btn>
           </v-card-actions>
@@ -161,11 +161,11 @@ export default {
       ssearch: '',
       deliverymethods: [],
       deliverymethodsHeaders: [
-        { text: 'Delivery method name', value: 'delivery_method_name', width: '150px' },
-        { text: 'Amount', value: 'delivery_method_amount', width: '150px' },
-        { text: 'Status', value: 'is_active', width: '100px' },
-        { text: 'Action', value: 'actions1', sortable: false, width: '100px' },
-        { text: 'Action', value: 'actions2', sortable: false, width: '100px' },
+        { text: 'Delivery method name', value: 'delivery_method_name' },
+        { text: 'Amount', value: 'delivery_method_amount' },
+        { text: 'Status', value: 'is_active' },
+        { text: 'Action', value: 'actions1', sortable: false },
+        { text: 'Action', value: 'actions2', sortable: false },
       ],
 
       addSdialog: false,
@@ -193,9 +193,9 @@ export default {
 
       minRequirements: [],
       minHeaders: [
-        { text:'Amount',    value:'value',    width:'150px' },
-        { text:'Status',    value:'is_active',width:'100px' },
-        { text:'Action',    value:'actions',  sortable:false, width:'100px' },
+        { text:'Amount',    value:'value' },
+        { text:'Status',    value:'is_active' },
+        { text:'Action',    value:'actions',  sortable:false },
       ],
       addMinDialog: false,
       editedMinIndex: -1,
@@ -383,14 +383,9 @@ export default {
 .v-input {
   font-size: 12px !important;
 }
-.delivery-method-search .col-md-10 {
-  width: calc(100% - 140px)!important;
-  flex: 0 0 calc(100% - 140px)!important;
-  max-width: calc(100% - 140px)!important;
-}
-.delivery-method-search .col-md-2 {
-  width: 140px!important;
-  flex: 0 0 140px!important;
-  max-width: 140px!important;
+</style>
+<style>
+.page-delivery-method .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
+  height: 32px!important;
 }
 </style>

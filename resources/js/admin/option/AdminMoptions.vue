@@ -1,5 +1,5 @@
 <template>
-    <div class="page-margin-20-40">
+    <div class="page-margin-20-40 page-product-option">
         <v-container fluid class="pt-0">
             <v-row class="mt-0 pt-0">
                 <v-col cols="12" md="11" class="p-0">
@@ -23,9 +23,6 @@
                             <v-row dense class="mx-1 pb-1">
                                 <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search name"/>
                             </v-row>
-                        </template>
-                        <template v-slot:item.index="{ index }">
-                            {{ index + 1 }}
                         </template>
                         <template #header.actions1>
                             <div class="text-center">Action</div>
@@ -63,7 +60,8 @@
                         <v-text-field v-model="defaultItem.moption_name" dense :rules="nameRule" placeholder="Colour, Size etc"></v-text-field>
                     </v-card-text>
                     <v-card-actions class="justify-center">
-                        <v-btn class="btn-32-text-12" type="submit" color="success" small :disabled="!fvalid">Add Option</v-btn>
+                        <v-spacer></v-spacer>
+                        <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!fvalid">Add Option</v-btn>
                     </v-card-actions>
                 </v-form>
             </v-card>
@@ -80,7 +78,8 @@
                         <v-text-field v-model="editedItem.moption_name" dense :rules="nameRule" placeholder="Colour, Size etc"></v-text-field>
                     </v-card-text>
                     <v-card-actions class="justify-center">
-                        <v-btn class="btn-32-text-12" type="submit" color="success" small :disabled="!evalid">Update Option</v-btn>
+                        <v-spacer></v-spacer>
+                        <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!evalid">Update Option</v-btn>
                     </v-card-actions>
                 </v-form>
             </v-card>
@@ -112,7 +111,6 @@ export default {
             editDialog:false,
             moptions:[],
             moptionHeaders:[
-                { text: 'Index', value: 'index', sortable: true },
                 { text: 'Name', value:'moption_name'},
                 { text: 'Action', value: 'actions1', sortable: false },
                 { text: 'Action', value: 'actions2', sortable: false },
@@ -225,18 +223,9 @@ export default {
 .v-input {
   font-size: 12px !important;
 }
-.search-product-options .col-md-11 {
-    width: calc(100% - 130px)!important;
-    flex: 0 0 calc(100% - 130px)!important;
-    max-width: calc(100% - 130px)!important;
-}
-.search-product-options .col-md-1 {
-    width: 130px!important;
-    flex: 0 0 130px!important;
-    max-width: 130px!important;
-    padding-right: 10px!important;
-}
-.search-product-options .col-md-1 button {
-    width: 100%!important;
+</style>
+<style>
+.page-product-option .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
+  height: 32px!important;
 }
 </style>

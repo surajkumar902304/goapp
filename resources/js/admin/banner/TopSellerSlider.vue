@@ -72,7 +72,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer/>
-          <v-btn class="btn-32-text-12" color="primary" @click="save">Add</v-btn>
+          <v-btn class="btn-32-text-12" style="font-weight: bold; color: #1976d2; background-color: white !important;" @click="save">Add</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -117,12 +117,12 @@ export default {
       sliderRows:[], 
       mainSel:[],
       sliderHdr: [
-        { text:'', value:'data-table-select', width:10 },
-        { text:'Image', value:'img', sortable:false, width:150 },
-        { text:'Product', value:'product', width:300 },
-        { text:'Variant', value:'variantLabel', width:400 }, 
-        { text:'Action',  value:'actions', sortable:false, width:100 },
-        { text: '', value: 'delete', sortable: false }
+        { text:'', value:'data-table-select' },
+        { text:'Image', value:'img', sortable:false },
+        { text:'Product', value:'product' },
+        { text:'Variant', value:'variantLabel' }, 
+        { text:'Action',  value:'actions', sortable:false },
+        { text: '', value: 'delete', sortable: false, width: '130px' }
       ],
 
       modalOpen:false, 

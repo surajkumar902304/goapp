@@ -18,7 +18,7 @@
       <v-row>
         <v-col cols="12" class="pt-0">
           <v-card elevation="5">
-            <v-simple-table>
+            <v-simple-table style="border-radius: 5px; overflow: hidden;">
               <thead>
                 <tr>
                   <th :colspan="5" class="pa-2" style="background-color: white !important;">
@@ -26,11 +26,11 @@
                   </th> 
                 </tr>
                 <tr style="height: 20px; background:#b6b6b6;">
-                  <th style="width:20%">Image</th>
-                  <th style="width:30%">Slider name</th>
-                  <th style="width:15%; text-align: center;">Action</th>
-                  <th style="width:15%; text-align: center;">Action</th>
-                  <th style="width:20%; text-align: center;">Position drag</th> 
+                  <th>Image</th>
+                  <th>Slider name</th>
+                  <th style="text-align: center;">Action</th>
+                  <th style="text-align: center;">Action</th>
+                  <th style="text-align: center;">Position drag</th> 
                 </tr>
               </thead>
               <draggable tag="tbody" :list="dealbanners" handle=".drag-handle" @end="onDragEnd">
@@ -91,7 +91,8 @@
             </v-card-text>
             <v-card-actions>
               <template v-if="editedIndex !== -1 || isImageSelected">
-                <v-btn class="btn-32-text-12" type="submit" color="success" small :disabled="!fsvalid || submitting">
+                <v-spacer></v-spacer>
+                <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!fsvalid || submitting">
                   {{ editedIndex === -1 ? 'Add' : 'Update' }}
                 </v-btn>
               </template>
@@ -371,16 +372,6 @@ export default {
 }
 .v-input {
     font-size: 12px !important;
-}
-.fruit-search .col-md-10 {
-    width: calc(100% - 140px)!important;
-    flex: 0 0 calc(100% - 140px)!important;
-    max-width: calc(100% - 140px)!important;
-}
-.fruit-search .col-md-2 {
-    width: 140px!important;
-    flex: 0 0 140px!important;
-    max-width: 140px!important;
 }
 </style>
   

@@ -1,5 +1,5 @@
 <template>
-<div class="page-margin-20-40">
+<div class="page-margin-20-40 page-coupons">
     <v-container fluid class="pt-0">
       <v-row class="mt-0 pt-0">
         <v-col cols="12" md="11" class="p-0">
@@ -96,25 +96,39 @@
           <v-card-text>
             <v-text-field v-model="defaultItem.code" @input="defaultItem.code = defaultItem.code.toUpperCase()" :rules="codeRules" label="Coupon Code" required/>
             <v-select v-model="defaultItem.main_mcat_id" :items="mainCategoryOptions" label="Select Main Category (optional)" item-title="text" item-value="value" :return-object="false" dense required />
-            <v-select v-model="defaultItem.discount_type" :items="discountTypeOptions" :rules="[v => !!v || 'Discount type is required']" label="Discount Type" required/>
-            <v-text-field v-model="defaultItem.discount_value" :rules="[v => v !== null && v !== '' || 'Discount value is required', v => parseFloat(v) >= 0 || 'Must be ≥ 0']" 
-                label="Discount Value" type="number" required/>
-            <v-menu v-model="menuExpires" :close-on-content-click="false" transition="scale-transition" offset-y max-width="290px" min-width="auto">
-                <template v-slot:activator="{ on, attrs }">
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-select v-model="defaultItem.discount_type" :items="discountTypeOptions" :rules="[v => !!v || 'Discount type is required']" label="Discount Type" required/>
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="defaultItem.discount_value" :rules="[v => v !== null && v !== '' || 'Discount value is required', v => parseFloat(v) >= 0 || 'Must be ≥ 0']" 
+                  label="Discount Value" type="number" required/>
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-menu v-model="menuExpires" :close-on-content-click="false" transition="scale-transition" offset-y max-width="290px" min-width="auto">
+                  <template v-slot:activator="{ on, attrs }">
                     <v-text-field v-model="defaultItem.expires_at" readonly label="Expires At (optional)" v-bind="attrs" v-on="on" placeholder="YYYY-MM-DD" />
-                </template>
-                <v-date-picker v-model="defaultItem.expires_at" no-title scrollable @input="menuExpires = false"/>
-            </v-menu>
-            <v-text-field v-model="defaultItem.usage_limit" :rules="[v => v === null || v === '' || (Number.isInteger(+v) && +v >= 1) || 'Must be integer ≥1']" 
-                label="Usage Limit (optional)" type="number" placeholder="e.g. 100"/>
-            <v-text-field v-model="defaultItem.per_user_limit" :rules="[v => v === null || v === '' || (Number.isInteger(+v) && +v >= 1) || 'Must be integer ≥1']" 
-                label="Per-User Limit (optional)" type="number" placeholder="e.g. 1"/>
-            <v-text-field v-model="defaultItem.min_cart_value" :rules="[v => v === null || v === '' || parseFloat(v) >= 0 || 'Must be ≥ 0']" label="Min Cart Value (optional)" 
-                type="number" placeholder="e.g. 500.00"/>
+                  </template>
+                  <v-date-picker v-model="defaultItem.expires_at" no-title scrollable @input="menuExpires = false"/>
+                </v-menu>
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="defaultItem.usage_limit" :rules="[v => v === null || v === '' || (Number.isInteger(+v) && +v >= 1) || 'Must be integer ≥1']" 
+                  label="Usage Limit (optional)" type="number" placeholder="e.g. 100"/>
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="defaultItem.per_user_limit" :rules="[v => v === null || v === '' || (Number.isInteger(+v) && +v >= 1) || 'Must be integer ≥1']" 
+                  label="Per-User Limit (optional)" type="number" placeholder="e.g. 1"/>
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field v-model="defaultItem.min_cart_value" :rules="[v => v === null || v === '' || parseFloat(v) >= 0 || 'Must be ≥ 0']" label="Min Cart Value (optional)" 
+                  type="number" placeholder="e.g. 500.00"/>
+              </v-col>
+            </v-row>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn class="btn-32-text-12" type="submit" color="success" small :disabled="!fsvalid || submitting">
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!fsvalid || submitting">
               {{ editedIndex === -1 ? 'Add' : 'Update' }}
             </v-btn>
           </v-card-actions>
@@ -159,16 +173,16 @@ export default {
       ssearch: '',
       coupons: [],
       couponsHeaders: [
-        { text: '', value: 'data-table-select', width: '10px' },
-        { text: 'Coupon code', value: 'code', width: '150px' },
-        { text: 'Discount type', value: 'discount_type', width: '150px' },
-        { text: 'Discount value', value: 'discount_value', width: '150px' },
-        { text: 'Min Cart value', value: 'min_cart_value', width: '150px' },
-        { text: 'Expires at', value: 'expires_at', width: '150px' },
-        { text: 'Status', value: 'is_active', width: '100px' },
-        { text: 'Action', value: 'actions1', sortable: false, width: '100px' },
-        { text: 'Action', value: 'actions2', sortable: false, width: '100px' },
-        { text: '', value: 'delete', sortable: false }
+        { text: '', value: 'data-table-select' },
+        { text: 'Coupon code', value: 'code' },
+        { text: 'Discount type', value: 'discount_type' },
+        { text: 'Discount value', value: 'discount_value' },
+        { text: 'Min Cart value', value: 'min_cart_value' },
+        { text: 'Expires at', value: 'expires_at' },
+        { text: 'Status', value: 'is_active' },
+        { text: 'Action', value: 'actions1', sortable: false },
+        { text: 'Action', value: 'actions2', sortable: false },
+        { text: '', value: 'delete', sortable: false, width: '130px' }
       ],
 
       addSdialog: false,
@@ -393,5 +407,8 @@ export default {
 <style>
 .v-input {
   font-size: 12px !important;
+}
+.page-coupons .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
+  height: 32px!important;
 }
 </style>

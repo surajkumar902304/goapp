@@ -1,22 +1,22 @@
 <template>
-  <div class="page-margin-20-40">
+  <div style="margin: 20px 60px !important;" class="page-sub-cat-add">
     <v-row>
       <h2 class="text-h6">Add New Sub-Category</h2>
     </v-row>
     <v-row class="mt-0">
       <v-col cols="6" class="d-flex">
-        <v-btn :loading="backLoading" :disabled="backLoading" small class="btn-32-text-12" @click="navigateBack">
+        <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="backLoading" :disabled="backLoading" small class="btn-32-text-12" @click="navigateBack">
             <template v-slot:loader>
                 <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
             </template>
-            <v-icon v-if="!backLoading">mdi-arrow-left</v-icon>
+            <v-icon v-if="!backLoading" style="font-size: 18px !important;">mdi-arrow-left</v-icon>
             <span v-if="!backLoading">Back</span>
         </v-btn>
       </v-col>
 
       <v-col cols="6" class="text-end">
-        <v-btn small outlined @click="discard" class="mr-2 btn-32-text-12">Discard</v-btn>
-        <v-btn small color="success" :loading="saveLoading" :disabled="saveDisabled" @click="saveSubCategory" class="btn-32-text-12">
+        <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small outlined @click="discard" class="mr-2 btn-32-text-12">Discard</v-btn>
+        <v-btn small style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="saveLoading" :disabled="saveDisabled" @click="saveSubCategory" class="btn-32-text-12">
           <template v-slot:loader>
                 <v-progress-circular indeterminate size="20" color="white"></v-progress-circular>
             </template>
@@ -72,7 +72,7 @@
                 <v-text-field dense hide-details outlined prepend-inner-icon="mdi-magnify mb-2" v-model="productSearch" placeholder="Search Product"/>
               </v-col>
               <v-col cols="2">
-                <v-btn dense outlined @click="productDialog=true" class="btn-32-text-12 mt-1">Browse</v-btn>
+                <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" dense outlined @click="productDialog=true" class="btn-32-text-12 mt-1">Browse</v-btn>
               </v-col>
               <v-col cols="4">
                 <v-select dense outlined prefix="Sort:" :items="sorts" v-model="sortMethod" @change="sortSelected"/>
@@ -162,7 +162,7 @@
               </div>
             </div>
 
-            <v-btn class="btn-32-text-12" outlined small @click="addCondition"><v-icon small>mdi-plus</v-icon> Add another condition</v-btn>
+            <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" class="btn-32-text-12" outlined small @click="addCondition"><v-icon small>mdi-plus</v-icon> Add another condition</v-btn>
           </v-card-text>
         </v-card>
       </v-col>
@@ -241,7 +241,7 @@
 
         <v-card-actions>
           <v-spacer/>
-          <v-btn class="btn-32-text-12" color="primary" @click="confirmProducts">Done</v-btn>
+          <v-btn class="btn-32-text-12" style="font-weight: bold; color: #1976d2; background-color: white !important;" @click="confirmProducts">Done</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -538,5 +538,9 @@ export default {
 }
 input#input-106 {
     height: 24px !important;
+}
+.page-sub-cat-add .v-select.v-input input {
+    height: 24px !important;
+    line-height: 24px !important;
 }
 </style>

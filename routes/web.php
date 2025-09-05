@@ -251,11 +251,11 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::post('/users/assign-tag', [UserTagController::class, 'assignTag']);  
     
     // Services & Display Solutions routes
-    Route::get('/services/vlist', [CouponController::class, 'serviceVlist'])->name('services.vlist');
-    Route::post('/services/add', [CouponController::class, 'addService'])->name('service.add');
-    Route::post('/services/update', [CouponController::class, 'editService'])->name('service.edit');
-    Route::post('/service-delete', [CouponController::class, 'deleteService']);
-    Route::post('/services/bulk-delete', [CouponController::class, 'bulkDeleteService']);
+    // Route::get('/services/vlist', [CouponController::class, 'serviceVlist'])->name('services.vlist');
+    // Route::post('/services/add', [CouponController::class, 'addService'])->name('service.add');
+    // Route::post('/services/update', [CouponController::class, 'editService'])->name('service.edit');
+    // Route::post('/service-delete', [CouponController::class, 'deleteService']);
+    // Route::post('/services/bulk-delete', [CouponController::class, 'bulkDeleteService']);
 });
 
 

@@ -1,9 +1,9 @@
 <template>
-  <div class="page-margin-20-40">
+  <div class="page-margin-20-40 page-reps">
     <v-container fluid class="pt-0">
       <v-row class="mt-0 pt-0">
         <v-col cols="12" md="11" class="p-0">
-          <h2 class="text-h6 mb-1">Reps</h2> 
+          <h2 class="text-h6 mb-1">Reps</h2>
         </v-col>
 
         <v-col cols="12" md="1" class="p-0 ps-2 text-end">
@@ -18,22 +18,23 @@
       <v-col cols="12">
         <v-card elevation="5">
           <v-data-table :items="reps" :headers="headers" :search="ssearch" item-key="rep_id" :footer-props="{
-              'items-per-page-options':[10,25,50,100], 'items-per-page-text':'Rows per page:'}">
+            'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:'
+          }">
             <template v-slot:top>
               <v-row dense class="mx-1 pb-1">
-                <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search all"/>
+                <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details
+                  prepend-inner-icon="mdi-magnify mb-2" placeholder="Search all" />
               </v-row>
             </template>
             <template v-slot:item.total_commission="{ item }">
-                £{{ item.total_commission }}
+              £{{ item.total_commission }}
             </template>
             <template #header.actions1>
               <div class="text-center">Action</div>
             </template>
             <template #item.actions1="{ item }">
               <div class="text-center">
-                <v-chip outlined pill small color="primary"
-                        @click="openDialog(item)">
+                <v-chip outlined pill small color="primary" @click="openDialog(item)">
                   <v-icon small left>mdi-pencil</v-icon>Edit
                 </v-chip>
               </div>
@@ -43,8 +44,7 @@
             </template>
             <template #item.actions2="{ item }">
               <div class="text-center">
-                <v-chip outlined pill small color="red"
-                        @click="confirmDelete(item)">
+                <v-chip outlined pill small color="red" @click="confirmDelete(item)">
                   <v-icon small left>mdi-delete</v-icon>Delete
                 </v-chip>
               </div>
@@ -58,21 +58,26 @@
       <v-card elevation="5">
         <v-card-title>
           {{ editMode ? 'Edit Rep' : 'Add Rep' }}
-          <v-spacer/><v-icon @click="dialog=false">mdi-close</v-icon>
+          <v-spacer /><v-icon @click="dialog = false">mdi-close</v-icon>
         </v-card-title>
 
         <v-form ref="repForm" v-model="valid" @submit.prevent="saveRep">
           <v-card-text>
-            <v-text-field v-model="form.name" label="Name" :rules="nameRules" :error-messages="backendErrors.name"/>
-            <v-text-field v-model="form.email" label="E-mail" :rules="emailRules" :error-messages="backendErrors.email"/>
-            <v-text-field v-model="form.mobile" label="Mobile" :rules="mobileRules" :error-messages="backendErrors.mobile"/>
-            <v-text-field v-model="form.rep_code" label="Rep Code" :rules="repCodeRules" :error-messages="backendErrors.rep_code"/>
-            <v-text-field v-model="form.commission_percent" label="Commission (%)" type="number" :rules="commissionRules" :error-messages="backendErrors.commission_percent"/>
-            <v-text-field v-model="form.password" label="Password" type="password" autocomplete="new-password" :rules="passwordRules" :error-messages="backendErrors.password"/>
+            <v-text-field v-model="form.name" label="Name" :rules="nameRules" :error-messages="backendErrors.name" />
+            <v-text-field v-model="form.email" label="E-mail" :rules="emailRules"
+              :error-messages="backendErrors.email" />
+            <v-text-field v-model="form.mobile" label="Mobile" :rules="mobileRules"
+              :error-messages="backendErrors.mobile" />
+            <v-text-field v-model="form.rep_code" label="Rep Code" :rules="repCodeRules"
+              :error-messages="backendErrors.rep_code" />
+            <v-text-field v-model="form.commission_percent" label="Commission (%)" type="number"
+              :rules="commissionRules" :error-messages="backendErrors.commission_percent" />
+            <v-text-field v-model="form.password" label="Password" type="password" autocomplete="new-password"
+              :rules="passwordRules" :error-messages="backendErrors.password" />
           </v-card-text>
           <v-card-actions>
-            <v-spacer/>
-            <v-btn class="btn-32-text-12" type="submit" color="success" :disabled="!valid">
+            <v-spacer />
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" :disabled="!valid">
               {{ editMode ? 'Update' : 'Save' }}
             </v-btn>
           </v-card-actions>
@@ -88,9 +93,10 @@
           Are you sure?
         </v-card-text>
         <v-card-actions>
-          <v-spacer/>
-          <v-btn class="btn-32-text-12" text @click="deleteDialog=false">Cancel</v-btn>
-          <v-btn class="btn-32-text-12" text color="red" :loading="deleteLoading" :disabled="deleteLoading" @click="performDelete">
+          <v-spacer />
+          <v-btn class="btn-32-text-12" text @click="deleteDialog = false">Cancel</v-btn>
+          <v-btn class="btn-32-text-12" text color="red" :loading="deleteLoading" :disabled="deleteLoading"
+            @click="performDelete">
             Delete
           </v-btn>
         </v-card-actions>
@@ -103,107 +109,107 @@
 import axios from 'axios'
 
 export default {
-  data () {
+  data() {
     return {
-      ssearch : '',
-      reps    : [],
-      headers : [
-        { text:'Customer name',  value:'name' },
-        { text:'Email',         value:'email' },
-        { text:'Rep code',       value:'rep_code' },
-        { text:'Commission (%)', value:'commission_percent' },
-        { text:'Total commission', value:'total_commission' },
-        { text:'', value:'actions1', sortable:false ,width:90 },
-        { text:'', value:'actions2', sortable:false ,width:90 },
+      ssearch: '',
+      reps: [],
+      headers: [
+        { text: 'Customer name', value: 'name' },
+        { text: 'Email', value: 'email' },
+        { text: 'Rep code', value: 'rep_code' },
+        { text: 'Commission (%)', value: 'commission_percent' },
+        { text: 'Total commission', value: 'total_commission' },
+        { text: '', value: 'actions1', sortable: false },
+        { text: '', value: 'actions2', sortable: false },
       ],
 
-      dialog   : false,
-      editMode : false,
-      valid    : false,
+      dialog: false,
+      editMode: false,
+      valid: false,
 
-      form : {
-        rep_id            : null,
-        name              : '',
-        email             : '',
-        mobile            : '',
-        rep_code          : '',
+      form: {
+        rep_id: null,
+        name: '',
+        email: '',
+        mobile: '',
+        rep_code: '',
         commission_percent: '',
-        password          : ''
+        password: ''
       },
-      backendErrors : {},      
-      deleteDialog : false,
+      backendErrors: {},
+      deleteDialog: false,
       deleteLoading: false,
-      repToDelete  : null
+      repToDelete: null
     }
   },
-  mounted () { 
-    this.fetchReps() 
+  mounted() {
+    this.fetchReps()
   },
-  computed : {
-    nameRules () { 
-      return [v => !!v || 'Name is required'] 
+  computed: {
+    nameRules() {
+      return [v => !!v || 'Name is required']
     },
-    emailRules () {
+    emailRules() {
       return [
         v => !!v || 'E-mail is required',
         v => /.+@.+\..+/.test(v) || 'E-mail must be valid'
       ]
     },
-    mobileRules () {
-       return [
+    mobileRules() {
+      return [
         v => !!v || 'Mobile number is required',
         v => !isNaN(v) || 'Must be numeric',
         v => (v + '').length <= 15 || 'Maximum 15 digits'
       ]
     },
-    repCodeRules () { 
-      return [v => !!v || 'Rep Code is required'] 
+    repCodeRules() {
+      return [v => !!v || 'Rep Code is required']
     },
-    commissionRules () {
+    commissionRules() {
       return [
         v => !!v || 'Commission is required',
         v => !isNaN(v) || 'Must be a number',
         v => (v >= 0 && v <= 100) || '0 – 100 only'
       ]
     },
-    passwordRules () {
+    passwordRules() {
       return this.editMode
         ? [
-            v => (v === '' || v.length >= 6) || 'Minimum 6 characters'
-          ]
+          v => (v === '' || v.length >= 6) || 'Minimum 6 characters'
+        ]
         : [
-            v => !!v || 'Password is required',
-            v => v.length >= 6 || 'Minimum 6 characters'
-          ]
+          v => !!v || 'Password is required',
+          v => v.length >= 6 || 'Minimum 6 characters'
+        ]
     }
   },
-  methods : {
-    fetchReps () {
+  methods: {
+    fetchReps() {
       axios.get('/admin/reps/vlist')
         .then(res => { this.reps = res.data.reps ?? [] })
-        .catch(()  => this.$toast?.error('Failed to load reps'))
+        .catch(() => this.$toast?.error('Failed to load reps'))
     },
-    openDialog (item = null) {
-      this.backendErrors = {}        
+    openDialog(item = null) {
+      this.backendErrors = {}
 
       if (item) {
         this.editMode = true
-        this.form = { ...item, password:'' }
+        this.form = { ...item, password: '' }
       } else {
         this.editMode = false
         this.form = {
-          rep_id:null, name:'', email:'', mobile:'',
-          rep_code:'', commission_percent:'', password:''
+          rep_id: null, name: '', email: '', mobile: '',
+          rep_code: '', commission_percent: '', password: ''
         }
       }
       this.$nextTick(() => { this.dialog = true })
     },
-    saveRep () {
+    saveRep() {
       if (!this.$refs.repForm.validate()) return
 
-      const url  = this.editMode
-         ? `/admin/reps/${this.form.rep_id}/update`
-         : '/admin/reps/store'
+      const url = this.editMode
+        ? `/admin/reps/${this.form.rep_id}/update`
+        : '/admin/reps/store'
 
       const payload = { ...this.form }
       if (this.editMode && !payload.password) delete payload.password
@@ -225,24 +231,24 @@ export default {
           }
         })
     },
-    confirmDelete (item) {
-      this.repToDelete  = item
+    confirmDelete(item) {
+      this.repToDelete = item
       this.deleteDialog = true
     },
-    performDelete () {
+    performDelete() {
       if (!this.repToDelete) return
       this.deleteLoading = true
 
       axios.post('/admin/rep-delete', { rep_id: this.repToDelete.rep_id })
         .then(() => {
-           this.$toast.success('Rep deleted', { timeout:500 })
-           this.fetchReps()
+          this.$toast.success('Rep deleted', { timeout: 500 })
+          this.fetchReps()
         })
         .catch(() => this.$toast.error('Delete failed'))
         .finally(() => {
           this.deleteLoading = false
-          this.deleteDialog  = false
-          this.repToDelete   = null
+          this.deleteDialog = false
+          this.repToDelete = null
         })
     }
   }
@@ -250,4 +256,8 @@ export default {
 </script>
 
 <style>
+.v-data-table>.v-data-table__wrapper>table>thead>tr>th,
+.page-reps .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
+  height: 32px!important;
+}
 </style>

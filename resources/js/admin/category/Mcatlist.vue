@@ -1,5 +1,5 @@
 <template>
-    <div class="page-margin-20-40">
+    <div class="page-margin-20-40 page-cat">
         <v-container fluid class="pt-0">
             <v-row class="mt-0 pt-0">
                 <v-col cols="12" md="11" class="p-0">
@@ -89,7 +89,8 @@
                         <v-text-field v-model="defaultItem.mcat_name" :rules="mcategorynameRule" label="Category Name"/>
                     </v-card-text>
                     <v-card-actions>
-                        <v-btn class="btn-32-text-12" type="submit" color="success" small :disabled="!fsvalid || submitting">
+                        <v-spacer></v-spacer>
+                        <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!fsvalid || submitting">
                             {{ editedIndex === -1 ? 'Add' : 'Update' }}
                         </v-btn>
                     </v-card-actions>
@@ -136,13 +137,13 @@
                 mcats: [],
                 mainCategories: [],
                 mcatsHeaders: [
-                    { text: '', value: 'data-table-select', width: '10px' },
-                    { text: 'Category name', value: 'mcat_name', width: '300px' },
-                    { text: 'Main category name', value: 'mainmcat_name', width: '300px' },
-                    { text: 'Status', value: 'status', sortable: false, width: '150px' },
-                    { text: 'Action', value: 'actions1', sortable: false, width: '170px' },
-                    { text: 'Action', value: 'actions2', sortable: false, width: '170px' },
-                    { text: '', value: 'delete', sortable: false }
+                    { text: '', value: 'data-table-select' },
+                    { text: 'Category name', value: 'mcat_name' },
+                    { text: 'Main category name', value: 'mainmcat_name' },
+                    { text: 'Status', value: 'status', sortable: false },
+                    { text: 'Action', value: 'actions1', sortable: false },
+                    { text: 'Action', value: 'actions2', sortable: false },
+                    { text: '', value: 'delete', sortable: false, width: '130px' }
                 ],
                 addSdialog: false,
                 editedIndex: -1,
@@ -327,14 +328,9 @@
 .v-input {
   font-size: 12px !important;
 }
-.category-search .col-md-10 {
-    width: calc(100% - 140px)!important;
-    flex: 0 0 calc(100% - 140px)!important;
-    max-width: calc(100% - 140px)!important;
-}
-.category-search .col-md-2 {
-    width: 140px!important;
-    flex: 0 0 140px!important;
-    max-width: 140px!important;
+</style>
+<style>
+.page-cat .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
+  height: 32px!important;
 }
 </style>

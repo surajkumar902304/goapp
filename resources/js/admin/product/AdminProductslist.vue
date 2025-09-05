@@ -17,7 +17,7 @@
 
         <v-row class="mt-0 pt-0">
             <v-col cols="12" class="mt-2">
-                <v-card elevation="5">
+                <v-card elevation="5" style="background-color: transparent;">
                     <v-row class="align-center">
                         <v-col class="pt-0">
                             <v-tabs v-model="activeTab" active-class="grey lighten-3" height="30" class="text-none">
@@ -60,7 +60,7 @@
                         <template v-slot:top>
                             <v-row dense class="mx-1 pb-1">
                                 <v-col cols="12" md="6" class="pa-0 pr-3">
-                                    <v-text-field class="m-2" v-model="msearch" dense outlined clearable hide-details prepend-inner-icon="mdi-magnify mb-2" 
+                                    <v-text-field class="px-2 py-1" v-model="msearch" dense outlined clearable hide-details prepend-inner-icon="mdi-magnify mb-2" 
                                         placeholder="Search Product, Type, Brand"/>
                                 </v-col>
                                 <v-col cols="6" md="2" class="pa-0 pr-3">
@@ -234,13 +234,13 @@ export default {
             selectedBrand: null,
             selectedTags: [],
             mprosHeaders: [
-                { text: 'Image', value: 'mproduct_image', width: '100px', sortable: false },
-                { text: 'Product', value: 'mproduct_title', width: '30%'},
-                { text: 'Status', value: 'status', width: '150px', sortable: false },
-                { text: 'Inventory', value: 'minventory', width: '150px', sortable: false },
-                { text: 'Type', value: 'type_name', width: '150px', sortable: false },
-                { text: 'Brand', value: 'brand_name', width: '150px', sortable: false },
-                { text: 'Actions', value: 'actions', width: '150px', sortable: false }
+                { text: 'Image', value: 'mproduct_image', sortable: false },
+                { text: 'Product', value: 'mproduct_title'},
+                { text: 'Status', value: 'status', sortable: false },
+                { text: 'Inventory', value: 'minventory', sortable: false },
+                { text: 'Type', value: 'type_name', sortable: false },
+                { text: 'Brand', value: 'brand_name', sortable: false },
+                { text: 'Actions', value: 'actions', sortable: false }
             ],
             deleteDialog: false,
             productToDelete: null,
@@ -602,31 +602,39 @@ export default {
     margin-top: 4px !important;
 }
 
-.search-products > div:first-child {
-    width: calc(50% - 130px) !important;
-    flex: 0 0 calc(50% - 130px) !important;
-    max-width: calc(50% - 130px) !important;
-}
-
-.search-products > div:last-child {
-    width: 130px !important;
-    flex: 0 0 130px !important;
-    max-width: 130px !important;
-}
-
-.search-products > div:last-child a {
-    width: calc(100% - 10px);
-}
-
 /* Custom css for all page */
 thead tr th {
     background-color: #dbdbdb;
 }
 .page-margin-20-40{
-    margin: 20px 40px !important;
+    /* margin: 20px 40px !important; */
 }
 .btn-32-text-12{
     height: 32px !important;
     font-size: 12px !important;
+}
+.v-tabs .v-item-group {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    overflow: hidden;
+}
+.v-tabs .v-tabs-bar__content {
+    border-bottom: 1px solid #dbdbdb;
+}
+.mdi-checkbox-blank-outline::before,
+.v-data-table .v-icon.v-icon {
+    font-size: 20px;
+}
+.v-input--selection-controls__ripple {
+    height: 12px;
+    width: 12px;
+    left: 50%;
+    top: 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
+    border-radius: 0;
+}
+.mdi-checkbox-marked::before {
+    font-size: 20px;
 }
 </style>

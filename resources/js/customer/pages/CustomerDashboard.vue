@@ -57,6 +57,6 @@ export default {
 
 <style>
 thead tr th {
-    background-color: #b6b6b6;
+    background-color: #dbdbdb;
 }
 </style>

@@ -103,7 +103,8 @@
                 </v-card-text>
                 <v-card-actions>
                     <template v-if="editedIndex !== -1 || isImageSelected">
-                        <v-btn class="btn-32-text-12" type="submit" color="success" small :disabled="!fsvalid || submitting">
+                        <v-spacer></v-spacer>
+                        <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important;" small :disabled="!fsvalid || submitting">
                             {{ editedIndex === -1 ? 'Add' : 'Update' }}
                         </v-btn>
                     </template>
@@ -157,12 +158,12 @@ export default {
             ssearch: '',
             mbrands: [],
             mbrandsHeaders: [
-                { text: '', value: 'data-table-select', width: '10px' },
-                { text: 'Image', value: 'mbrand_image', sortable: false, width: '150px' },
+                { text: '', value: 'data-table-select' },
+                { text: 'Image', value: 'mbrand_image', sortable: false },
                 { text: 'Name', value: 'mbrand_name', width: '375px' },
-                { text: 'Action', value: 'actions1', sortable: false, width: '250px' },
-                { text: 'Action', value: 'actions2', sortable: false, width: '250px' },
-                { text: '', value: 'delete', sortable: false }
+                { text: 'Action', value: 'actions1', sortable: false },
+                { text: 'Action', value: 'actions2', sortable: false },
+                { text: '', value: 'delete', sortable: false, width: '130px' }
             ],
             addSdialog: false,
             editedIndex: -1,

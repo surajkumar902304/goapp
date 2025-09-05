@@ -1,13 +1,13 @@
 <template>
-  <div v-if="order" class="page-margin-20-40">
+  <div v-if="order" style="margin: 20px 60px !important;">
     <v-row class="mb-2 align-center justify-space-between">
       <v-col cols="12" md="6">
         <div class="d-flex align-center">
-          <v-btn class="btn-32-text-12 mr-2" :loading="backLoading" :disabled="backLoading" small elevation="0" @click="navigateBack">
+          <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" class="btn-32-text-12 mr-2" :loading="backLoading" :disabled="backLoading" small elevation="0" @click="navigateBack">
             <template #loader>
               <v-progress-circular indeterminate size="16" color="white" />
             </template>
-            <v-icon v-if="!backLoading" small>mdi-arrow-left</v-icon>
+            <v-icon v-if="!backLoading" small style="font-size: 18px !important;">mdi-arrow-left</v-icon>
           </v-btn>
 
           <h3 class="text-h6 font-weight-bold mb-0 mr-2">#TR00{{ order.order_id }}</h3>
@@ -29,11 +29,11 @@
           Refund
         </v-btn> -->
 
-        <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled'" class="btn-32-text-12 ml-1" small outlined color="red" @click="dialogCancel = true">
+        <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled'" class="btn-32-text-12 ml-1" small outlined style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" @click="dialogCancel = true">
           Cancel
         </v-btn>
 
-        <v-btn class="btn-32-text-12 ml-1" small outlined @click="printPackingSlip">
+        <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" class="btn-32-text-12 ml-1" small outlined @click="printPackingSlip">
           Print Packing Slip
         </v-btn>
       </v-col>
@@ -81,7 +81,7 @@
           </v-list>
 
           <v-card-actions class="justify-end">
-            <v-btn class="btn-32-text-12" color="primary" small @click="openFulfilDialog">
+            <v-btn class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small @click="openFulfilDialog">
               Fulfill Item
             </v-btn>
           </v-card-actions>
@@ -140,7 +140,7 @@
           </v-list>
 
           <v-card-actions class="justify-end">
-            <v-btn v-if="!f.tracking_id" class="btn-32-text-12" color="success" small @click="openTrackingDialog(f)">
+            <v-btn v-if="!f.tracking_id" class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small @click="openTrackingDialog(f)">
               + Add Tracking
             </v-btn>
           </v-card-actions>
@@ -203,11 +203,11 @@
           </v-simple-table>
 
           <v-card-actions class="justify-end">
-            <v-btn class="btn-32-text-12 mr-2" small outlined :loading="loadingInvoice" :disabled="loadingInvoice" @click="sendInvoice">
+            <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" class="btn-32-text-12 mr-2" small outlined :loading="loadingInvoice" :disabled="loadingInvoice" @click="sendInvoice">
               Send Invoice
             </v-btn>
 
-            <v-btn class="btn-32-text-12" v-if="order.payment_status.toLowerCase() !== 'paid'" small color="success" :loading="loadingPaid" :disabled="loadingPaid" 
+            <v-btn style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" class="btn-32-text-12" v-if="order.payment_status.toLowerCase() !== 'paid'" small :loading="loadingPaid" :disabled="loadingPaid" 
               @click="markAsPaid">
               <template #loader>
                 <v-progress-circular indeterminate size="16" color="white" />

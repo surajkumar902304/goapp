@@ -1,12 +1,16 @@
 <template>
   <div class="page-margin-20-40">
-    <v-row>
-      <h2 class="text-h6 mb-1">Customers</h2>
-    </v-row>
+    <v-container fluid class="pt-0">
+      <v-row class="mt-0 pt-0">
+        <v-col cols="12" md="10" class="p-0">
+          <h2 class="text-h6 mb-1">Customers</h2>
+        </v-col>
+      </v-row>
+    </v-container>
 
-    <v-row>
-      <v-col cols="12" class="mb-4">
-        <v-card elevation="5">
+    <v-row class="mt-0 pt-0">
+      <v-col cols="12" class="mt-2">
+        <v-card elevation="5" style="background-color: transparent;">
           <v-row class="align-center">
             <v-col class="pt-0">
               <v-tabs v-model="activeTab" active-class="grey lighten-3" height="30">
@@ -45,7 +49,7 @@
           <v-data-table dense v-model="selected" show-select item-key="id" :items="filteredUsers" :headers="userHeaders" :search="ssearch"
             :footer-props="{ 'items-per-page-options':[10,25,50,100], 'items-per-page-text':'Rows per page:'}">
             <template v-slot:top>
-              <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" 
+              <v-text-field v-model="ssearch" class="px-2 py-1" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" 
                 placeholder="Search Name, Email, Spend"/>
             </template>
             <template #item.wallet="{ item }">
