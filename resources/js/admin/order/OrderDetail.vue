@@ -15,13 +15,13 @@
 
           <h3 class="text-h6 font-weight-bold mb-0 mr-2">#TR00{{ order.order_id }}</h3>
 
-          <v-chip small class="ma-1" :color="order.payment_status.toLowerCase() === 'paid' ? '#e0e0e0' : '#ffd6a4'" text-color="black">
+          <v-chip small class="ma-1" :color="order.payment_status.toLowerCase() === 'paid' ? '#e0e0e0' : '#ffd6a4'"
+            text-color="black">
             {{ order.payment_status }}
           </v-chip>
 
           <v-chip small class="ma-1"
-            :color="order.fulfillment_status.toLowerCase() === 'fulfilled' ? '#e0e0e0' : '#ffeb78'"
-            text-color="black">
+            :color="order.fulfillment_status.toLowerCase() === 'fulfilled' ? '#e0e0e0' : '#ffeb78'" text-color="black">
             {{ order.fulfillment_status }}
           </v-chip>
         </div>
@@ -56,19 +56,24 @@
           <v-row class="m-0">
             <v-col cols="12" md="6">
               <v-card-title class="py-2 pb-0">
-                <div class="subtitle-2 font-weight-bold"><span style="background-color: #ffeb78; font-size: 14px; font-weight: 700;" class="rounded-pill px-2 py-1">Unfulfilled ({{ unfulfilledItems.length }})</span></div>
+                <div class="subtitle-2 font-weight-bold">
+                  <span class="rounded-pill px-2 py-1" style="background-color:#ffeb78;font-size:14px;font-weight:700;">
+                    Unfulfilled ({{ unfulfilledItems.length }})
+                  </span>
+                </div>
               </v-card-title>
             </v-col>
             <v-col cols="12" md="6">
               <v-card-actions class="justify-end">
-
+                <!-- optional actions area -->
               </v-card-actions>
             </v-col>
           </v-row>
+
           <div class="list-wrap px-3">
             <div class="list-container border border-1 rounded-2 overflow-hidden">
               <v-list one-line class="p-0">
-                <v-list-item v-for="item in unfulfilledItems" :key="item.order_item_id" class="py-2">
+                <v-list-item v-for="item in visibleUnfulfilledItems" :key="item.order_item_id" class="py-2">
                   <v-list-item-avatar size="50">
                     <v-img :src="imgSrc(item.variant?.image, item.product?.mproduct_image)" contain />
                   </v-list-item-avatar>
@@ -77,12 +82,21 @@
                     <v-col cols="6">
                       <strong>{{ item.product.mproduct_title }}</strong>
                       <div class="caption" v-if="item.variant?.option_value">
-                        <div v-for="(val, key) in item.variant.option_value" :key="key"><span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1"><span class="fw-bold">{{ key }}</span>: {{ val }}</span></div>
+                        <div v-for="(val, key) in item.variant.option_value" :key="key">
+                          <span class="rounded-pill px-2 py-1 lh-1 mb-1"
+                            style="background-color:#eee;font-size:12px;font-weight:500;display:inline-block;">
+                            <span class="fw-bold">{{ key }}</span>: {{ val }}
+                          </span>
+                        </div>
                       </div>
                     </v-col>
 
                     <v-col cols="3" class="text-right">
-                      £{{ item.variant.price | money }} × <span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1">{{ item.quantity - (item.fulfilled_quantity || 0) }}</span>
+                      £{{ item.variant.price | money }} ×
+                      <span class="rounded-pill px-2 py-1 lh-1 mb-1"
+                        style="background-color:#eee;font-size:12px;font-weight:500;display:inline-block;">
+                        {{ item.quantity - (item.fulfilled_quantity || 0) }}
+                      </span>
                     </v-col>
 
                     <v-col cols="3" class="text-right font-weight-medium">
@@ -93,14 +107,22 @@
               </v-list>
             </div>
           </div>
-          <v-card-actions class="justify-end">
-            <v-btn class="btn-32-text-12 me-2"
-              style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small
+
+          <v-card-actions class="px-4">
+            <v-spacer />
+            <v-btn v-if="unfulfilledItems.length > 3" small text class="btn-32-text-12 me-2"
+              @click="showAllUnfulfilled = !showAllUnfulfilled">
+              {{ showAllUnfulfilled ? 'Show less' : `Show ${hiddenUnfulfilledCount} more` }}
+            </v-btn>
+            <v-spacer />
+            <v-btn class="btn-32-text-12 me-2" small
+              style="color:#1976d2;background-color:white !important;border:1px solid #1976d2 !important;"
               @click="openFulfilDialog">
               Fulfill Item
             </v-btn>
           </v-card-actions>
         </v-card>
+
 
         <v-card v-for="f in (order.fulfillments || [])" :key="f.order_fulfillment_id" elevation="5"
           class="mb-4 mt-4 rounded-3">
@@ -133,37 +155,53 @@
 
           <div class="list-wrap px-3">
             <div class="list-container border border-1 rounded-2 overflow-hidden">
-          <v-list dense class="p-0">
-            <v-list-item v-for="itm in f.items" :key="f.order_fulfillment_id + '-' + itm.order_item_id" class="py-2">
-              <v-list-item-avatar size="50">
-                <v-img :src="imgSrc(itm.variant?.image, itm.product?.mproduct_image)" contain />
-              </v-list-item-avatar>
+              <v-list dense class="p-0">
+                <v-list-item v-for="itm in visibleFulfilledItems(f)" :key="f.order_fulfillment_id + '-' + itm.order_item_id"
+                  class="py-2">
+                  <v-list-item-avatar size="50">
+                    <v-img :src="imgSrc(itm.variant?.image, itm.product?.mproduct_image)" contain />
+                  </v-list-item-avatar>
 
-              <v-row no-gutters align="center" class="w-100">
-                <v-col cols="6">
-                  <strong>{{ itm.product.mproduct_title }}</strong>
-                  <div class="caption" v-if="itm.variant?.option_value">
-                    <div v-for="(val, key) in itm.variant.option_value" :key="key">
-                      <span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1"><span class="fw-bold">{{ key }}</span>: {{ val }}</span>
-                    </div>
-                  </div>
-                </v-col>
+                  <v-row no-gutters align="center" class="w-100">
+                    <v-col cols="6">
+                      <strong>{{ itm.product.mproduct_title }}</strong>
+                      <div class="caption" v-if="itm.variant?.option_value">
+                        <div v-for="(val, key) in itm.variant.option_value" :key="key">
+                          <span
+                            style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;"
+                            class="rounded-pill px-2 py-1 lh-1 mb-1"><span class="fw-bold">{{ key }}</span>: {{ val
+                            }}</span>
+                        </div>
+                      </div>
+                    </v-col>
 
-                <v-col cols="3" class="text-right">
-                  £{{ itm.variant.price | money }} × <span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;" class="rounded-pill px-2 py-1 lh-1 mb-1">{{ itm.quantity }}</span>
-                </v-col>
+                    <v-col cols="3" class="text-right">
+                      £{{ itm.variant.price | money }} × <span
+                        style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;"
+                        class="rounded-pill px-2 py-1 lh-1 mb-1">{{ itm.quantity }}</span>
+                    </v-col>
 
-                <v-col cols="3" class="text-right font-weight-medium">
-                  £{{ (itm.variant.price * itm.quantity).toFixed(2) }}
-                </v-col>
-              </v-row>
-            </v-list-item>
-          </v-list>
+                    <v-col cols="3" class="text-right font-weight-medium">
+                      £{{ (itm.variant.price * itm.quantity).toFixed(2) }}
+                    </v-col>
+                  </v-row>
+                </v-list-item>
+              </v-list>
+            </div>
           </div>
-          </div>
-          <v-card-actions class="justify-end">
-            <v-btn class="btn-32-text-12 me-2"
-              style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" small
+          <v-card-actions class="px-4">
+            <v-spacer />
+            <v-btn
+              v-if="(f.items || []).length > 3"
+              small text class="btn-32-text-12 me-2"
+              @click="toggleFulfillment(f.order_fulfillment_id)"
+            >
+              {{ isFulfillmentExpanded(f.order_fulfillment_id)
+                  ? 'Show less'
+                  : `Show ${hiddenFulfilledCount(f)} more` }}
+            </v-btn>
+            <v-spacer />
+            <v-btn v-if="!f.tracking_id" class="btn-32-text-12 me-2" style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" small
               @click="openTrackingDialog(f)">
               + Add Tracking
             </v-btn>
@@ -341,8 +379,7 @@
           <v-spacer />
           <v-btn class="btn-32-text-12" text @click="trackingDialog = false">Close</v-btn>
           <!-- <v-btn class="btn-32-text-12" color="primary" :loading="loadingTracking" :disabled="loadingTracking" @click="saveTracking"> -->
-          <v-btn class="btn-32-text-12" color="primary" :loading="loadingTracking" :disabled="true"
-            @click="saveTracking">
+          <v-btn class="btn-32-text-12" color="primary" :loading="loadingTracking" :disabled="true" @click="saveTracking">
             <template #loader>
               <v-progress-circular indeterminate size="16" color="white" />
             </template>
@@ -408,6 +445,9 @@ export default {
       dialogCancel: false,
       loadingCancel: false,
       dialogRefund: false,
+
+      showAllUnfulfilled: false,
+      expandedFulfillments: {},
     }
   },
 
@@ -417,6 +457,12 @@ export default {
       return this.order.items.filter(i =>
         (i.fulfilled_quantity ?? 0) < (i.quantity ?? 0)
       )
+    },
+    visibleUnfulfilledItems() {
+      return this.showAllUnfulfilled ? this.unfulfilledItems : this.unfulfilledItems.slice(0, 3)
+    },
+    hiddenUnfulfilledCount() {
+      return Math.max(this.unfulfilledItems.length - 3, 0)
     },
     totalDiscount() {
       const s = this.order?.summary || {}
@@ -606,6 +652,21 @@ export default {
         this.loadingInvoice = false
       }
     },
+    isFulfillmentExpanded(id) {
+      return !!this.expandedFulfillments[id];
+    },
+    toggleFulfillment(id) {
+      this.$set(this.expandedFulfillments, id, !this.isFulfillmentExpanded(id));
+    },
+    visibleFulfilledItems(f) {
+      const expanded = this.isFulfillmentExpanded(f.order_fulfillment_id);
+      const items = f.items || [];
+      return expanded ? items : items.slice(0, 3);
+    },
+    hiddenFulfilledCount(f) {
+      const len = (f.items || []).length;
+      return Math.max(len - 3, 0);
+    },
 
     printPackingSlip() {
       const url = `/admin/order/packing-slip/${this.order.order_id}`
@@ -629,7 +690,8 @@ export default {
   border-radius: 10px;
   padding-right: 15px;
 }
-.list-wrap .v-list-item + .v-list-item {
+
+.list-wrap .v-list-item+.v-list-item {
   border-top: 1px solid #dee2e6;
 }
 </style>
