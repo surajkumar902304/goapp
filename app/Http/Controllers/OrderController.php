@@ -173,7 +173,7 @@ class OrderController extends Controller
         }
         return response()->json([
             'success' => true,
-            'updated_count'  => $updatedCount,
+            'updated_count' => $updatedCount,
             'credited_count' => $creditedCount,
         ]);
     }
@@ -531,6 +531,42 @@ class OrderController extends Controller
         return view('admin.orders.packing-slip', compact('order'));
     }
 
+    public function bulkPackingSlips(Request $request)
+    {
+        // order_ids: [14,15,16,...]  (array या CSV दोनों चलेंगे)
+        $ids = $request->input('order_ids', []);
+        if (is_string($ids)) {
+            $ids = array_filter(array_map('intval', explode(',', $ids)));
+        } else {
+            $ids = array_filter(array_map('intval', (array) $ids));
+        }
+
+        $request->validate([
+            'order_ids' => ['required'],
+            // अगर strict चाहिए तो: 'order_ids.*' => 'integer|exists:orders,order_id'
+        ]);
+
+        $orders = Order::with([
+            'user',
+            'userCompanyAddress',
+            'items.variant.product',
+            'items.variant.details',
+            'fulfillments' => function ($q) {
+                $q->orderBy('fulfilled_at', 'asc');
+            },
+            'fulfillments.items.orderItem.variant.product',
+            'fulfillments.items.orderItem.variant.details',
+        ])
+            ->whereIn('order_id', $ids)
+            ->orderBy('order_id', 'asc')
+            ->get();
+
+        if ($orders->isEmpty()) {
+            abort(404, 'No orders found for given IDs.');
+        }
+
+        return view('admin.orders.bulk-packing-slip', compact('orders'));
+    }
 
     public function fulfill(Request $req)
     {

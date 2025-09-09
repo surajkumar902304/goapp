@@ -42,6 +42,9 @@
                   <v-list-item @click="openConfirmDialog('markUnfulfilled')">
                     <v-list-item-title>Mark as Unfulfilled</v-list-item-title>
                   </v-list-item>
+                  <v-list-item @click="openPrintConfirmDialog = true">
+                    <v-list-item-title>Print</v-list-item-title>
+                  </v-list-item>
                 </v-list>
               </v-menu>
             </v-col>
@@ -114,6 +117,22 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog v-model="openPrintConfirmDialog" max-width="400">
+      <v-card elevation="5">
+        <v-card-title class="text-h6">Confirm {{ actionLabel }}</v-card-title>
+        <v-card-text>
+          Are you sure you want to <strong>Print</strong>
+          <strong>{{ selected.length }}</strong> selected orders?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn class="btn-32-text-12" text color="grey" @click="openPrintConfirmDialog = false">Cancel</v-btn>
+          <v-btn class="btn-32-text-12" text color="red" :loading="loadingBulk" :disabled="loadingBulk"
+            @click="executePrintAction">Yes</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -134,6 +153,8 @@ export default {
       confirmDialog: false,
       loadingBulk: false,
       actionLabel: '',
+
+      openPrintConfirmDialog: false
     };
   },
   computed: {
@@ -230,7 +251,8 @@ export default {
         markPaid: 'Mark as Paid',
         markCancle: 'Mark as Cancle',
         markFulfilled: 'Mark as Fulfilled',
-        markUnfulfilled: 'Mark as Unfulfilled'
+        markUnfulfilled: 'Mark as Unfulfilled',
+        print: 'print'
       }[action] || '';
       this.confirmDialog = true;
     },
@@ -275,6 +297,26 @@ export default {
         this.loadingBulk = false;
       }
     },
+    async executePrintAction() {
+      this.loadingBulk = true;
+      try {
+        const base = '/admin/orders-bulk/packing-slips';
+        const ids = this.selected.map(r => r.order_id);
+
+        const qs = new URLSearchParams();
+        ids.forEach(id => qs.append('order_ids[]', id));
+
+        window.open(`${base}?${qs.toString()}`, '_blank');
+        this.$toast?.success('Opening print view...', { timeout: 800 });
+      } catch (err) {
+        this.$toast?.error('Failed to open print view', { timeout: 800 });
+      } finally {
+        this.openPrintConfirmDialog = false;
+        this.selected = [];
+        this.loadingBulk = false;
+      }
+    }
+
   },
 };
 </script>
