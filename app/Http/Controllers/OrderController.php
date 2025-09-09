@@ -6,6 +6,7 @@ use App\Models\DeliveryMethod;
 use App\Models\OrderFulfillment;
 use App\Models\OrderFulfillmentItem;
 use App\Models\OrderItem;
+use App\Models\ProductVat;
 use App\Models\Setting;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
@@ -289,6 +290,8 @@ class OrderController extends Controller
             'fulfillments.items.orderItem.variant.mvariantDetail',
         ])->find($orderid);
 
+        $vatPercent = ProductVat::first();
+
         if (!$order) {
             return response()->json(['status' => false, 'message' => 'Order not found'], 404);
         }
@@ -426,10 +429,11 @@ class OrderController extends Controller
                 'subtotal' => $order->product_total_amount,
                 'wallet_discount' => $walletDiscount,
                 'coupon_discount' => $couponDiscount,
-                'delivery_cost' => $deliveryCost,
-                'vat' => $order->vat,
-                'payment_total' => $order->total_amount,
-                'total_paid' => $order->total_paid,
+                'delivery_cost'   => $deliveryCost,
+                'vat'             => $order->vat,
+                'vat_percent'     => $vatPercent,
+                'payment_total'   => $order->total_amount,
+                'total_paid'      => $order->total_paid,
             ],
 
             'items' => $items,
@@ -533,7 +537,6 @@ class OrderController extends Controller
 
     public function bulkPackingSlips(Request $request)
     {
-        // order_ids: [14,15,16,...]  (array या CSV दोनों चलेंगे)
         $ids = $request->input('order_ids', []);
         if (is_string($ids)) {
             $ids = array_filter(array_map('intval', explode(',', $ids)));
@@ -543,7 +546,6 @@ class OrderController extends Controller
 
         $request->validate([
             'order_ids' => ['required'],
-            // अगर strict चाहिए तो: 'order_ids.*' => 'integer|exists:orders,order_id'
         ]);
 
         $orders = Order::with([

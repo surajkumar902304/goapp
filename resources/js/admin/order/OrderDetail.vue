@@ -225,7 +225,7 @@
                   </tr>
                   <tr>
                     <td>Vat</td>
-                    <td></td>
+                    <td class="text-right">{{ order.summary.vat_percent.product_vat }}%</td>
                     <td class="text-right">£{{ order.summary.vat | money }}</td>
                   </tr>
                   <tr>
