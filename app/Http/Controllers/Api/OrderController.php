@@ -332,7 +332,7 @@ class OrderController extends Controller
 
             $order->load(['items', 'user:id,name,email']);
 
-            Mail::to($order->user->email)->queue(new OrderPlacedMail($order));
+            Mail::to($order->user->email)->send(new OrderPlacedMail($order));
 
             return response()->json([
                 'status' => true,
