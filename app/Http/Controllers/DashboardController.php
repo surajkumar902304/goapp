@@ -12,7 +12,7 @@ class DashboardController extends Controller
     {
         $totalUsers = User::count();
         $totalOrders = Order::count();
-        $revenue = Order::sum('total_paid');
+        $revenue = Order::sum('total_amount');
         return response()->json([
             'status' => true,
             'total_users' => $totalUsers,
