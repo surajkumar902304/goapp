@@ -612,6 +612,7 @@ thead tr th {
 .btn-32-text-12{
     height: 26px !important;
     font-size: 12px !important;
+    font-weight: 700 !important;
 }
 .v-tabs .v-item-group {
     border-top-left-radius: 5px;

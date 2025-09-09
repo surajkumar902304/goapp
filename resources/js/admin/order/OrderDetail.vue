@@ -378,8 +378,8 @@
         <v-card-actions>
           <v-spacer />
           <v-btn class="btn-32-text-12" text @click="trackingDialog = false">Close</v-btn>
-          <!-- <v-btn class="btn-32-text-12" color="primary" :loading="loadingTracking" :disabled="loadingTracking" @click="saveTracking"> -->
-          <v-btn class="btn-32-text-12" color="primary" :loading="loadingTracking" :disabled="true" @click="saveTracking">
+          <!-- <v-btn class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="loadingTracking" :disabled="loadingTracking" @click="saveTracking"> -->
+          <v-btn class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="loadingTracking" :disabled="true" @click="saveTracking">
             <template #loader>
               <v-progress-circular indeterminate size="16" color="white" />
             </template>

@@ -35,19 +35,19 @@ class OrderController extends Controller
             'deliveryMethod',
             'coupon'
         ])->where('user_id', auth()->id())
-        ->orderBy('created_at', 'desc');
+            ->orderBy('created_at', 'desc');
 
         $paginator = $query->paginate($perPage);
 
-        $payload = $paginator->getCollection()->map(function($order) {
+        $payload = $paginator->getCollection()->map(function ($order) {
             $units = $order->items->sum('quantity');
-            $skus  = $order->items->count();
+            $skus = $order->items->count();
 
             $walletDiscount = $order->wallet_discount ?? 0;
             $couponDiscount = $order->coupon_discount ?? 0;
 
             $delivery = $order->deliveryMethod;
-            $address  = $order->userCompanyAddress;
+            $address = $order->userCompanyAddress;
 
             $freeDeliveryLimit = Setting::where('key', 'min_order_free_delivery')->value('value') ?? 0;
             $deliveryCost = '0';
@@ -56,75 +56,75 @@ class OrderController extends Controller
                 $deliveryCost = DeliveryMethod::where('delivery_method_id', $delivery->delivery_method_id)->value('delivery_method_amount') ?? 0;
             }
 
-            $items = $order->items->map(function($itm) {
+            $items = $order->items->map(function ($itm) {
                 $variant = $itm->variant;
                 $product = $variant->product;
 
-                $opts = $variant->mvariantDetail->options        ?? null;
-                $vals = $variant->mvariantDetail->option_value   ?? null;
+                $opts = $variant->mvariantDetail->options ?? null;
+                $vals = $variant->mvariantDetail->option_value ?? null;
                 $opts = is_string($opts) ? json_decode($opts, true) : $opts;
                 $vals = is_string($vals) ? json_decode($vals, true) : $vals;
 
                 return [
                     'order_item_id' => $itm->order_item_id,
-                    'mvariant_id'   => $variant->mvariant_id,
-                    'quantity'      => $itm->quantity,
-                    'unit_price'    => (float) $itm->unit_price,
-                    'variant'       => [
-                        'sku'           => $variant->sku,
-                        'image'         => $variant->mvariant_image,
-                        'price'         => (float) $variant->price,
+                    'mvariant_id' => $variant->mvariant_id,
+                    'quantity' => $itm->quantity,
+                    'unit_price' => (float) $itm->unit_price,
+                    'variant' => [
+                        'sku' => $variant->sku,
+                        'image' => $variant->mvariant_image,
+                        'price' => (float) $variant->price,
                         'compare_price' => (float) $variant->compare_price,
-                        'cost_price'    => (float) $variant->cost_price,
-                        'options'       => $opts,
-                        'option_value'  => $vals,
+                        'cost_price' => (float) $variant->cost_price,
+                        'options' => $opts,
+                        'option_value' => $vals,
                     ],
-                    'product'       => [
-                        'mproduct_id'    => $product->mproduct_id,
+                    'product' => [
+                        'mproduct_id' => $product->mproduct_id,
                         'mproduct_title' => $product->mproduct_title,
-                        'mproduct_slug'  => $product->mproduct_slug,
+                        'mproduct_slug' => $product->mproduct_slug,
                         'mproduct_image' => $product->mproduct_image,
                     ],
                 ];
             });
 
             return [
-                'order_id'   => $order->order_id,
-                'user'       => [
-                    'id'    => $order->user->id,
-                    'name'  => $order->user->name,
+                'order_id' => $order->order_id,
+                'user' => [
+                    'id' => $order->user->id,
+                    'name' => $order->user->name,
                     'email' => $order->user->email,
                 ],
-                'order_date'           => $order->created_at->toDateTimeString(),
-                'units'                => $units,
-                'payment_status'       => $order->status,
-                'fulfillment_status'   => $order->fulfillment_status,
-                'skus'                 => $skus,
-                'delivery'             => [
-                    'method_id'  => $delivery->delivery_method_id   ?? null,
-                    'method'     => $delivery->delivery_method_name ?? null,
+                'order_date' => $order->created_at->toDateTimeString(),
+                'units' => $units,
+                'payment_status' => $order->status,
+                'fulfillment_status' => $order->fulfillment_status,
+                'skus' => $skus,
+                'delivery' => [
+                    'method_id' => $delivery->delivery_method_id ?? null,
+                    'method' => $delivery->delivery_method_name ?? null,
                     'address_id' => $address->user_company_address_id ?? null,
-                    'address'    => $address->full_address          ?? null,
+                    'address' => $address->full_address ?? null,
                 ],
                 'coupon' => $order->coupon ? [
-                    'coupon_id'      => $order->coupon->coupon_id,
-                    'code'           => $order->coupon->code,
-                    'discount_type'  => $order->coupon->discount_type,
+                    'coupon_id' => $order->coupon->coupon_id,
+                    'code' => $order->coupon->code,
+                    'discount_type' => $order->coupon->discount_type,
                     'discount_value' => $order->coupon->discount_value,
-                    'expires_at'     => $order->coupon->expires_at,
-                    'usage_limit'    => $order->coupon->usage_limit,
+                    'expires_at' => $order->coupon->expires_at,
+                    'usage_limit' => $order->coupon->usage_limit,
                     'per_user_limit' => $order->coupon->per_user_limit,
                     'min_cart_value' => $order->coupon->min_cart_value,
                 ] : null,
                 'delivery_instructions' => $order->delivery_instructions,
-                'summary'   => [
-                    'subtotal'        => $order->product_total_amount, 
-                    'wallet_discount' => $walletDiscount, 
-                    'coupon_discount' => $couponDiscount, 
-                    'delivery_cost'   => $deliveryCost, 
-                    'vat'             => $order->vat, 
-                    'payment_total'   => $order->total_amount, 
-                    'total_paid'      => $order->total_paid, 
+                'summary' => [
+                    'subtotal' => $order->product_total_amount,
+                    'wallet_discount' => $walletDiscount,
+                    'coupon_discount' => $couponDiscount,
+                    'delivery_cost' => $deliveryCost,
+                    'vat' => $order->vat,
+                    'payment_total' => $order->total_amount,
+                    'total_paid' => $order->total_paid,
                 ],
                 'items' => $items,
             ];
@@ -133,17 +133,17 @@ class OrderController extends Controller
         $paginator->setCollection($payload);
 
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => 'Fetch all Orders Successfully',
-            'cdnURL'     => config('cdn.url'),
-            'orders'  => $paginator->items(),      
-            'meta'    => [
+            'cdnURL' => config('cdn.url'),
+            'orders' => $paginator->items(),
+            'meta' => [
                 'current_page' => $paginator->currentPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-                'last_page'    => $paginator->lastPage(),
-                'from'         => $paginator->firstItem(),
-                'to'           => $paginator->lastItem(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+                'from' => $paginator->firstItem(),
+                'to' => $paginator->lastItem(),
             ],
         ], 200);
     }
@@ -153,24 +153,22 @@ class OrderController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'wallet_discount'           => ['nullable', 'numeric'],
-            'coupon_discount'           => ['nullable', 'numeric'],
-            'user_company_address_id'   => ['required', 'integer', 'exists:user_company_addresses,user_company_address_id'],
-            'delivery_method_id'        => ['required', 'integer', 'exists:delivery_methods,delivery_method_id'],
-            'delivery_instructions'     => ['nullable', 'string'],
-            'coupon_id'                 => ['nullable','string','regex:/^\d+$/'],
-
+            'wallet_discount' => ['nullable', 'numeric'],
+            'coupon_discount' => ['nullable', 'numeric'],
+            'user_company_address_id' => ['required', 'integer', 'exists:user_company_addresses,user_company_address_id'],
+            'delivery_method_id' => ['required', 'integer', 'exists:delivery_methods,delivery_method_id'],
+            'delivery_instructions' => ['nullable', 'string'],
+            'coupon_id' => ['nullable', 'string', 'regex:/^\d+$/'],
+            'pay_by_bank' => ['boolean'], 
         ]);
-            $couponId = $validated['coupon_id'] ?? null;
-            if ($couponId === '') {
-                $couponId = null;
-            }
+
+        $couponId = trim($validated['coupon_id'] ?? '') ?: null;
 
         DB::beginTransaction();
 
         try {
             $cartItems = Cart_item::where('user_id', $user->id)
-                ->with('mvariant') 
+                ->with('mvariant')
                 ->get();
 
             if ($cartItems->isEmpty()) {
@@ -180,87 +178,117 @@ class OrderController extends Controller
                 ], 422);
             }
 
-            $productTotal = 0;
-            $totalvat = 0;
+            $productTotal = 0.0;
+            $totalvat = 0.0;
 
             foreach ($cartItems as $cart) {
-                $quantity = $cart->quantity;
-                $unit_price = $cart->mvariant->price;
-                $vatAmount = 0;
+                $quantity = (int) $cart->quantity;
+                $unit_price = (float) $cart->mvariant->price;
+                $vatAmount = 0.0;
 
-                if ($cart->mvariant->taxable == 1) {
-                    $vatAmountsum = $unit_price * 0.20;
-                    $vatAmount += $vatAmountsum;
+                if ((int) $cart->mvariant->taxable === 1) {
+                    $vatAmount = $unit_price * 0.20; 
                 }
 
-                $lineSubtotal = $unit_price * $quantity;
-                $productTotal += $lineSubtotal;
+                $productTotal += $unit_price * $quantity;
                 $totalvat += $vatAmount * $quantity;
             }
 
-            $freeDeliveryLimit = Setting::where('key', 'min_order_free_delivery')->value('value') ?? 0;
-            $deliveryCharge = 0;
+            $freeDeliveryLimit = (float) (Setting::where('key', 'min_order_free_delivery')->value('value') ?? 0);
+            $deliveryCharge = 0.0;
 
             if ($productTotal < $freeDeliveryLimit) {
-                $deliveryCharge = DeliveryMethod::where('delivery_method_id', $validated['delivery_method_id'])->value('delivery_method_amount') ?? 0;
+                $deliveryCharge = (float) (DeliveryMethod::where('delivery_method_id', $validated['delivery_method_id'])
+                    ->value('delivery_method_amount') ?? 0);
             }
 
-            $wallet_discount = $validated['wallet_discount'] ?? 0;
-            $coupon_discount = $validated['coupon_discount'] ?? 0;
+            $wallet_discount = (float) ($validated['wallet_discount'] ?? 0);
+            $coupon_discount = (float) ($validated['coupon_discount'] ?? 0);
 
-            $finalTotal = $productTotal + $totalvat + $deliveryCharge - $wallet_discount - $coupon_discount;
-            $totalPaid = $productTotal + $totalvat + $deliveryCharge - $coupon_discount;
+            $grossTotal = $productTotal + $totalvat + $deliveryCharge;             
+            $amountBeforeWallet = max(0, $grossTotal - $coupon_discount);                 
+            $amountDueAfterWallet = max(0, $amountBeforeWallet - $wallet_discount);       
 
-            $wallet = Wallet::where('user_id', $user->id)->first();
+            $wallet = Wallet::lockForUpdate()->firstOrCreate(
+                ['user_id' => $user->id],
+                ['balance' => 0]
+            );
 
             if ($wallet_discount > $wallet->balance) {
+                DB::rollBack();
                 return response()->json(['status' => false, 'message' => 'Insufficient wallet balance'], 400);
             }
 
-            if ($wallet && $wallet_discount > 0) {
-                $wallet->balance =  $wallet->balance - $wallet_discount;
-                $wallet->save();
+            if ($wallet_discount > 0) {
+                $wallet->decrement('balance', $wallet_discount);
 
                 WalletTransaction::create([
-                    'wallet_id'   => $wallet->wallet_id,
-                    'type'        => 'debit',
-                    'amount'      => $wallet_discount,
-                    'reference'   => 'ORDER-' . uniqid(), 
+                    'wallet_id' => $wallet->wallet_id, 
+                    'type' => 'debit',
+                    'amount' => $wallet_discount,
+                    'reference' => 'ORDER-' . uniqid(),
                     'description' => 'Wallet used during checkout',
                 ]);
             }
 
-            $status = $finalTotal > 0 ? 'pending' : 'paid';
+            $payByBank = $request->boolean('pay_by_bank');
+
+            if ($amountDueAfterWallet <= 0.00001) {
+                $status = 'paid';
+                $creditPayByBankBonus = false;
+
+            } elseif ($payByBank) {
+                $status = 'pending';
+                $creditPayByBankBonus = true;
+
+            } else {
+                $status = 'paid';
+                $creditPayByBankBonus = false;
+            }
+
+            if ($creditPayByBankBonus) {
+                $wallet->increment('balance', 1);
+
+                WalletTransaction::create([
+                    'wallet_id' => $wallet->wallet_id, 
+                    'type' => 'credit',
+                    'amount' => 1,
+                    'reference' => 'PAYBYBANK-' . uniqid(),
+                    'description' => 'Pay by bank bonus',
+                ]);
+            }
+
+            $finalTotal = $amountDueAfterWallet;
 
             $order = Order::create([
-                'user_id'                  => $user->id,
-                'total_amount'             => $finalTotal,
-                'wallet_discount'          => $wallet_discount,
-                'coupon_discount'          => $coupon_discount,
-                'status'                   => $status,
-                'fulfillment_status'       => 'unfulfilled',
-                'user_company_address_id'  => $validated['user_company_address_id'],
-                'delivery_method_id'       => $validated['delivery_method_id'],
-                'vat'                      => $totalvat,
-                'total_paid'               => $totalPaid,
-                'product_total_amount'     => $productTotal,
-                'delivery_instructions'    => $validated['delivery_instructions'],
+                'user_id' => $user->id,
+                'total_amount' => $finalTotal,                  
+                'wallet_discount' => $wallet_discount,
+                'coupon_discount' => $coupon_discount,
+                'status' => $status,
+                'fulfillment_status' => 'unfulfilled',
+                'user_company_address_id' => $validated['user_company_address_id'],
+                'delivery_method_id' => $validated['delivery_method_id'],
+                'vat' => $totalvat,
+                'total_paid' => $finalTotal,                    
+                'product_total_amount' => $productTotal,
+                'delivery_instructions' => $validated['delivery_instructions'] ?? null,
                 'coupon_id' => $couponId,
             ]);
 
             foreach ($cartItems as $cart) {
-                $quantity = $cart->quantity;
-                $unit_price = $cart->mvariant->price;
+                $quantity = (int) $cart->quantity;
+                $unit_price = (float) $cart->mvariant->price;
 
-                if ($cart->mvariant->taxable == 1) {
+                if ((int) $cart->mvariant->taxable === 1) {
                     $unit_price += $unit_price * 0.20;
                 }
 
                 OrderItem::create([
-                    'order_id'    => $order->order_id,
+                    'order_id' => $order->order_id,
                     'mvariant_id' => $cart->mvariant_id,
-                    'quantity'    => $quantity,
-                    'unit_price'  => $unit_price,
+                    'quantity' => $quantity,
+                    'unit_price' => $unit_price,
                 ]);
 
                 Mstock::where('mvariant_id', $cart->mvariant_id)
@@ -272,26 +300,25 @@ class OrderController extends Controller
             if ($user->rep_id) {
                 $rep_id = $user->rep_id;
 
-                $commissionPercent = Customer::where('rep_id', $rep_id)->value('commission_percent') ?? 0;
-
+                $commissionPercent = (float) (Customer::where('rep_id', $rep_id)->value('commission_percent') ?? 0);
                 $commissionAmount = ($productTotal * $commissionPercent) / 100;
 
                 OrderCommission::create([
-                    'order_id'           => $order->order_id,
-                    'rep_id'             => $rep_id,
-                    'user_id'            => $user->id,
-                    'product_total'      => $productTotal,
+                    'order_id' => $order->order_id,
+                    'rep_id' => $rep_id,
+                    'user_id' => $user->id,
+                    'product_total' => $productTotal,
                     'commission_percent' => $commissionPercent,
-                    'commission_amount'  => $commissionAmount,
+                    'commission_amount' => $commissionAmount,
                 ]);
 
                 CustomerCommission::updateOrCreate(
                     ['rep_id' => $rep_id],
-                    ['total_commission' => DB::raw("total_commission + $commissionAmount")]
+                    ['total_commission' => DB::raw("total_commission + {$commissionAmount}")]
                 );
             }
 
-            if (! is_null($couponId)) {
+            if (!is_null($couponId)) {
                 CouponUsage::updateOrCreate(
                     ['coupon_id' => $couponId, 'user_id' => $user->id],
                     ['used_count' => DB::raw('used_count + 1')]
@@ -305,39 +332,40 @@ class OrderController extends Controller
             Mail::to($order->user->email)->queue(new OrderPlacedMail($order));
 
             return response()->json([
-                'status'  => true,
+                'status' => true,
                 'message' => 'Order Placed Successfully',
-                'cdnURL'     => config('cdn.url'),
-                'order'   => $order,
+                'cdnURL' => config('cdn.url'),
+                'order' => $order,
             ], 201);
 
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
                 'message' => 'Failed to create order.',
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
+
 
     public function show($id)
     {
         $order = Order::with([
             'items.variant.product',
-            'items.variant.mvariantDetail',    
-            'items.variant.mstock',          
-            'user:id,name,email',                                                                  
+            'items.variant.mvariantDetail',
+            'items.variant.mstock',
+            'user:id,name,email',
             'userCompanyAddress',
             'deliveryMethod',
             'coupon'
         ])->find($id);
 
-        if (! $order) {
+        if (!$order) {
             return response()->json(['status' => false, 'message' => 'Order not found'], 404);
         }
 
         $units = $order->items->sum('quantity');
-        $skus  = $order->items->count();
+        $skus = $order->items->count();
 
         $walletDiscount = $order->wallet_discount ?? 0.00;
         $couponDiscount = $order->coupon_discount ?? 0.00;
@@ -355,11 +383,11 @@ class OrderController extends Controller
             $deliveryCost = DeliveryMethod::where('delivery_method_id', $deliveryId)->value('delivery_method_amount') ?? 0;
         }
 
-        $items = $order->items->map(function($itm) {
+        $items = $order->items->map(function ($itm) {
             $variant = $itm->variant;
             $product = $variant->product;
 
-            $rawOptions     = optional($variant->mvariantDetail)->options;
+            $rawOptions = optional($variant->mvariantDetail)->options;
             $rawOptionValue = optional($variant->mvariantDetail)->option_value;
 
             $parsedOptions = null;
@@ -378,58 +406,58 @@ class OrderController extends Controller
 
             return [
                 'order_item_id' => $itm->order_item_id,
-                'mvariant_id'   => $variant->mvariant_id,
-                'quantity'      => $itm->quantity,
-                'unit_price'    => (float) $itm->unit_price,
+                'mvariant_id' => $variant->mvariant_id,
+                'quantity' => $itm->quantity,
+                'unit_price' => (float) $itm->unit_price,
 
                 'variant' => [
-                    'sku'           => $variant->sku,
-                    'image'         => $variant->mvariant_image,
-                    'price'         => (float) $variant->price,
+                    'sku' => $variant->sku,
+                    'image' => $variant->mvariant_image,
+                    'price' => (float) $variant->price,
                     'compare_price' => (float) $variant->compare_price,
-                    'cost_price'    => (float) $variant->cost_price,
-                    'options'       => $parsedOptions,
-                    'option_value'  => $parsedOptionValue,
-                    'stock'         => optional($variant->mstock)->quantity ?? 0,
-                    'mlocation_id'  => optional($variant->mstock)->mlocation_id,
+                    'cost_price' => (float) $variant->cost_price,
+                    'options' => $parsedOptions,
+                    'option_value' => $parsedOptionValue,
+                    'stock' => optional($variant->mstock)->quantity ?? 0,
+                    'mlocation_id' => optional($variant->mstock)->mlocation_id,
                 ],
 
                 'product' => [
-                    'mproduct_id'    => $product->mproduct_id,
+                    'mproduct_id' => $product->mproduct_id,
                     'mproduct_title' => $product->mproduct_title,
-                    'mproduct_slug'  => $product->mproduct_slug,
+                    'mproduct_slug' => $product->mproduct_slug,
                     'mproduct_image' => $product->mproduct_image,
                 ],
             ];
         })->values();
 
         $payload = [
-            'order_id'=> $order->order_id,
-            'user'    => [
-                'id'    => $order->user->id,
-                'name'  => $order->user->name,
+            'order_id' => $order->order_id,
+            'user' => [
+                'id' => $order->user->id,
+                'name' => $order->user->name,
                 'email' => $order->user->email,
             ],
-            'order_date'          => $order->created_at->toDateTimeString(),
-            'units'               => $units,
-            'payment_status'      => $order->status,
-            'fulfillment_status'  => $order->fulfillment_status,
-            'skus'                => $skus,
+            'order_date' => $order->created_at->toDateTimeString(),
+            'units' => $units,
+            'payment_status' => $order->status,
+            'fulfillment_status' => $order->fulfillment_status,
+            'skus' => $skus,
 
             'delivery' => [
-                'method_id'  => $deliveryId, 
-                'method'  => $deliveryName,
+                'method_id' => $deliveryId,
+                'method' => $deliveryName,
                 'address_id' => $addressId,
                 'address' => $address,
             ],
 
             'coupon' => $order->coupon ? [
-                'coupon_id'      => $order->coupon->coupon_id,
-                'code'           => $order->coupon->code,
-                'discount_type'  => $order->coupon->discount_type,
+                'coupon_id' => $order->coupon->coupon_id,
+                'code' => $order->coupon->code,
+                'discount_type' => $order->coupon->discount_type,
                 'discount_value' => $order->coupon->discount_value,
-                'expires_at'     => $order->coupon->expires_at,
-                'usage_limit'    => $order->coupon->usage_limit,
+                'expires_at' => $order->coupon->expires_at,
+                'usage_limit' => $order->coupon->usage_limit,
                 'per_user_limit' => $order->coupon->per_user_limit,
                 'min_cart_value' => $order->coupon->min_cart_value,
             ] : null,
@@ -437,30 +465,30 @@ class OrderController extends Controller
             'delivery_instructions' => $order->delivery_instructions,
 
             'summary' => [
-                'subtotal'        => $order->product_total_amount,
-                'wallet_discount' => $walletDiscount, 
-                'coupon_discount' => $couponDiscount, 
-                'delivery_cost'   => $deliveryCost, 
-                'vat'             => $order->vat, 
-                'payment_total'   => $order->total_amount, 
-                'total_paid'      => $order->total_paid, 
+                'subtotal' => $order->product_total_amount,
+                'wallet_discount' => $walletDiscount,
+                'coupon_discount' => $couponDiscount,
+                'delivery_cost' => $deliveryCost,
+                'vat' => $order->vat,
+                'payment_total' => $order->total_amount,
+                'total_paid' => $order->total_paid,
             ],
 
             'items' => $items,
         ];
 
         return response()->json([
-            'status'  => true,
-              'cdnURL'     => config('cdn.url'),
+            'status' => true,
+            'cdnURL' => config('cdn.url'),
             'message' => 'Fetch Order Successfully',
-            'order'   => $payload,
+            'order' => $payload,
         ], 200);
     }
 
     public function update(Request $request, $id)
     {
         $order = Order::find($id);
-        if (! $order) {
+        if (!$order) {
             return response()->json(['message' => 'Order not found'], 404);
         }
 
@@ -475,17 +503,17 @@ class OrderController extends Controller
         $order->save();
 
         return response()->json([
-            'status'  => true,
-            'cdnURL'     => config('cdn.url'),
+            'status' => true,
+            'cdnURL' => config('cdn.url'),
             'message' => 'Order Status Updated Successfully',
-            'order'    => $order->load(['items', 'user:id,name,email']),
+            'order' => $order->load(['items', 'user:id,name,email']),
         ], 200);
     }
 
     public function destroy($id)
     {
         $order = Order::find($id);
-        if (! $order) {
+        if (!$order) {
             return response()->json(['message' => 'Order not found'], 404);
         }
 
