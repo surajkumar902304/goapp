@@ -683,4 +683,8 @@ export default {
 .list-wrap .v-list-item+.v-list-item {
   border-top: 1px solid #dee2e6;
 }
+
+.v-dialog .v-input--selection-controls__ripple {
+    display: none!important;
+}
 </style>
