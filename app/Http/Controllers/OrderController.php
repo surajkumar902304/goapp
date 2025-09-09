@@ -49,7 +49,7 @@ class OrderController extends Controller
                     'order_id' => $order->order_id,
                     'created_at' => $order->created_at->toDateTimeString(),
                     'name' => optional($order->user)->name,
-                    'total_paid' => (float) $order->total_paid,
+                    'total_amount' => (float) $order->total_amount,
                     'status' => $order->status,
                     'fulfillment_status' => $order->fulfillment_status,
                     'total_items' => (int) $order->items_sum_quantity,
