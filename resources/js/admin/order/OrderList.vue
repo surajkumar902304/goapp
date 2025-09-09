@@ -62,8 +62,8 @@
                 #TR00{{ item.order_id }}
               </router-link>
             </template>
-            <template v-slot:item.total_paid="{ item }">
-              £{{ item.total_paid }}
+            <template v-slot:item.total_amount="{ item }">
+              £{{ item.total_amount }}
             </template>
             <template #item.status="{ item }">
               <v-chip :color="statusColor(item.status)" small outlined>{{ item.status }}</v-chip>
@@ -179,7 +179,7 @@ export default {
         { text: 'Order Id', value: 'order_id' },
         { text: 'Date', value: 'created_at' },
         { text: 'Customer', value: 'name' },
-        { text: 'Total amount', value: 'total_paid' },
+        { text: 'Total amount', value: 'total_amount' },
         { text: 'Payment status', value: 'status' },
         { text: 'Fulfillment status', value: 'fulfillment_status' },
         { text: 'Items', value: 'total_items' },
