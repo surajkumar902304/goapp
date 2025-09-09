@@ -15,7 +15,7 @@
                     </v-btn>
                 </div>
                 <div class="col-md-6 text-right">
-                    <v-btn style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" :loading="deleteLoading" :disabled="deleteLoading || !fvalid" @click="openDuplicateDialog" class="btn-32-text-12">Duplicate</v-btn>
+                    <v-btn style="color: black; background-color: white !important; border: 1px solid black !important;" :loading="deleteLoading" :disabled="deleteLoading || !fvalid" @click="openDuplicateDialog" class="btn-32-text-12">Duplicate</v-btn>
                     <v-btn type="submit" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :disabled="!fvalid || isSubmitting" :loading="isSubmitting" class="btn-32-text-12">Update</v-btn>
                 </div>
             </div>

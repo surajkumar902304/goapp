@@ -23,7 +23,12 @@ class Order extends Model
         'total_paid',
         'product_total_amount',
         'delivery_instructions',
-        'coupon_id'
+        'coupon_id',
+        'pay_by_bank'
+    ];
+
+    protected $casts = [
+        'pay_by_bank'  => 'boolean',
     ];
 
     public function user()

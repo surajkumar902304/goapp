@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\DeliveryMethod;
+use App\Models\ProductVat;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
+    // Min Ddelivery Order
     public function getMinOrder()
     {
         $setting = Setting::where('key', 'min_order_free_delivery')->first();
@@ -114,5 +116,29 @@ class SettingController extends Controller
         } catch (\Exception $e) {
             return response()->json(['status' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    // Product Vat
+    public function productVatVlist()
+    {
+        $vat = ProductVat::get();
+        return response()->json([
+            'status' => true,
+            'vat' => $vat,
+        ],200);
+    }
+
+    public function editProductVat(Request $request)
+    {
+        $request->validate([
+            'product_vat_id' => 'required|exists:product_vats,product_vat_id',
+            'product_vat'    => 'required|integer',
+        ]);
+
+        $vat = ProductVat::find($request->product_vat_id);
+        $vat->product_vat = $request->product_vat;
+        $vat->save();
+
+        return response()->json(['status' => true]);
     }
 }

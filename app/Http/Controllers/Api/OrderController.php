@@ -178,6 +178,8 @@ class OrderController extends Controller
                 ], 422);
             }
 
+            $vatPercent = DB::table('product_vats')->value('product_vat') ?? 20;
+            $vatPercent = $vatPercent / 100;
             $productTotal = 0.0;
             $totalvat = 0.0;
 
@@ -187,7 +189,7 @@ class OrderController extends Controller
                 $vatAmount = 0.0;
 
                 if ((int) $cart->mvariant->taxable === 1) {
-                    $vatAmount = $unit_price * 0.20; 
+                    $vatAmount = $unit_price * $vatPercent; 
                 }
 
                 $productTotal += $unit_price * $quantity;
@@ -262,7 +264,7 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'user_id' => $user->id,
-                'total_amount' => $finalTotal,                  
+                'total_amount' => $grossTotal,                  
                 'wallet_discount' => $wallet_discount,
                 'coupon_discount' => $coupon_discount,
                 'status' => $status,
@@ -274,6 +276,7 @@ class OrderController extends Controller
                 'product_total_amount' => $productTotal,
                 'delivery_instructions' => $validated['delivery_instructions'] ?? null,
                 'coupon_id' => $couponId,
+                'pay_by_bank' => $payByBank,
             ]);
 
             foreach ($cartItems as $cart) {

@@ -7,6 +7,8 @@ use App\Models\OrderFulfillment;
 use App\Models\OrderFulfillmentItem;
 use App\Models\OrderItem;
 use App\Models\Setting;
+use App\Models\Wallet;
+use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +29,7 @@ class OrderController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($order) use ($freeDeliveryLimit) {
-                $hasReceipt = OrderFulfillment::where('order_id', $order->order_id)->exists(); 
+                $hasReceipt = OrderFulfillment::where('order_id', $order->order_id)->exists();
 
                 $deliveryCost = 0;
                 $deliveryMethodName = 'Free';
@@ -38,20 +40,20 @@ class OrderController extends Controller
                         $deliveryCost = $deliveryMethod->delivery_method_amount;
                         $deliveryMethodName = $deliveryMethod->delivery_method_name;
                     }
-                }else{
+                } else {
                     $deliveryMethodName = 'Free (' . $deliveryMethod->delivery_method_name . ')';
                 }
 
                 return [
-                    'order_id'           => $order->order_id,
-                    'created_at'         => $order->created_at->toDateTimeString(),
-                    'name'               => optional($order->user)->name,
-                    'total_paid'         => (float) $order->total_paid,
-                    'status'             => $order->status,
+                    'order_id' => $order->order_id,
+                    'created_at' => $order->created_at->toDateTimeString(),
+                    'name' => optional($order->user)->name,
+                    'total_paid' => (float) $order->total_paid,
+                    'status' => $order->status,
                     'fulfillment_status' => $order->fulfillment_status,
-                    'total_items'        => (int) $order->items_sum_quantity,
-                    'delivery_method'    => $deliveryMethodName,
-                    'has_receipt'        => $hasReceipt,
+                    'total_items' => (int) $order->items_sum_quantity,
+                    'delivery_method' => $deliveryMethodName,
+                    'has_receipt' => $hasReceipt,
                 ];
             });
 
@@ -64,8 +66,8 @@ class OrderController extends Controller
     public function updateOrderStatus(Request $request)
     {
         $request->validate([
-            'order_ids'  => 'required',
-            'status'    => 'required|in:Pending,Paid,Cancelled',
+            'order_ids' => 'required',
+            'status' => 'required|in:Pending,Paid,Cancelled',
         ]);
 
         Order::whereIn('order_id', $request->order_ids)
@@ -115,26 +117,72 @@ class OrderController extends Controller
             'bulkstatus' => 'required|string|in:paid,cancelled'
         ]);
 
-        $orders = Order::with('user')->whereIn('order_id', $req->order_ids)->get();
+        $orders = Order::with('user:id,email')->whereIn('order_id', $req->order_ids)->get();
+
+        $updatedCount = 0;
+        $creditedCount = 0;
 
         foreach ($orders as $order) {
-            $order->status = $req->bulkstatus;
-            $order->save();
+            DB::transaction(function () use ($req, $order, &$updatedCount, &$creditedCount) {
+                $targetStatus = strtolower($req->bulkstatus);
+                $current = strtolower((string) $order->status);
 
-            if ($req->bulkstatus === 'cancelled') {
-                Mail::to($order->user->email)->send(new OrderCancelledMail($order));
-            }
+                if ($current !== $targetStatus) {
+                    $order->status = $targetStatus;
+                    $order->save();
+                    $updatedCount++;
+                }
+
+                if ($targetStatus === 'cancelled') {
+                    if ($order->relationLoaded('user') && $order->user && $order->user->email) {
+                        Mail::to($order->user->email)->send(new OrderCancelledMail($order));
+                    }
+                    return;
+                }
+
+                if ($targetStatus === 'paid' && (bool) $order->pay_by_bank === true) {
+                    if ($current !== 'paid') {
+                        $wallet = Wallet::lockForUpdate()->firstOrCreate(
+                            ['user_id' => $order->user_id],
+                            ['balance' => 0]
+                        );
+
+                        $walletId = $wallet->wallet_id ?? $wallet->id;
+                        $reference = 'PAYBYBANK-BONUS-ORDER-' . $order->order_id;
+
+                        $alreadyCredited = WalletTransaction::where('wallet_id', $walletId)
+                            ->where('reference', $reference)
+                            ->exists();
+
+                        if (!$alreadyCredited) {
+                            $wallet->increment('balance', 1);
+
+                            WalletTransaction::create([
+                                'wallet_id' => $walletId,
+                                'type' => 'credit',
+                                'amount' => 1,
+                                'reference' => $reference,
+                                'description' => 'Pay by bank bonus (bulk mark paid)',
+                            ]);
+
+                            $creditedCount++;
+                        }
+                    }
+                }
+            });
         }
         return response()->json([
             'success' => true,
+            'updated_count'  => $updatedCount,
+            'credited_count' => $creditedCount,
         ]);
     }
 
     public function ordersBulkMarkFulfilled(Request $req)
     {
         $validated = $req->validate([
-            'order_ids'     => ['required','array'],
-            'bulkfulfilled' => ['required','string','in:fulfilled,unfulfilled'],
+            'order_ids' => ['required', 'array'],
+            'bulkfulfilled' => ['required', 'string', 'in:fulfilled,unfulfilled'],
         ]);
 
         $summary = DB::transaction(function () use ($validated) {
@@ -143,11 +191,11 @@ class OrderController extends Controller
                 ->lockForUpdate()
                 ->get();
 
-            $ordersUpdated   = 0;
-            $itemsUpdated    = 0;
-            $fulCreated      = 0;
+            $ordersUpdated = 0;
+            $itemsUpdated = 0;
+            $fulCreated = 0;
             $fulItemsCreated = 0;
-            $fulDeleted      = 0;
+            $fulDeleted = 0;
 
             if ($validated['bulkfulfilled'] === 'fulfilled') {
                 foreach ($orders as $order) {
@@ -166,21 +214,22 @@ class OrderController extends Controller
                     }
 
                     $ful = OrderFulfillment::create([
-                        'order_id'         => $order->order_id,
-                        'tracking_id'      => null,
+                        'order_id' => $order->order_id,
+                        'tracking_id' => null,
                         'shipping_courier' => null,
-                        'fulfilled_at'     => now(),
+                        'fulfilled_at' => now(),
                     ]);
                     $fulCreated++;
 
                     foreach ($remainingItems as $it) {
                         $remaining = max(0, ($it->quantity ?? 0) - ($it->fulfilled_quantity ?? 0));
-                        if ($remaining <= 0) continue;
+                        if ($remaining <= 0)
+                            continue;
 
                         OrderFulfillmentItem::create([
                             'order_fulfillment_id' => $ful->order_fulfillment_id,
-                            'order_item_id'        => $it->order_item_id,
-                            'quantity'             => $remaining,
+                            'order_item_id' => $it->order_item_id,
+                            'quantity' => $remaining,
                         ]);
                         $fulItemsCreated++;
 
@@ -211,16 +260,16 @@ class OrderController extends Controller
             }
 
             return [
-                'orders_updated'             => $ordersUpdated,
-                'items_updated'              => $itemsUpdated,
-                'fulfillments_created'       => $fulCreated,
-                'fulfillment_items_created'  => $fulItemsCreated,
-                'fulfillments_deleted'       => $fulDeleted,
+                'orders_updated' => $ordersUpdated,
+                'items_updated' => $itemsUpdated,
+                'fulfillments_created' => $fulCreated,
+                'fulfillment_items_created' => $fulItemsCreated,
+                'fulfillments_deleted' => $fulDeleted,
             ];
         });
 
         return response()->json(array_merge([
-            'status'  => true,
+            'status' => true,
             'message' => 'Fulfillment status updated.',
         ], $summary));
     }
@@ -240,21 +289,21 @@ class OrderController extends Controller
             'fulfillments.items.orderItem.variant.mvariantDetail',
         ])->find($orderid);
 
-        if (! $order) {
+        if (!$order) {
             return response()->json(['status' => false, 'message' => 'Order not found'], 404);
         }
 
         $units = $order->items->sum('quantity');
-        $skus  = $order->items->count();
+        $skus = $order->items->count();
 
         $walletDiscount = $order->wallet_discount ?? 0.00;
-        $couponDiscount = $order->coupon_discount ?? 0.00;
+        $couponDiscount = $order->coupon_discount + $order->wallet_discount ?? 0.00;
 
-        $deliveryId   = optional($order->deliveryMethod)->delivery_method_id;
+        $deliveryId = optional($order->deliveryMethod)->delivery_method_id;
         $deliveryName = optional($order->deliveryMethod)->delivery_method_name;
 
         $addressId = optional($order->userCompanyAddress)->user_company_address_id;
-        $address   = optional($order->userCompanyAddress)->full_address;
+        $address = optional($order->userCompanyAddress)->full_address;
 
         $freeDeliveryLimit = Setting::where('key', 'min_order_free_delivery')->value('value') ?? 0;
         $deliveryCost = 0;
@@ -266,37 +315,37 @@ class OrderController extends Controller
             $variant = $itm->variant;
             $product = $variant->product;
 
-            $rawOptions     = optional($variant->mvariantDetail)->options;
+            $rawOptions = optional($variant->mvariantDetail)->options;
             $rawOptionValue = optional($variant->mvariantDetail)->option_value;
 
             $parsedOptions = is_string($rawOptions) ? json_decode($rawOptions, true) : (is_array($rawOptions) ? $rawOptions : null);
             $parsedOptionValue = is_string($rawOptionValue) ? json_decode($rawOptionValue, true) : (is_array($rawOptionValue) ? $rawOptionValue : null);
 
             return [
-                'order_item_id'       => $itm->order_item_id,
-                'mvariant_id'         => $variant->mvariant_id,
-                'quantity'            => (int) $itm->quantity,
-                'fulfilled_quantity'  => (int) ($itm->fulfilled_quantity ?? 0),
-                'unit_price'          => (float) $itm->unit_price,
+                'order_item_id' => $itm->order_item_id,
+                'mvariant_id' => $variant->mvariant_id,
+                'quantity' => (int) $itm->quantity,
+                'fulfilled_quantity' => (int) ($itm->fulfilled_quantity ?? 0),
+                'unit_price' => (float) $itm->unit_price,
 
                 'variant' => [
-                    'sku'           => $variant->sku,
-                    'image'         => $variant->mvariant_image,
-                    'price'         => (float) $variant->price,
+                    'sku' => $variant->sku,
+                    'image' => $variant->mvariant_image,
+                    'price' => (float) $variant->price,
                     'compare_price' => (float) $variant->compare_price,
-                    'cost_price'    => (float) $variant->cost_price,
-                    'weight'        => $variant->weight,
-                    'weightunit'    => $variant->weightunit,
-                    'options'       => $parsedOptions,
-                    'option_value'  => $parsedOptionValue,
-                    'stock'         => optional($variant->mstock)->quantity ?? 0,
-                    'mlocation_id'  => optional($variant->mstock)->mlocation_id,
+                    'cost_price' => (float) $variant->cost_price,
+                    'weight' => $variant->weight,
+                    'weightunit' => $variant->weightunit,
+                    'options' => $parsedOptions,
+                    'option_value' => $parsedOptionValue,
+                    'stock' => optional($variant->mstock)->quantity ?? 0,
+                    'mlocation_id' => optional($variant->mstock)->mlocation_id,
                 ],
 
                 'product' => [
-                    'mproduct_id'    => $product->mproduct_id,
+                    'mproduct_id' => $product->mproduct_id,
                     'mproduct_title' => $product->mproduct_title,
-                    'mproduct_slug'  => $product->mproduct_slug,
+                    'mproduct_slug' => $product->mproduct_slug,
                     'mproduct_image' => $product->mproduct_image,
                 ],
             ];
@@ -305,9 +354,9 @@ class OrderController extends Controller
         $fulfillments = $order->fulfillments->map(function ($f) {
             return [
                 'order_fulfillment_id' => $f->order_fulfillment_id,
-                'tracking_id'          => $f->tracking_id,
-                'shipping_courier'     => $f->shipping_courier,
-                'fulfilled_at'         => $f->fulfilled_at,
+                'tracking_id' => $f->tracking_id,
+                'shipping_courier' => $f->shipping_courier,
+                'fulfilled_at' => $f->fulfilled_at,
 
                 'items' => $f->items->map(function ($fi) {
                     $oi = $fi->orderItem;
@@ -321,12 +370,12 @@ class OrderController extends Controller
 
                     return [
                         'order_item_id' => $oi->order_item_id,
-                        'quantity'      => (int) $fi->quantity,
+                        'quantity' => (int) $fi->quantity,
 
                         'variant' => [
-                            'sku'          => $variant->sku,
-                            'image'        => $variant->mvariant_image,
-                            'price'        => (float) $variant->price,
+                            'sku' => $variant->sku,
+                            'image' => $variant->mvariant_image,
+                            'price' => (float) $variant->price,
                             'option_value' => $parsedOptionValue,
                         ],
                         'product' => [
@@ -339,34 +388,34 @@ class OrderController extends Controller
         })->values();
 
         $payload = [
-            'order_id'       => $order->order_id,
-            'order_number'   => '#00' . $order->order_id,
+            'order_id' => $order->order_id,
+            'order_number' => '#00' . $order->order_id,
             'user' => [
-                'id'     => $order->user->id,
-                'name'   => $order->user->name,
-                'email'  => $order->user->email,
+                'id' => $order->user->id,
+                'name' => $order->user->name,
+                'email' => $order->user->email,
                 'mobile' => $order->user->mobile,
             ],
-            'order_date'         => $order->created_at->toDateTimeString(),
-            'units'              => $units,
-            'payment_status'     => $order->status,
+            'order_date' => $order->created_at->toDateTimeString(),
+            'units' => $units,
+            'payment_status' => $order->status,
             'fulfillment_status' => $order->fulfillment_status,
-            'skus'               => $skus,
+            'skus' => $skus,
 
             'delivery' => [
-                'method_id'  => $deliveryId,
-                'method'     => $deliveryName,
+                'method_id' => $deliveryId,
+                'method' => $deliveryName,
                 'address_id' => $addressId,
-                'address'    => $address,
+                'address' => $address,
             ],
 
             'coupon' => $order->coupon ? [
-                'coupon_id'      => $order->coupon->coupon_id,
-                'code'           => $order->coupon->code,
-                'discount_type'  => $order->coupon->discount_type,
+                'coupon_id' => $order->coupon->coupon_id,
+                'code' => $order->coupon->code,
+                'discount_type' => $order->coupon->discount_type,
                 'discount_value' => $order->coupon->discount_value,
-                'expires_at'     => $order->coupon->expires_at,
-                'usage_limit'    => $order->coupon->usage_limit,
+                'expires_at' => $order->coupon->expires_at,
+                'usage_limit' => $order->coupon->usage_limit,
                 'per_user_limit' => $order->coupon->per_user_limit,
                 'min_cart_value' => $order->coupon->min_cart_value,
             ] : null,
@@ -374,36 +423,69 @@ class OrderController extends Controller
             'delivery_instructions' => $order->delivery_instructions,
 
             'summary' => [
-                'subtotal'        => $order->product_total_amount,
+                'subtotal' => $order->product_total_amount,
                 'wallet_discount' => $walletDiscount,
                 'coupon_discount' => $couponDiscount,
-                'delivery_cost'   => $deliveryCost,
-                'vat'             => $order->vat,
-                'payment_total'   => $order->total_amount,
-                'total_paid'      => $order->total_paid,
+                'delivery_cost' => $deliveryCost,
+                'vat' => $order->vat,
+                'payment_total' => $order->total_amount,
+                'total_paid' => $order->total_paid,
             ],
 
-            'items'         => $items,
-            'fulfillments'  => $fulfillments,  
+            'items' => $items,
+            'fulfillments' => $fulfillments,
         ];
 
         return response()->json([
-            'status'  => true,
+            'status' => true,
             'message' => 'Fetch Order Successfully',
-            'order'   => $payload,
+            'order' => $payload,
         ], 200);
     }
 
     public function markAsPaid(Request $request)
     {
-        $order = Order::find($request->order_id);
+        $order = Order::with('user:id,name,email')->find($request->order_id);
 
         if (!$order) {
             return response()->json(['status' => false, 'message' => 'Order not found'], 404);
         }
 
-        $order->status = 'Paid';
-        $order->save();
+        if (strtolower($order->status) === 'paid') {
+            return response()->json(['status' => true, 'message' => 'Order is already paid']);
+        }
+
+        DB::transaction(function () use ($order) {
+            $order->status = 'paid';
+            $order->save();
+
+            if ((bool) $order->pay_by_bank === true) {
+                $wallet = Wallet::lockForUpdate()->firstOrCreate(
+                    ['user_id' => $order->user_id],
+                    ['balance' => 0]
+                );
+
+                $walletId = $wallet->wallet_id ?? $wallet->id;
+
+                $reference = 'PAYBYBANK-BONUS-ORDER-' . $order->order_id;
+
+                $alreadyCredited = WalletTransaction::where('wallet_id', $walletId)
+                    ->where('reference', $reference)
+                    ->exists();
+
+                if (!$alreadyCredited) {
+                    $wallet->increment('balance', 1);
+
+                    WalletTransaction::create([
+                        'wallet_id' => $walletId,
+                        'type' => 'credit',
+                        'amount' => 1,
+                        'reference' => $reference,
+                        'description' => 'Pay by bank bonus on mark as paid',
+                    ]);
+                }
+            }
+        });
 
         return response()->json(['status' => true, 'message' => 'Order marked as paid']);
     }
@@ -435,16 +517,16 @@ class OrderController extends Controller
     public function packingSlip($order_id)
     {
         $order = Order::with([
-        'user',
-        'userCompanyAddress',
-        'items.variant.product',
-        'items.variant.details',
-        'fulfillments' => function ($q) {
-            $q->orderBy('fulfilled_at', 'asc');
-        },
-        'fulfillments.items.orderItem.variant.product',
-        'fulfillments.items.orderItem.variant.details',
-    ])->findOrFail($order_id);
+            'user',
+            'userCompanyAddress',
+            'items.variant.product',
+            'items.variant.details',
+            'fulfillments' => function ($q) {
+                $q->orderBy('fulfilled_at', 'asc');
+            },
+            'fulfillments.items.orderItem.variant.product',
+            'fulfillments.items.orderItem.variant.details',
+        ])->findOrFail($order_id);
 
         return view('admin.orders.packing-slip', compact('order'));
     }
@@ -454,9 +536,9 @@ class OrderController extends Controller
     {
         $data = $req->validate([
             'order_id' => 'required|integer|exists:orders,order_id',
-            'lines'    => 'required|array',
+            'lines' => 'required|array',
             'lines.*.order_item_id' => 'required|integer|exists:order_items,order_item_id',
-            'lines.*.quantity'      => 'required|integer|min:1',
+            'lines.*.quantity' => 'required|integer|min:1',
         ]);
 
         return DB::transaction(function () use ($data) {
@@ -466,10 +548,10 @@ class OrderController extends Controller
                 ->whereNull('tracking_id')
                 ->first();
 
-            if (! $open) {
+            if (!$open) {
                 $open = OrderFulfillment::create([
-                    'order_id'      => $order->order_id,
-                    'fulfilled_at'  => now(),
+                    'order_id' => $order->order_id,
+                    'fulfilled_at' => now(),
                 ]);
             }
 
@@ -478,15 +560,15 @@ class OrderController extends Controller
                 $oi = OrderItem::findOrFail($line['order_item_id']);
 
                 $remaining = ($oi->quantity ?? 0) - ($oi->fulfilled_quantity ?? 0);
-                $qty = min($remaining, (int)$line['quantity']);
+                $qty = min($remaining, (int) $line['quantity']);
                 if ($qty <= 0) {
                     continue;
                 }
 
                 OrderFulfillmentItem::create([
                     'order_fulfillment_id' => $open->order_fulfillment_id,
-                    'order_item_id'        => $oi->order_item_id,
-                    'quantity'             => $qty,
+                    'order_item_id' => $oi->order_item_id,
+                    'quantity' => $qty,
                 ]);
 
                 $oi->increment('fulfilled_quantity', $qty);
@@ -504,7 +586,7 @@ class OrderController extends Controller
 
             return response()->json([
                 'status' => true,
-                'order'  => $order,
+                'order' => $order,
             ]);
         });
     }
@@ -513,13 +595,13 @@ class OrderController extends Controller
     {
         $data = $req->validate([
             'order_fulfillment_id' => 'required|integer|exists:order_fulfillments,order_fulfillment_id',
-            'tracking_id'          => 'required|string|max:255',
-            'shipping_courier'     => 'nullable|string|max:255',
+            'tracking_id' => 'required|string|max:255',
+            'shipping_courier' => 'nullable|string|max:255',
         ]);
 
         $f = OrderFulfillment::findOrFail($data['order_fulfillment_id']);
         $f->update([
-            'tracking_id'      => $data['tracking_id'],
+            'tracking_id' => $data['tracking_id'],
             'shipping_courier' => $data['shipping_courier'],
         ]);
 

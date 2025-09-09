@@ -13,9 +13,9 @@
             <span v-if="!backLoading">Back</span>
           </v-btn>
 
-          <h3 class="text-h6 font-weight-bold mb-0 mr-2">#TR00{{ order.order_id }}</h3>
+          <h6 class="text-h6 font-weight-bold mb-0">#TR00{{ order.order_id }}</h6>
 
-          <v-chip small class="ma-1" :color="order.payment_status.toLowerCase() === 'paid' ? '#e0e0e0' : '#ffd6a4'"
+          <v-chip small class="ma-1 mr-0" :color="order.payment_status.toLowerCase() === 'paid' ? '#e0e0e0' : '#ffd6a4'"
             text-color="black">
             {{ order.payment_status }}
           </v-chip>
@@ -28,20 +28,20 @@
       </v-col>
 
       <v-col cols="12" md="6" class="text-end">
-        <!-- <v-btn class="btn-32-text-12 ml-1" small outlined color="success" @click="sendRefund">
+        <v-btn class="btn-32-text-12 ml-1" small outlined style="color: black; background-color: white !important; border: 1px solid black !important;" @click="sendRefund">
           Refund
-        </v-btn> -->
+        </v-btn>
 
         <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled'" class="btn-32-text-12 ml-1" small outlined
           style="color: red; background-color: white !important; border: 1px solid red !important;"
           @click="dialogCancel = true">
-          Cancel
+          Cancel Order
         </v-btn>
 
         <v-btn class="btn-32-text-12 ml-1"
           style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small
           outlined @click="printPackingSlip">
-          Print Packing Slip
+          Print
         </v-btn>
       </v-col>
     </v-row>
@@ -110,7 +110,7 @@
 
           <v-card-actions class="px-4">
             <v-spacer />
-            <v-btn v-if="unfulfilledItems.length > 3" small text class="btn-32-text-12 me-2"
+            <v-btn v-if="unfulfilledItems.length > 10" small text class="btn-32-text-12 me-2"
               @click="showAllUnfulfilled = !showAllUnfulfilled">
               {{ showAllUnfulfilled ? 'Show less' : `Show ${hiddenUnfulfilledCount} more` }}
             </v-btn>
@@ -192,7 +192,7 @@
           <v-card-actions class="px-4">
             <v-spacer />
             <v-btn
-              v-if="(f.items || []).length > 3"
+              v-if="(f.items || []).length > 10"
               small text class="btn-32-text-12 me-2"
               @click="toggleFulfillment(f.order_fulfillment_id)"
             >
@@ -201,7 +201,7 @@
                   : `Show ${hiddenFulfilledCount(f)} more` }}
             </v-btn>
             <v-spacer />
-            <v-btn v-if="!f.tracking_id" class="btn-32-text-12 me-2" style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;" small
+            <v-btn v-if="!f.tracking_id" class="btn-32-text-12 me-2" style="color: black; background-color: white !important; border: 1px solid black !important;" small
               @click="openTrackingDialog(f)">
               + Add Tracking
             </v-btn>
@@ -233,31 +233,20 @@
                     <td class="text-right">{{ order.delivery.method }}</td>
                     <td class="text-right">£{{ order.summary.delivery_cost | money }}</td>
                   </tr>
+                  <tr class="font-weight-bold">
+                    <td>Total</td>
+                    <td></td>
+                    <td class="text-right">£{{ order.summary.payment_total | money }}</td>
+                  </tr>
                   <tr>
                     <td>Discount</td>
                     <td></td>
                     <td class="text-right">-£{{ order.summary.coupon_discount | money }}</td>
                   </tr>
-                  <tr class="font-weight-bold">
-                    <td>Total</td>
-                    <td></td>
-                    <td class="text-right">£{{ order.summary.total_paid | money }}</td>
-                  </tr>
-
-                  <tr v-if="order.payment_status.toLowerCase() === 'pending'">
-                    <td>Wallet</td>
-                    <td></td>
-                    <td class="text-right">-£{{ order.summary.wallet_discount | money }}</td>
-                  </tr>
-                  <tr v-if="order.payment_status.toLowerCase() === 'paid'">
+                  <tr>
                     <td>Paid</td>
                     <td></td>
                     <td class="text-right">£{{ order.summary.total_paid | money }}</td>
-                  </tr>
-                  <tr v-if="order.payment_status.toLowerCase() === 'pending'">
-                    <td>Balance</td>
-                    <td></td>
-                    <td class="text-right">£{{ order.summary.payment_total | money }}</td>
                   </tr>
                 </tbody>
               </template>
@@ -272,7 +261,7 @@
             </v-btn>
 
             <v-btn class="btn-32-text-12" v-if="order.payment_status.toLowerCase() !== 'paid'" small
-              style="color: #0cc827; background-color: white !important; border: 1px solid #0cc827 !important;"
+              style="color: black; background-color: white !important; border: 1px solid black !important;"
               :loading="loadingPaid" :disabled="loadingPaid" @click="markAsPaid">
               <template #loader>
                 <v-progress-circular indeterminate size="16" color="white" />
@@ -459,10 +448,10 @@ export default {
       )
     },
     visibleUnfulfilledItems() {
-      return this.showAllUnfulfilled ? this.unfulfilledItems : this.unfulfilledItems.slice(0, 3)
+      return this.showAllUnfulfilled ? this.unfulfilledItems : this.unfulfilledItems.slice(0, 10)
     },
     hiddenUnfulfilledCount() {
-      return Math.max(this.unfulfilledItems.length - 3, 0)
+      return Math.max(this.unfulfilledItems.length - 10, 0)
     },
     totalDiscount() {
       const s = this.order?.summary || {}
@@ -661,11 +650,11 @@ export default {
     visibleFulfilledItems(f) {
       const expanded = this.isFulfillmentExpanded(f.order_fulfillment_id);
       const items = f.items || [];
-      return expanded ? items : items.slice(0, 3);
+      return expanded ? items : items.slice(0, 10);
     },
     hiddenFulfilledCount(f) {
       const len = (f.items || []).length;
-      return Math.max(len - 3, 0);
+      return Math.max(len - 10, 0);
     },
 
     printPackingSlip() {

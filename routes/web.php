@@ -241,6 +241,10 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::post('/delivery-method-delete', [SettingController::class, 'deleteDeliveryMethod']);
     Route::post('/delivery-method/status-toggle/{id}', [SettingController::class, 'deliveryMethodToggleStatus']);
 
+    // Product vat routes
+    Route::get('/product-vat/vlist', [SettingController::class, 'productVatVlist']);
+    Route::post('/product-vat/update', [SettingController::class, 'editProductVat']);
+
     // User Tag routes
     Route::get('/user-tags/vlist', [UserTagController::class, 'userTagVlist']);
     Route::post('/user-tag/add', [UserTagController::class, 'addUserTag']);

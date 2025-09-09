@@ -66,7 +66,7 @@
           <v-spacer></v-spacer>
           <v-icon @click="addSdialog = false">mdi-close</v-icon>
         </v-card-title>
-        <v-form v-model="fsvalid" @submit.prevent="saveBankDetail">
+        <v-form v-model="fsvalid" @submit.prevent="saveDeliveryMethod">
           <v-card-text>
             <v-text-field v-model="defaultItem.delivery_method_name" :rules="methodnameRules" label="Delivery Method Name"/>
             <v-text-field v-model="defaultItem.delivery_method_amount" type="number" :rules="amountRules" label="Delivery Method Amount"/>
@@ -108,7 +108,7 @@
     <v-row class="mt-0">
       <v-col cols="12">
         <v-card elevation="5">
-          <v-data-table :headers="minHeaders" :items="minRequirements" :footer-props="{ 'items-per-page-options': [10,25,50,100], 'items-per-page-text': 'Rows per page:' }">
+          <v-data-table :headers="minHeaders" :items="minRequirements" :items-per-page="-1" hide-default-footer>
             <template #item.value="{ item }">
               £{{ item.value }}
             </template>
@@ -143,6 +143,53 @@
             <v-spacer/>
             <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small :loading="savingMin" :disabled="!minFormValid">
               {{ editedMinIndex===-1 ? 'Add' : 'Update' }}
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
+
+    <v-row class="mt-8">
+      <v-col cols="12">
+        <h2 class="text-h6 mb-1">Product Vat</h2>
+      </v-col>
+    </v-row>
+
+    <v-row class="mt-0">
+      <v-col cols="12">
+        <v-card elevation="5">
+          <v-data-table :headers="vatHeaders" :items="vatRequirements" :items-per-page="-1" hide-default-footer>
+            <template #item.product_vat="{ item }">
+              {{ item.product_vat }}
+            </template>
+            <template #header.actions><div class="text-center">Action</div></template>
+            <template #item.actions="{ item }">
+              <div class="text-center">
+                <v-chip color="primary" class="white--text" outlined pill small @click="openVatDialog(item)" style="cursor:pointer;">
+                  <v-icon small left>mdi-pencil</v-icon>Edit
+                </v-chip>
+              </div>
+            </template>
+          </v-data-table>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <v-dialog v-model="addVatDialog" max-width="600" @update:model-value="onVatDialogToggle">
+      <v-card elevation="5">
+        <v-card-title>
+          {{ editedVatIndex === -1 ? 'Add Product Vat' : 'Edit Product Vat'}}
+          <v-spacer/>
+          <v-icon @click="addVatDialog = false">mdi-close</v-icon>
+        </v-card-title>
+        <v-form v-model="vatFormValid" @submit.prevent="saveVat">
+          <v-card-text>
+            <v-text-field v-model="defaultVatItem.product_vat" type="number" :rules="[v=>!!v||'Required', v=>v>0||'Must be >0']" label="Product Vat" outlined/>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer/>
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small :loading="savingVat" :disabled="!vatFormValid">
+              {{ editedVatIndex===-1 ? 'Add' : 'Update' }}
             </v-btn>
           </v-card-actions>
         </v-form>
@@ -188,7 +235,7 @@ export default {
         v => parseFloat(v) > 0 || 'Delivery Amount must be greater than 0',
       ],
       deleteDialog: false,
-      bankdetailToDelete: null,
+      deliveryMethodToDelete: null,
       deleteLoading: false,
 
       minRequirements: [],
@@ -202,12 +249,24 @@ export default {
       minFormValid: false,
       savingMin: false,
       defaultMinItem: { setting_id:null, value:null },
+
+      vatRequirements: [],
+      vatHeaders: [
+        { text:'Vat (%)',  value:'product_vat' },
+        { text:'Action',   value:'actions',  sortable:false },
+      ],
+      addVatDialog: false,
+      editedVatIndex: -1,
+      vatFormValid: false,
+      savingVat: false,
+      defaultVatItem: { product_vat_id:null, product_vat:null },
     
     }
   },
   created() {
     this.getAlldeliverymethods();
     this.getAllSettings();
+    this.getAllVat();
   },
   watch: {
     addSdialog(val) {
@@ -218,8 +277,10 @@ export default {
     async getAllSettings() {
       const res = await axios.get('/admin/settings/vlist')
       this.minRequirements = res.data.deliverymethods
-        .filter(s => s.key === 'min_order_free_delivery')
-        .map((s, i) => ({ ...s, index: i + 1 }))
+    },
+    async getAllVat() {
+      const res = await axios.get('/admin/product-vat/vlist')
+      this.vatRequirements = res.data.vat
     },
     async toggleMinStatus(item) {
       try {
@@ -265,6 +326,41 @@ export default {
         this.savingMin = false
       }
     },
+    openVatDialog(item=null) {
+      if (item) {
+        this.defaultVatItem = { ...item }
+        this.editedVatIndex = item.product_vat_id
+        this.vatFormValid = true
+      } else {
+        this.defaultVatItem = { product_vat_id:null, product_vat:null }
+        this.editedVatIndex = -1
+        this.vatFormValid = false
+      }
+      this.addVatDialog = true
+    },
+    onVatDialogToggle(open) {
+      if (!open) {
+        this.defaultVatItem = { product_vat_id:null, product_vat:null }
+        this.vatFormValid = false
+        this.savingVat = false
+      }
+    },
+    async saveVat() {
+      this.savingVat = true
+      try {
+        await axios.post('/admin/product-vat/update', {
+          product_vat_id: this.defaultVatItem.product_vat_id,
+          product_vat: this.defaultVatItem.product_vat
+        })
+        this.$toast.success('Saved!')
+        await this.getAllVat()
+        this.addVatDialog = false
+      } catch (e) {
+        this.$toast.error('Save failed')
+      } finally {
+        this.savingVat = false
+      }
+    },
     getAlldeliverymethods() {
       axios.get('/admin/delivery-method/vlist').then(res => {
         this.deliverymethods = res.data.deliverymethods;
@@ -306,16 +402,8 @@ export default {
       this.fsvalid = true
       this.addSdialog = true
     },
-    async saveBankDetail() {
+    async saveDeliveryMethod() {
       this.submitting = true;
-
-      let expiresAtValue = this.defaultItem.expires_at;
-
-      if (expiresAtValue) {
-        expiresAtValue = `${expiresAtValue} 00:00:00`;
-      } else {
-        expiresAtValue = null;
-      }
 
       const payload = {
         delivery_method_name: this.defaultItem.delivery_method_name.toUpperCase(),
@@ -348,21 +436,21 @@ export default {
           await axios.post(`/admin/delivery-method/status-toggle/${item.delivery_method_id}`, {
               is_active: item.is_active
           });
-          this.$toast?.success('Bank Detail Status updated', { timeout: 500 });
+          this.$toast?.success('Delivery Method Status updated', { timeout: 500 });
       } catch (error) {
           console.error("Failed to toggle status", error);
           this.$toast?.error('Failed to update status', { timeout: 500 });
       }
     },
     confirmDelete(item) {
-      this.bankdetailToDelete = item
+      this.deliveryMethodToDelete = item
       this.deleteDialog = true
     },
     async performDelete() {
-      if (!this.bankdetailToDelete) return
+      if (!this.deliveryMethodToDelete) return
       this.deleteLoading = true
       try {
-        await axios.post('/admin/delivery-method-delete', { delivery_method_id: this.bankdetailToDelete.delivery_method_id })
+        await axios.post('/admin/delivery-method-delete', { delivery_method_id: this.deliveryMethodToDelete.delivery_method_id })
         this.$toast.success('Delivery Method deleted successfully!', { timeout: 500 })
         this.getAlldeliverymethods()
       } catch (err) {
@@ -371,7 +459,7 @@ export default {
       } finally {
         this.deleteLoading = false
         this.deleteDialog = false
-        this.bankdetailToDelete = null
+        this.deliveryMethodToDelete = null
       }
     },
 
