@@ -62,7 +62,7 @@ class AdminController extends Controller
 
         foreach ($users as $user) {
             $user->total_order = Order::where('user_id', $user->id)->count();
-            $user->total_spend = Order::where('user_id', $user->id)->sum('total_paid');
+            $user->total_spend = Order::where('user_id', $user->id)->sum('total_amount');
         }
 
         return response()->json([
