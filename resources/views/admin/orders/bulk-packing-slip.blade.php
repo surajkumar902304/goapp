@@ -4,241 +4,401 @@
 
     $cdn = 'https://cdn.truewebpro.com/';
 
-    $imgForItem = function($variant) use ($cdn) {
+    $imgForItem = function ($variant) use ($cdn) {
         $imageSrc = ($variant->mvariant_image ?? null)
             ?: optional($variant->product)->mproduct_image
             ?: '/images/no-image-available.png';
-
-        return Str::startsWith($imageSrc, ['http','/images']) ? $imageSrc : $cdn.$imageSrc;
+        return Str::startsWith($imageSrc, ['http', '/images']) ? $imageSrc : $cdn . $imageSrc;
     };
 
-    $optionLines = function($variant) {
+    $optionLines = function ($variant) {
         $detail = optional($variant->details)->first();
-        if (!$detail) return [];
+        if (!$detail)
+            return [];
 
         $raw = $detail->option_value;
         $options = is_string($raw) ? json_decode($raw, true) : (is_array($raw) ? $raw : []);
+        if (!is_array($options))
+            return [];
 
-        if (!is_array($options)) return [];
         $lines = [];
         foreach ($options as $k => $v) {
-            $lines[] = $k.': '.$v;
+            $k = e($k);
+            $v = e($v);
+            $lines[] = '<strong class="opt-key">' . $k . ':</strong> ' . $v;
         }
         return $lines;
     };
+
+    $brand = 'GOAPP'; 
 @endphp
 
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>Packing Slips</title>
+
     <style>
-        body { font-family: Arial, sans-serif; color:#000; margin: 40px; }
-        .header { text-align:center; background:#000; color:#FFD700; padding:20px; }
-        .section { margin: 20px 0; }
-        .page { page-break-after: always; }
-        @media print {
-            .no-print { display:none; }
-            .page:last-of-type { page-break-after: auto; }
-            .header { margin: 20px; padding: 20px; }
-            .section { margin: 20px; padding: 20px; }
-            body { margin: 0 !important; }
+        :root {
+            --page-margin: 12mm;
+            --inner-padding: 8mm;
         }
-        table { width:100%; border-collapse: collapse; }
-        th, td { padding: 8px; border-bottom: 1px solid #e5e5e5; }
-        thead th { border-bottom: 2px solid #000; }
-        .flex { display:flex; align-items:flex-start; }
-        .space-between { display:flex; justify-content:space-between; }
-        .muted { color:#777; font-size:12px; }
-        .title-strong { font-weight: bold; margin-top: 10px; }
-        .footer { margin-top: 40px; text-align:center; font-size:12px; }
-        .img { margin-right:10px; width:50px; height:50px; object-fit:contain; }
+
+        @page {
+            size: A4;
+            margin: var(--page-margin);
+        }
+
+        @media screen {
+            body {
+                margin: 0;
+                background: #eee;
+            }
+
+            .page {
+                width: 210mm;
+                min-height: calc(297mm - 2 * var(--page-margin));
+                margin: 12px auto;
+                box-shadow: 0 0 0 1px #cfcfcf;
+                background: #fff;
+            }
+        }
+
+        @media print {
+            body {
+                margin: 0 !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            color: #000;
+        }
+
+        .page {
+            page-break-after: always;
+            padding: var(--inner-padding);
+            box-sizing: border-box;
+            background: #fff;
+        }
+
+        .page:last-of-type {
+            page-break-after: auto;
+        }
+
+        .ps-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin: 0 0 12px 0;
+        }
+
+        .ps-head__brand {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: .5px;
+        }
+
+        .ps-head__meta {
+            text-align: right;
+            font-size: 14px;
+        }
+
+        .ps-addr-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin: 4px 0 20px;
+        }
+
+        .ps-addr__title {
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: .08em;
+            margin-bottom: 4px;
+        }
+
+        .ps-muted {
+            color: #777;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        thead th {
+            border-bottom: 2px solid #000;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        tfoot {
+            display: table-row-group;
+        }
+
+        tr,
+        img {
+            page-break-inside: avoid;
+        }
+
+        .flex {
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .muted {
+            color: #777;
+            font-size: 12px;
+        }
+
+        .title-strong {
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        .img {
+            margin-right: 10px;
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .opt-key {
+            color: #000;
+            font-weight: 700;
+        }
     </style>
 </head>
+
 <body>
 
-@foreach ($orders as $order)
-    @php
-        $unfulfilledItems = $order->items->filter(function ($it) {
-            $fulfilled = (int)($it->fulfilled_quantity ?? 0);
-            $qty       = (int)($it->quantity ?? 0);
-            return $qty > $fulfilled;
-        });
+    @foreach ($orders as $order)
+        @php
+            $unfulfilledItems = $order->items->filter(function ($it) {
+                $fulfilled = (int) ($it->fulfilled_quantity ?? 0);
+                $qty = (int) ($it->quantity ?? 0);
+                return $qty > $fulfilled;
+            });
 
-        $orderDate     = $order->order_date ?? $order->created_at;
-        $formattedDate = Carbon::parse($orderDate)->format('F d, Y');
-    @endphp
+            $orderDate = $order->order_date ?? $order->created_at;
+            $formattedDate = Carbon::parse($orderDate)->format('F d, Y');
 
-    {{-- Unfulfilled --}}
-    @if($unfulfilledItems->count() > 0)
-    <div class="page">
-        <div class="header">
-            <h1>GOAPP Packing Slip</h1>
-            <p>Order #{{ $order->order_id }}<br>{{ $formattedDate }}</p>
-        </div>
+            $ship = optional($order->userCompanyAddress);
+            $bill = optional($order->userCompanyAddress);
 
-        <div class="section space-between">
-            <div style="width:48%;">
-                <h3>Customer Info</h3>
-                <p>{{ $order->user->name }}</p>
-                <p>{{ $order->user->email }}</p>
-                <p>{{ $order->user->mobile }}</p>
-            </div>
-            <div style="width:48%; text-align:right;">
-                <h3>Shipping Address</h3>
-                <p>{{ optional($order->userCompanyAddress)->user_company_name }}</p>
-                <p>
-                    {{ trim((optional($order->userCompanyAddress)->company_address1 ?? '').' '.(optional($order->userCompanyAddress)->company_address2 ?? '')) }}
-                </p>
-                <p>
-                    {{ trim((optional($order->userCompanyAddress)->company_city ?? '').' '.(optional($order->userCompanyAddress)->company_country ?? '').' '.(optional($order->userCompanyAddress)->company_postcode ?? '')) }}
-                </p>
-            </div>
-        </div>
+            $shipLine1 = trim(($ship->company_address1 ?? '') . ' ' . ($ship->company_address2 ?? ''));
+            $shipLine2 = trim(($ship->company_city ?? '') . ' ' . ($ship->company_country ?? '') . ' ' . ($ship->company_postcode ?? ''));
+            $hasShip = ($ship->user_company_name ?? '') !== '' || $shipLine1 !== '' || $shipLine2 !== '';
 
-        <div class="section">
-            <table>
-                <thead>
-                    <tr>
-                        <th align="left">ITEMS</th>
-                        <th align="center"></th>
-                        <th align="right">QUANTITY</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($unfulfilledItems as $item)
-                        @php
-                            $variant   = $item->variant;
-                            $product   = optional($variant)->product;
-                            $src       = $imgForItem($variant);
-                            $remaining = max(0, (int)$item->quantity - (int)$item->fulfilled_quantity);
-                        @endphp
+            $billLine1 = trim(($bill->company_address1 ?? '') . ' ' . ($bill->company_address2 ?? ''));
+            $billLine2 = trim(($bill->company_city ?? '') . ' ' . ($bill->company_country ?? '') . ' ' . ($bill->company_postcode ?? ''));
+            $hasBill = ($bill->user_company_name ?? '') !== '' || $billLine1 !== '' || $billLine2 !== '';
+          @endphp
+
+        @if($unfulfilledItems->count() > 0)
+            <div class="page">
+                <div class="ps-head">
+                    <div class="ps-head__brand">{{ $brand }}</div>
+                    <div class="ps-head__meta">
+                        <div>Order #TR00{{ $order->order_id }}</div>
+                        <div>{{ $formattedDate }}</div>
+                    </div>
+                </div>
+
+                <div class="ps-addr-row">
+                    <div class="ps-addr">
+                        <div class="ps-addr__title">SHIP TO</div>
+                        @if($hasShip)
+                            @if($ship->user_company_name)
+                            <div>{{ $ship->user_company_name }}</div>@endif
+                            @if($shipLine1)
+                            <div>{{ $shipLine1 }}</div>@endif
+                            @if($shipLine2)
+                            <div>{{ $shipLine2 }}</div>@endif
+                        @else
+                            <div class="ps-muted">No shipping address</div>
+                        @endif
+                    </div>
+
+                    <div class="ps-addr">
+                        <div class="ps-addr__title">BILL TO</div>
+                        @if($hasBill)
+                            @if($bill->user_company_name)
+                            <div>{{ $bill->user_company_name }}</div>@endif
+                            @if($billLine1)
+                            <div>{{ $billLine1 }}</div>@endif
+                            @if($billLine2)
+                            <div>{{ $billLine2 }}</div>@endif
+                        @else
+                            <div class="ps-muted">No billing address</div>
+                        @endif
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
                         <tr>
-                            <td>
-                                <div class="flex">
-                                    <img class="img" src="{{ $src }}" alt="Product">
-                                    <div>
-                                        <div class="title-strong">{{ optional($product)->mproduct_title }}</div>
-                                        <div class="muted">{{ $variant->sku }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                @foreach($optionLines($variant) as $ln)
-                                    <div class="muted">{{ $ln }}</div>
-                                @endforeach
-                            </td>
-                            <td align="right">
-                                {{ $remaining }} of {{ (int)$item->quantity }}
-                            </td>
+                            <th align="left">ITEMS</th>
+                            <th align="right">QUANTITY</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        @foreach($unfulfilledItems as $item)
+                            @php
+                                $variant = $item->variant;
+                                $product = optional($variant)->product;
+                                $src = $imgForItem($variant);
+                                $remaining = max(0, (int) $item->quantity - (int) $item->fulfilled_quantity);
+                              @endphp
+                            <tr>
+                                <td>
+                                    <div class="flex">
+                                        <img class="img" src="{{ $src }}" alt="Product">
+                                        <div>
+                                            <div class="title-strong">{{ optional($product)->mproduct_title }}</div>
+                                            <div class="muted">
+                                                @foreach($optionLines($variant) as $ln)
+                                                    <div class="muted">{!! $ln !!}</div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td align="right">{{ $remaining }} of {{ (int) $item->quantity }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
 
-        <div class="section" style="text-align:center">
-            <p>Thank you for shopping with us!</p>
-            <p>GOAPP</p>
-            <p>UK</p>
-            <p>info@truewebapp.com</p>
-            <p>truewebapp.com</p>
-        </div>
-    </div>
-    @endif
-
-    {{-- Fulfillments --}}
-    @foreach($order->fulfillments as $ful)
-    <div class="page">
-        <div class="header">
-            <h1>GOAPP Packing Slip</h1>
-            <p>
-                Order #{{ $order->order_id }}<br>
-                {{ Carbon::parse($ful->fulfilled_at ?? $orderDate)->format('F d, Y') }}
-                @if($ful->tracking_id)
-                    <br>
-                    Tracking: {{ $ful->tracking_id }}
-                    @if($ful->shipping_courier)
-                        &nbsp;&mdash;&nbsp;{{ $ful->shipping_courier }}
-                    @endif
-                @endif
-            </p>
-        </div>
-
-        <div class="section space-between">
-            <div style="width:48%;">
-                <h3>Customer Info</h3>
-                <p>{{ $order->user->name }}</p>
-                <p>{{ $order->user->email }}</p>
-                <p>{{ $order->user->mobile }}</p>
+                <div class="footer">
+                    <p>Thank you for shopping with us!</p>
+                    <p>GOAPP</p>
+                    <p>UK</p>
+                    <p>info@truewebapp.com</p>
+                    <p>truewebapp.com</p>
+                </div>
             </div>
-            <div style="width:48%; text-align:right;">
-                <h3>Shipping Address</h3>
-                <p>{{ optional($order->userCompanyAddress)->user_company_name }}</p>
-                <p>
-                    {{ trim((optional($order->userCompanyAddress)->company_address1 ?? '').' '.(optional($order->userCompanyAddress)->company_address2 ?? '')) }}
-                </p>
-                <p>
-                    {{ trim((optional($order->userCompanyAddress)->company_city ?? '').' '.(optional($order->userCompanyAddress)->company_country ?? '').' '.(optional($order->userCompanyAddress)->company_postcode ?? '')) }}
-                </p>
-            </div>
-        </div>
+        @endif
 
-        <div class="section">
-            <table>
-                <thead>
-                    <tr>
-                        <th align="left">ITEMS</th>
-                        <th align="center"></th>
-                        <th align="right">QUANTITY</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($ful->items as $fi)
-                        @php
-                            $oi      = $fi->orderItem;                
-                            $variant = optional($oi)->variant;
-                            $product = optional($variant)->product;
-                            $src     = $imgForItem($variant);
-                            $qty     = (int)$fi->quantity;           
-                        @endphp
+        @foreach($order->fulfillments as $ful)
+            <div class="page">
+                <div class="ps-head">
+                    <div class="ps-head__brand">{{ $brand }}</div>
+                    <div class="ps-head__meta">
+                        <div>Order #TR00{{ $order->order_id }}</div>
+                        <div>{{ Carbon::parse($ful->fulfilled_at ?? $orderDate)->format('F d, Y') }}</div>
+                        @if($ful->tracking_id)
+                            <div style="margin-top:4px;">
+                                Tracking: {{ $ful->tracking_id }}
+                                @if($ful->shipping_courier) &nbsp;&mdash;&nbsp;{{ $ful->shipping_courier }} @endif
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="ps-addr-row">
+                    <div class="ps-addr">
+                        <div class="ps-addr__title">SHIP TO</div>
+                        @if($hasShip)
+                            @if($ship->user_company_name)
+                            <div>{{ $ship->user_company_name }}</div>@endif
+                            @if($shipLine1)
+                            <div>{{ $shipLine1 }}</div>@endif
+                            @if($shipLine2)
+                            <div>{{ $shipLine2 }}</div>@endif
+                        @else
+                            <div class="ps-muted">No shipping address</div>
+                        @endif
+                    </div>
+
+                    <div class="ps-addr">
+                        <div class="ps-addr__title">BILL TO</div>
+                        @if($hasBill)
+                            @if($bill->user_company_name)
+                            <div>{{ $bill->user_company_name }}</div>@endif
+                            @if($billLine1)
+                            <div>{{ $billLine1 }}</div>@endif
+                            @if($billLine2)
+                            <div>{{ $billLine2 }}</div>@endif
+                        @else
+                            <div class="ps-muted">No billing address</div>
+                        @endif
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
                         <tr>
-                            <td>
-                                <div class="flex">
-                                    <img class="img" src="{{ $src }}" alt="Product">
-                                    <div>
-                                        <div class="title-strong">{{ optional($product)->mproduct_title }}</div>
-                                        <div class="muted">{{ optional($variant)->sku }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                @foreach($optionLines($variant) as $ln)
-                                    <div class="muted">{{ $ln }}</div>
-                                @endforeach
-                            </td>
-                            <td align="right">{{ $qty }}</td>
+                            <th align="left">ITEMS</th>
+                            <th align="right">QUANTITY</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody>
+                        @foreach($ful->items as $fi)
+                            @php
+                                $oi = $fi->orderItem;
+                                $variant = optional($oi)->variant;
+                                $product = optional($variant)->product;
+                                $src = $imgForItem($variant);
+                                $qty = (int) $fi->quantity;
+                              @endphp
+                            <tr>
+                                <td>
+                                    <div class="flex">
+                                        <img class="img" src="{{ $src }}" alt="Product">
+                                        <div>
+                                            <div class="title-strong">{{ optional($product)->mproduct_title }}</div>
+                                            <div class="muted">
+                                                @foreach($optionLines($variant) as $ln)
+                                                    <div class="muted">{!! $ln !!}</div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td align="right">{{ $qty }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
 
-        <div class="section" style="text-align:center">
-            <p>Thank you for shopping with us!</p>
-            <p>GOAPP</p>
-            <p>UK</p>
-            <p>info@truewebapp.com</p>
-            <p>truewebapp.com</p>
-        </div>
-    </div>
+                <div class="footer">
+                    <p>Thank you for shopping with us!</p>
+                    <p>GOAPP</p>
+                    <p>UK</p>
+                    <p>info@truewebapp.com</p>
+                    <p>truewebapp.com</p>
+                </div>
+            </div>
+        @endforeach
+
     @endforeach
-@endforeach
 
-<div class="footer no-print">
-    <button onclick="window.print()">Print / Save as PDF</button>
-</div>
+    <div class="footer no-print">
+        <button onclick="window.print()">Print / Save as PDF</button>
+    </div>
 
 </body>
+
 </html>

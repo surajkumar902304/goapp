@@ -35,7 +35,7 @@
         <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled'" class="btn-32-text-12 ml-1" small outlined
           style="color: red; background-color: white !important; border: 1px solid red !important;"
           @click="dialogCancel = true">
-          Cancel Order
+          Cancel
         </v-btn>
 
         <v-btn class="btn-32-text-12 ml-1"

@@ -26,6 +26,9 @@
                   prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Product Offers" />
               </v-row>
             </template>
+            <template #item.variant_label="{ item }">
+              <span v-html="item.variant_label_html || item.variant_label || '—'"></span>
+            </template>
             <template #header.actions1>
               <div class="text-center">Action</div>
             </template>
@@ -91,11 +94,21 @@
         </v-card-title>
         <v-form v-model="addValid" @submit.prevent="saveAdd">
           <v-card-text>
-            <v-autocomplete v-model="addForm.product_ids" :items="products" item-text="mproduct_title"
+            <v-autocomplete class="dialog-variants" v-model="addForm.product_ids" :items="products" item-text="mproduct_title"
               item-value="mproduct_id" label="Products" multiple small-chips deletable-chips :rules="[required]"
               @change="loadAddVariants" />
-            <v-autocomplete v-model="addForm.variant_ids" :items="addVariants" item-text="option_label"
-              item-value="mvariant_id" label="Variants" multiple small-chips deletable-chips :rules="[required]" />
+            <v-autocomplete class="dialog-variants" ref="variantSelect" v-model="addForm.variant_ids" :items="addVariants"
+              item-text="option_label" item-value="mvariant_id" label="Variants" multiple small-chips deletable-chips
+              :rules="[required]" :menu-props="{ offsetY: true, contentClass: 'variant-menu' }">
+              <template v-slot:append-item>
+                <div v-if="(addForm.variant_ids || []).length" class="pa-2 text-right">
+                  <v-btn small color="primary" class="px-4" @click.stop="applyVariantSelection">
+                    Apply
+                  </v-btn>
+                </div>
+              </template>
+            </v-autocomplete>
+
             <v-select v-model="addForm.product_deal_tag" :items="dealTagOptions" item-text="label" item-value="value"
               label="Product Deal Tag" dense :menu-props="{ offsetY: true }" />
             <v-text-field v-model="addForm.product_offer" label="Product Offer" />
@@ -134,7 +147,7 @@
             <v-btn class="btn-32-text-12" type="submit"
               style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"
               :disabled="!editValid || saving">
-              Update Offer
+              Update
             </v-btn>
           </v-card-actions>
         </v-form>
@@ -297,13 +310,14 @@ export default {
         for (const v of (p.mvariants || [])) {
           vIndex.set(v.mvariant_id, {
             mproduct_title: p.mproduct_title,
-            variant_label: this.formatVariantValues(v.option_value) || '', 
+            variant_label: this.formatVariantValues(v.option_value) || '',
+            variant_label_html: this.formatVariantValuesHtml(v.option_value) || '',
           });
         }
       }
 
       this.productOffers = (data.productoffers || []).map(offer => {
-        const extra = vIndex.get(offer.mvariant_id) || { mproduct_title: '', variant_label: '' };
+        const extra = vIndex.get(offer.mvariant_id) || { mproduct_title: '', variant_label: '', variant_label_html: '' };
         return { ...offer, ...extra };
       });
     },
@@ -346,6 +360,68 @@ export default {
       }
 
       return String(optionValue);
+    },
+    formatVariantValuesHtml(optionValue) {
+      const pairs = this.parseVariantPairs(optionValue);
+      return pairs
+        .filter(({ k, v }) => k && v != null && v !== '')
+        .map(({ k, v }) => `<strong>${this.escapeHtml(String(k))}</strong>: ${this.escapeHtml(String(v))}`)
+        .join(', ');
+    },
+
+    parseVariantPairs(optionValue) {
+      if (!optionValue) return [];
+
+      if (typeof optionValue === 'string') {
+        const s = optionValue.trim();
+        if (/^[^{}\[\]]+:\s*.+/.test(s)) {
+          return s.split(',').map(part => {
+            const [k, ...rest] = part.split(':');
+            return { k: k?.trim(), v: rest.join(':').trim() };
+          });
+        }
+        if (s.startsWith('{') || s.startsWith('[')) {
+          try { optionValue = JSON.parse(s); } catch { }
+        } else if (s.includes('|') || s.includes('=')) {
+          return s.split('|').map(pair => {
+            const [k, ...rest] = pair.split('=');
+            return { k: k?.trim(), v: rest.join('=').trim() };
+          });
+        }
+      }
+
+      if (Array.isArray(optionValue)) {
+        const out = [];
+        for (const o of optionValue) {
+          if (!o || typeof o !== 'object') continue;
+          const k = o.key || o.name || o.label || o.option || Object.keys(o)[0];
+          const v = o.value ?? (k && o[k]);
+          out.push({ k, v });
+        }
+        return out;
+      }
+
+      if (typeof optionValue === 'object') {
+        return Object.entries(optionValue).map(([k, v]) => ({ k, v }));
+      }
+
+      return [];
+    },
+
+    escapeHtml(s) {
+      return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    },
+    applyVariantSelection() {
+      if (this.$refs.variantSelect && this.$refs.variantSelect.isMenuActive !== undefined) {
+        this.$refs.variantSelect.isMenuActive = false;
+      } else if (this.$refs.variantSelect && this.$refs.variantSelect.blur) {
+        this.$refs.variantSelect.blur();
+      }
     },
     openAddDialog() {
       this.resetAdd(false);
@@ -645,6 +721,15 @@ export default {
 </style>
 <style>
 .page-product-offer .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
+  height: 32px !important;
+}
+</style>
+<style>
+.variant-menu .v-list {
+  max-height: 144px;
+  overflow-y: auto !important;
+}
+.dialog-variants label {
   height: 32px !important;
 }
 </style>
