@@ -27,6 +27,8 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'country',
         'postcode',
         'admin_approval',
+        'referred_by',
+        'referral_code',
     ];
 
     protected $hidden = [

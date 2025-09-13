@@ -49,6 +49,7 @@ Route::middleware(['auth.api'])->group(function () {
     Route::post('/change-password', [AuthController::class, 'changePassword']);
     Route::delete('/user-account/delete', [AuthController::class, 'deleteUserAccount']);
     Route::put('/user-profile/update', [AuthController::class, 'updateProfile']);
+    Route::post('/send-referral', [AuthController::class, 'sendReferralEmail']);
     
     // Brands
     Route::get('/brands', [BrandController::class, 'index']);

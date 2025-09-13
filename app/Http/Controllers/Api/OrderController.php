@@ -12,6 +12,7 @@ use App\Models\Mstock;
 use App\Models\Order;
 use App\Models\OrderCommission;
 use App\Models\OrderItem;
+use App\Models\Referral;
 use App\Models\Setting;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
@@ -159,7 +160,7 @@ class OrderController extends Controller
             'delivery_method_id' => ['required', 'integer', 'exists:delivery_methods,delivery_method_id'],
             'delivery_instructions' => ['nullable', 'string'],
             'coupon_id' => ['nullable', 'string', 'regex:/^\d+$/'],
-            'pay_by_bank' => ['boolean'], 
+            'pay_by_bank' => ['boolean'],
         ]);
 
         $couponId = trim($validated['coupon_id'] ?? '') ?: null;
@@ -180,6 +181,7 @@ class OrderController extends Controller
 
             $vatPercent = DB::table('product_vats')->value('product_vat') ?? 20;
             $vatPercent = $vatPercent / 100;
+
             $productTotal = 0.0;
             $totalvat = 0.0;
 
@@ -189,7 +191,7 @@ class OrderController extends Controller
                 $vatAmount = 0.0;
 
                 if ((int) $cart->mvariant->taxable === 1) {
-                    $vatAmount = $unit_price * $vatPercent; 
+                    $vatAmount = $unit_price * $vatPercent;
                 }
 
                 $productTotal += $unit_price * $quantity;
@@ -207,9 +209,9 @@ class OrderController extends Controller
             $wallet_discount = (float) ($validated['wallet_discount'] ?? 0);
             $coupon_discount = (float) ($validated['coupon_discount'] ?? 0);
 
-            $grossTotal = $productTotal + $totalvat + $deliveryCharge;             
-            $amountBeforeWallet = max(0, $grossTotal - $coupon_discount);                 
-            $amountDueAfterWallet = max(0, $amountBeforeWallet - $wallet_discount);       
+            $grossTotal = $productTotal + $totalvat + $deliveryCharge;
+            $amountBeforeWallet = max(0, $grossTotal - $coupon_discount);
+            $amountDueAfterWallet = max(0, $amountBeforeWallet - $wallet_discount);
 
             $wallet = Wallet::lockForUpdate()->firstOrCreate(
                 ['user_id' => $user->id],
@@ -225,7 +227,7 @@ class OrderController extends Controller
                 $wallet->decrement('balance', $wallet_discount);
 
                 WalletTransaction::create([
-                    'wallet_id' => $wallet->wallet_id, 
+                    'wallet_id' => $wallet->wallet_id,
                     'type' => 'debit',
                     'amount' => $wallet_discount,
                     'reference' => 'ORDER-' . uniqid(),
@@ -252,7 +254,7 @@ class OrderController extends Controller
                 $wallet->increment('balance', 1);
 
                 WalletTransaction::create([
-                    'wallet_id' => $wallet->wallet_id, 
+                    'wallet_id' => $wallet->wallet_id,
                     'type' => 'credit',
                     'amount' => 1,
                     'reference' => 'PAYBYBANK-' . uniqid(),
@@ -264,7 +266,7 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'user_id' => $user->id,
-                'total_amount' => $grossTotal,                  
+                'total_amount' => $grossTotal,
                 'wallet_discount' => $wallet_discount,
                 'coupon_discount' => $coupon_discount,
                 'status' => $status,
@@ -272,7 +274,7 @@ class OrderController extends Controller
                 'user_company_address_id' => $validated['user_company_address_id'],
                 'delivery_method_id' => $validated['delivery_method_id'],
                 'vat' => $totalvat,
-                'total_paid' => $finalTotal,                    
+                'total_paid' => $finalTotal,
                 'product_total_amount' => $productTotal,
                 'delivery_instructions' => $validated['delivery_instructions'] ?? null,
                 'coupon_id' => $couponId,
@@ -326,6 +328,49 @@ class OrderController extends Controller
                     ['coupon_id' => $couponId, 'user_id' => $user->id],
                     ['used_count' => DB::raw('used_count + 1')]
                 );
+            }
+
+            $hasPlacedOrdersBefore = Order::where('user_id', $user->id)
+                ->where('order_id', '!=', $order->order_id)
+                ->exists();
+
+            $referral = Referral::where('user_id', $user->id)
+                ->where('has_received_bonus', 0)
+                ->first();
+
+            if (!$hasPlacedOrdersBefore && $referral) {
+                $referrerId = $referral->referrer_id;
+
+                $userWallet = Wallet::firstOrCreate(
+                    ['user_id' => $user->id],
+                    ['balance' => 0]
+                );
+                $userWallet->increment('balance', 10);
+
+                WalletTransaction::create([
+                    'wallet_id' => $userWallet->wallet_id,
+                    'type' => 'credit',
+                    'amount' => 10,
+                    'reference' => 'REFBONUS-' . uniqid(),
+                    'description' => 'Referral bonus for joining (first order)',
+                ]);
+
+                $referrerWallet = Wallet::firstOrCreate(
+                    ['user_id' => $referrerId],
+                    ['balance' => 0]
+                );
+                $referrerWallet->increment('balance', 10);
+
+                WalletTransaction::create([
+                    'wallet_id' => $referrerWallet->wallet_id,
+                    'type' => 'credit',
+                    'amount' => 10,
+                    'reference' => 'REFBONUS-' . uniqid(),
+                    'description' => 'Referral bonus for referring (first order)',
+                ]);
+
+                $referral->has_received_bonus = 1;
+                $referral->save();
             }
 
             DB::commit();
