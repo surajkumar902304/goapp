@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\PasswordChangedMail;
 use App\Models\Customer;
 use App\Models\Referral;
+use App\Models\ReferralInvite;
 use App\Models\Rep;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -279,7 +280,9 @@ class AuthController extends Controller
     public function sendReferralEmail(Request $request)
     {
         $request->validate([
-            'email' => 'required|email'
+            'name'  => 'required|string|max:255',
+            'city'  => 'required|string|max:255',
+            'email' => 'required|email',
         ]);
 
         $sender = auth()->user();
@@ -287,15 +290,24 @@ class AuthController extends Controller
         if (!$sender || !$sender->referral_code) {
             return response()->json([
                 'status' => false,
-                'message' => 'Referral code not found for this user.'
+                'message' => 'Invalid referral code.'
             ], 404);
         }
+
+        $invite = ReferralInvite::create([
+            'sender_user_id' => $sender->id,
+            'name'           => $request->name,
+            'city'           => $request->city,
+            'email'          => $request->email,
+            'referral_code'  => $sender->referral_code, 
+        ]);
 
         Mail::to($request->email)->send(new ReferralCodeMail($sender));
 
         return response()->json([
-            'status' => true,
-            'message' => 'Referral code sent successfully to your friend.'
+            'status'  => true,
+            'message' => 'Referral code sent successfully.',
+            'invite'  => $invite,
         ]);
     }
 }
