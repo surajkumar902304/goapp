@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ServiceInterestMail;
 use App\Models\DeliveryMethod;
 use App\Models\ServiceSolution;
 use App\Models\UserCompanyAddress;
 use Illuminate\Http\Request;
+use Mail;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenExpiredException;
@@ -28,11 +30,11 @@ class CompanyAddressController extends Controller
 
             $company_address = UserCompanyAddress::where('user_id', $user->id)->get();
 
-            $delivery_methods = DeliveryMethod::where('is_active', '=','1')->get();
+            $delivery_methods = DeliveryMethod::where('is_active', '=', '1')->get();
 
             return response()->json([
-                'status'    => true,
-                'message'   => 'Fetched all Company Addresses & Delivery Methods successfully',
+                'status' => true,
+                'message' => 'Fetched all Company Addresses & Delivery Methods successfully',
                 'company_addresses' => $company_address,
                 'delivery_methods' => $delivery_methods,
             ], 200);
@@ -56,12 +58,12 @@ class CompanyAddressController extends Controller
 
             $request->validate([
                 'user_company_address_id' => 'nullable|exists:user_company_addresses,user_company_address_id',
-                'user_company_name'       => 'required|string|max:255',
-                'company_address1'        => 'required|string|max:255',
-                'company_address2'        => 'nullable|string|max:255',
-                'company_city'            => 'required|string|max:255',
-                'company_country'         => 'required|string|max:255',
-                'company_postcode'        => 'required|string|max:255',
+                'user_company_name' => 'required|string|max:255',
+                'company_address1' => 'required|string|max:255',
+                'company_address2' => 'nullable|string|max:255',
+                'company_city' => 'required|string|max:255',
+                'company_country' => 'required|string|max:255',
+                'company_postcode' => 'required|string|max:255',
             ]);
 
             $data = $request->only([
@@ -75,8 +77,8 @@ class CompanyAddressController extends Controller
 
             if ($request->user_company_address_id) {
                 $address = UserCompanyAddress::where('user_id', $user->id)
-                            ->where('user_company_address_id', $request->user_company_address_id)
-                            ->first();
+                    ->where('user_company_address_id', $request->user_company_address_id)
+                    ->first();
 
                 if (!$address) {
                     return response()->json(['status' => false, 'message' => 'Address not found.'], 404);
@@ -110,8 +112,8 @@ class CompanyAddressController extends Controller
             ]);
 
             $deleted = UserCompanyAddress::where('user_id', $user->id)
-                        ->where('user_company_address_id', $request->user_company_address_id)
-                        ->delete();
+                ->where('user_company_address_id', $request->user_company_address_id)
+                ->delete();
 
             if ($deleted) {
                 return response()->json(['status' => true, 'message' => 'Address deleted successfully.']);
@@ -126,13 +128,14 @@ class CompanyAddressController extends Controller
 
 
     //Delivery Methods
-    public function deliveryMethod(){
+    public function deliveryMethod()
+    {
 
         $delivery_methods = DeliveryMethod::where('is_active', 1)->get();
 
         return response()->json([
-            'status'    => true,
-            'message'   => 'Fetched all Delivery Methods successfully',
+            'status' => true,
+            'message' => 'Fetched all Delivery Methods successfully',
             'delivery_methods' => $delivery_methods,
         ], 200);
     }
@@ -143,10 +146,41 @@ class CompanyAddressController extends Controller
         $service_solutions = ServiceSolution::get();
 
         return response()->json([
-            'status'    => true,
-            'message'   => 'Fetched all Delivery Methods successfully',
+            'status' => true,
+            'message' => 'Fetched all service & solution successfully',
             'service_solutions' => $service_solutions,
         ], 200);
     }
-   
+
+    public function serviceInterested(Request $request)
+    {
+        $request->validate([
+            'service_solution_id' => 'required|exists:service_solutions,service_solution_id',
+            'name' => 'required|string',
+            'phone' => 'required|string',
+            'email' => 'required|string|email',
+            'note' => 'required|string'
+        ]);
+
+        $service = ServiceSolution::findOrFail($request->service_solution_id);
+
+        $data = [
+            'name' => $request->name,
+            'phone' => $request->phone,
+            'email' => $request->email,
+            'note' => $request->note,
+            'service_title' => $service->service_solution_title,
+            'service_subtitle' => $service->service_solution_sub_title,
+            'service_image' => config('cdn.url') . ltrim($service->service_solution_image, '/'),
+            'service_desc' => $service->service_solution_desc,
+        ];
+
+        Mail::to('suraj.impactmindz@gmail.com')->send(new ServiceInterestMail($data));
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Interested email sent successfully.',
+        ]);
+    }
+
 }

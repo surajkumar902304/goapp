@@ -89,6 +89,7 @@ Route::middleware(['auth.api'])->group(function () {
 
     // Service & Solution
     Route::get('/service-solutions', [CompanyAddressController::class, 'serviceAndSolution']);
+    Route::post('/service-solutions', [CompanyAddressController::class, 'serviceInterested']);
 
     // Order Routes 
     Route::apiResource('orders', OrderController::class);
