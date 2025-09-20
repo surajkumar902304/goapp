@@ -6,7 +6,7 @@
           <h2 class="text-h6 mb-1">Orders</h2>
         </v-col>
         <v-col cols="12" md="6" class="p-0 d-flex justify-end">
-          <v-btn color="primary" @click="syncOrders" :disabled="saving" class="text-capitalize">
+          <v-btn class="text-none btn-32-text-12" small style="color: #1976d2; font-weight: bold; background-color: white !important; border: 1px solid #1976d2 !important;" @click="syncOrders" :disabled="saving">
             Sync Royal Mail
           </v-btn>
 
