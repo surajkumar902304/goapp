@@ -28,7 +28,7 @@ class SettingController extends Controller
 
     public function getListSettings()
     {
-        $settings= Setting::orderBy('setting_id', 'desc')->get();
+        $settings= Setting::where('key', 'min_order_free_delivery')->get();
         return response()->json([
             'status' => true,
             'deliverymethods' => $settings,

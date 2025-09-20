@@ -1,9 +1,21 @@
 <template>
   <div>
     <v-container fluid class="pt-0">
-      <v-row class="mt-0 pt-0">
-        <v-col cols="12" md="10" class="p-0">
+      <v-row class="mt-0 pt-0 align-center justify-space-between">
+        <v-col cols="12" md="6" class="p-0">
           <h2 class="text-h6 mb-1">Orders</h2>
+        </v-col>
+        <v-col cols="12" md="6" class="p-0 d-flex justify-end">
+          <v-btn color="primary" @click="syncOrders" :disabled="saving" class="text-capitalize">
+            Sync Royal Mail
+          </v-btn>
+
+          <v-overlay :value="saving" opacity="0.6" absolute>
+            <div class="d-flex flex-column align-center">
+              <v-progress-circular indeterminate size="64" color="primary" />
+              <div class="mt-4 font-weight-medium">Processing… please wait</div>
+            </div>
+          </v-overlay>
         </v-col>
       </v-row>
     </v-container>
@@ -69,8 +81,8 @@
               <v-chip :color="statusColor(item.status)" small outlined>{{ item.status }}</v-chip>
             </template>
             <template #item.fulfillment_status="{ item }">
-              <v-chip :color="item.fulfillment_status.toLowerCase() === 'fulfilled' ? 'green' : 'red'" small outlined>
-                {{ item.fulfillment_status }}
+              <v-chip :color="getFulfillmentStatusColor(item.fulfillment_status)" small outlined>
+                {{ formatFulfillmentStatus(item.fulfillment_status) }}
               </v-chip>
             </template>
             <template v-slot:item.total_items="{ item }">
@@ -154,7 +166,9 @@ export default {
       loadingBulk: false,
       actionLabel: '',
 
-      openPrintConfirmDialog: false
+      openPrintConfirmDialog: false,
+
+      saving: false
     };
   },
   computed: {
@@ -226,6 +240,29 @@ export default {
         case 'cancelled': return 'red';
         default: return 'orange';
       }
+    },
+    getFulfillmentStatusColor(fulfillment_status) {
+      switch (fulfillment_status?.toLowerCase()) {
+        case 'fulfilled':
+          return 'green';
+        case 'partiallyfulfilled':
+          return 'orange';
+        case 'unfulfilled':
+        default:
+          return 'red';
+      }
+    },
+    formatFulfillmentStatus(fulfillment_status) {
+      if (!fulfillment_status) return '';
+
+      const map = {
+        fulfilled: 'Fulfilled',
+        unfulfilled: 'Unfulfilled',
+        partiallyfulfilled: 'Partially Fulfilled',
+      };
+
+      const key = fulfillment_status.toLowerCase();
+      return map[key] || fulfillment_status.charAt(0).toUpperCase() + fulfillment_status.slice(1);
     },
     changeStatus(order, newStatus) {
       order.status = newStatus;
@@ -314,6 +351,18 @@ export default {
         this.openPrintConfirmDialog = false;
         this.selected = [];
         this.loadingBulk = false;
+      }
+    },
+    async syncOrders() {
+      try {
+        this.saving = true
+        const res = await axios.post('/admin/royalmail/sync');
+        this.$toast.success(`Royal Mail sync: (pushed ${res.data.pushed_now} order)`, { timeout: 800 });
+        this.getAllOrders();
+      } catch (e) {
+        this.$toast.error('Sync failed.')
+      } finally {
+        this.saving = false
       }
     }
 

@@ -30,4 +30,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'royalmail_cnd' => [
+        'base' => env('ROYALMAIL_CND_BASE'),
+        'key' => env('ROYALMAIL_CND_API_KEY'),
+    ],
+
+
 ];

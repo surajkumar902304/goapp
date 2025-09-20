@@ -128,6 +128,14 @@ class OrderController extends Controller
                 $targetStatus = strtolower($req->bulkstatus);
                 $current = strtolower((string) $order->status);
 
+                if (
+                    $targetStatus === 'cancelled'
+                    && !empty($order->royalmail_order_identifier)
+                    && $order->cnd_status === 'created'
+                ) {
+                    return; // skip cancellation for this order
+                }
+
                 if ($current !== $targetStatus) {
                     $order->status = $targetStatus;
                     $order->save();
@@ -200,6 +208,10 @@ class OrderController extends Controller
 
             if ($validated['bulkfulfilled'] === 'fulfilled') {
                 foreach ($orders as $order) {
+                    if (!empty($order->royalmail_order_identifier) && $order->cnd_status === 'created') {
+                        continue;
+                    }
+
                     $remainingItems = $order->items->filter(function ($it) {
                         $remaining = max(0, ($it->quantity ?? 0) - ($it->fulfilled_quantity ?? 0));
                         return $remaining > 0;
@@ -247,6 +259,10 @@ class OrderController extends Controller
                 }
             } else {
                 foreach ($orders as $order) {
+                    if (!empty($order->royalmail_order_identifier) && $order->cnd_status === 'created') {
+                        continue;
+                    }
+
                     $itemsUpdated += OrderItem::where('order_id', $order->order_id)
                         ->update(['fulfilled_quantity' => 0]);
 
@@ -393,6 +409,7 @@ class OrderController extends Controller
         $payload = [
             'order_id' => $order->order_id,
             'order_number' => '#00' . $order->order_id,
+            'cnd_status' => $order->cnd_status,
             'user' => [
                 'id' => $order->user->id,
                 'name' => $order->user->name,
@@ -429,11 +446,11 @@ class OrderController extends Controller
                 'subtotal' => $order->product_total_amount,
                 'wallet_discount' => $walletDiscount,
                 'coupon_discount' => $couponDiscount,
-                'delivery_cost'   => $deliveryCost,
-                'vat'             => $order->vat,
-                'vat_percent'     => $vatPercent,
-                'payment_total'   => $order->total_amount,
-                'total_paid'      => $order->total_paid,
+                'delivery_cost' => $deliveryCost,
+                'vat' => $order->vat,
+                'vat_percent' => $vatPercent,
+                'payment_total' => $order->total_amount,
+                'total_paid' => $order->total_paid,
             ],
 
             'items' => $items,
@@ -613,8 +630,17 @@ class OrderController extends Controller
             }
 
             $all = $order->items()->get();
+
             $allDone = $all->every(fn($i) => ($i->fulfilled_quantity ?? 0) >= ($i->quantity ?? 0));
-            $order->fulfillment_status = $allDone ? 'fulfilled' : 'unfulfilled';
+            $noneDone = $all->every(fn($i) => ($i->fulfilled_quantity ?? 0) === 0);
+
+            if ($allDone) {
+                $order->fulfillment_status = 'fulfilled';
+            } elseif ($noneDone) {
+                $order->fulfillment_status = 'unfulfilled';
+            } else {
+                $order->fulfillment_status = 'partiallyfulfilled';
+            }
             $order->save();
 
             $order->load([

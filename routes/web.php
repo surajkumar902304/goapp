@@ -237,7 +237,7 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::get('/orders-bulk/packing-slips', [OrderController::class, 'bulkPackingSlips'])->name('admin.order.bulkpackingSlip');
 
     // routes/ Click & drop royal mail
-    Route::post('/royalmail/sync-toggle', [RoyalMailSyncController::class, 'toggle']);
+    Route::post('/royalmail/sync', [RoyalMailSyncController::class, 'sync']);
 
 
     // Delivery Methods routes

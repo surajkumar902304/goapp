@@ -15,24 +15,25 @@
 
           <h6 class="text-h6 font-weight-bold mb-0">#TR00{{ order.order_id }}</h6>
 
-          <v-chip small class="ma-1 mr-0" :color="order.payment_status.toLowerCase() === 'paid' ? '#e0e0e0' : '#ffd6a4'"
-            text-color="black">
+          <v-chip small class="ma-1 mr-0 text-capitalize"
+            :color="order.payment_status.toLowerCase() === 'paid' ? '#e0e0e0' : '#ffd6a4'" text-color="black">
             {{ order.payment_status }}
           </v-chip>
 
-          <v-chip small class="ma-1"
-            :color="order.fulfillment_status.toLowerCase() === 'fulfilled' ? '#e0e0e0' : '#ffeb78'" text-color="black">
-            {{ order.fulfillment_status }}
+          <v-chip small class="ma-1" :color="getFulfillmentStatusColor(order.fulfillment_status)" text-color="black">
+            {{ formatFulfillmentStatus(order.fulfillment_status) }}
           </v-chip>
         </div>
       </v-col>
 
       <v-col cols="12" md="6" class="text-end">
-        <v-btn class="btn-32-text-12 ml-1" small outlined style="color: black; background-color: white !important; border: 1px solid black !important;" @click="sendRefund">
+        <v-btn v-if="order.cnd_status !== 'created'" class="btn-32-text-12 ml-1" small outlined
+          style="color: black; background-color: white !important; border: 1px solid black !important;"
+          @click="sendRefund">
           Refund
         </v-btn>
 
-        <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled'" class="btn-32-text-12 ml-1" small outlined
+        <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled' && order.cnd_status !== 'created'" class="btn-32-text-12 ml-1" small outlined
           style="color: red; background-color: white !important; border: 1px solid red !important;"
           @click="dialogCancel = true">
           Cancel
@@ -115,7 +116,7 @@
               {{ showAllUnfulfilled ? 'Show less' : `Show ${hiddenUnfulfilledCount} more` }}
             </v-btn>
             <v-spacer />
-            <v-btn class="btn-32-text-12 me-2" small
+            <v-btn v-if="order.cnd_status !== 'created'" class="btn-32-text-12 me-2" small
               style="color:#1976d2;background-color:white !important;border:1px solid #1976d2 !important;"
               @click="openFulfilDialog">
               Fulfill Item
@@ -156,8 +157,8 @@
           <div class="list-wrap px-3">
             <div class="list-container border border-1 rounded-2 overflow-hidden">
               <v-list dense class="p-0">
-                <v-list-item v-for="itm in visibleFulfilledItems(f)" :key="f.order_fulfillment_id + '-' + itm.order_item_id"
-                  class="py-2">
+                <v-list-item v-for="itm in visibleFulfilledItems(f)"
+                  :key="f.order_fulfillment_id + '-' + itm.order_item_id" class="py-2">
                   <v-list-item-avatar size="50">
                     <v-img :src="imgSrc(itm.variant?.image, itm.product?.mproduct_image)" contain />
                   </v-list-item-avatar>
@@ -191,17 +192,15 @@
           </div>
           <v-card-actions class="px-4">
             <v-spacer />
-            <v-btn
-              v-if="(f.items || []).length > 10"
-              small text class="btn-32-text-12 me-2"
-              @click="toggleFulfillment(f.order_fulfillment_id)"
-            >
+            <v-btn v-if="(f.items || []).length > 10" small text class="btn-32-text-12 me-2"
+              @click="toggleFulfillment(f.order_fulfillment_id)">
               {{ isFulfillmentExpanded(f.order_fulfillment_id)
-                  ? 'Show less'
-                  : `Show ${hiddenFulfilledCount(f)} more` }}
+                ? 'Show less'
+                : `Show ${hiddenFulfilledCount(f)} more` }}
             </v-btn>
             <v-spacer />
-            <v-btn v-if="!f.tracking_id" class="btn-32-text-12 me-2" style="color: black; background-color: white !important; border: 1px solid black !important;" small
+            <v-btn v-if="!f.tracking_id" class="btn-32-text-12 me-2"
+              style="color: black; background-color: white !important; border: 1px solid black !important;" small
               @click="openTrackingDialog(f)">
               + Add Tracking
             </v-btn>
@@ -368,7 +367,9 @@
           <v-spacer />
           <v-btn class="btn-32-text-12" text @click="trackingDialog = false">Close</v-btn>
           <!-- <v-btn class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="loadingTracking" :disabled="loadingTracking" @click="saveTracking"> -->
-          <v-btn class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="loadingTracking" :disabled="true" @click="saveTracking">
+          <v-btn class="btn-32-text-12"
+            style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"
+            :loading="loadingTracking" :disabled="true" @click="saveTracking">
             <template #loader>
               <v-progress-circular indeterminate size="16" color="white" />
             </template>
@@ -485,7 +486,29 @@ export default {
       const { data } = await axios.get(`/admin/vorder/editdata/${this.orderid}`)
       this.order = data.order
     },
+    getFulfillmentStatusColor(fulfillment_status) {
+      switch (fulfillment_status?.toLowerCase()) {
+        case 'fulfilled':
+          return '#e0e0e0';
+        case 'partiallyfulfilled':
+          return '#ffd6a4';
+        case 'unfulfilled':
+        default:
+          return '#ffeb78';
+      }
+    },
+    formatFulfillmentStatus(fulfillment_status) {
+      if (!fulfillment_status) return '';
 
+      const map = {
+        fulfilled: 'Fulfilled',
+        unfulfilled: 'Unfulfilled',
+        partiallyfulfilled: 'Partially Fulfilled',
+      };
+
+      const key = fulfillment_status.toLowerCase();
+      return map[key] || fulfillment_status.charAt(0).toUpperCase() + fulfillment_status.slice(1);
+    },
     navigateBack() {
       if (this.backLoading) return
       this.backLoading = true
@@ -685,6 +708,6 @@ export default {
 }
 
 .v-dialog .v-input--selection-controls__ripple {
-    display: none!important;
+  display: none !important;
 }
 </style>

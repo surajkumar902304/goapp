@@ -24,7 +24,11 @@ class Order extends Model
         'product_total_amount',
         'delivery_instructions',
         'coupon_id',
-        'pay_by_bank'
+        'pay_by_bank',
+        'royalmail_order_identifier',
+        'pushed_to_cnd_at',
+        'cnd_status',
+        'cnd_last_error',
     ];
 
     protected $casts = [
