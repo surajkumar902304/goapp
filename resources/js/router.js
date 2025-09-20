@@ -34,7 +34,7 @@ import AdminCoupons from './admin/coupon/AdminCoupons.vue';
 import RepList from './admin/rep/RepList.vue';
 import OrderList from './admin/order/OrderList.vue';
 import OrderDetail from './admin/order/OrderDetail.vue';
-
+import ServiceDisplaySolution from './admin/service/ServiceDisplaySolution.vue';
 
 
 const routes = [
@@ -67,7 +67,7 @@ const routes = [
   { path: '/admin/reps', component: RepList, name: 'reps-list' },
   { path: '/admin/orders', component: OrderList, name: 'order-list' },
   { path: '/admin/orders/:orderid', component: OrderDetail, name: 'order-detail', props: route => ({ orderid: Number(route.params.orderid) }) },
-
+  { path: '/admin/services', component: ServiceDisplaySolution, name: 'service-list' },
 
   { path: '*', component: AdminNotFound, name: 'AdminNotFound', meta: { layout: 'none' } },
 ];

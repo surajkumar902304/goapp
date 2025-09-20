@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\RoyalMailSyncController;
 use App\Http\Controllers\BankDetailController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\DashboardController;
@@ -235,6 +236,10 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::get('/order/packing-slip/{order_id}', [OrderController::class, 'packingSlip'])->name('admin.order.packingSlip');
     Route::get('/orders-bulk/packing-slips', [OrderController::class, 'bulkPackingSlips'])->name('admin.order.bulkpackingSlip');
 
+    // routes/ Click & drop royal mail
+    Route::post('/royalmail/sync-toggle', [RoyalMailSyncController::class, 'toggle']);
+
+
     // Delivery Methods routes
     Route::get('/delivery-method/vlist', [SettingController::class, 'deliveryMethodVlist'])->name('deliverymethods.vlist');
     Route::post('/delivery-method/add', [SettingController::class, 'addDeliveryMethod'])->name('deliverymethod.add');
@@ -256,11 +261,11 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::post('/users/assign-tag', [UserTagController::class, 'assignTag']);  
     
     // Services & Display Solutions routes
-    // Route::get('/services/vlist', [CouponController::class, 'serviceVlist'])->name('services.vlist');
-    // Route::post('/services/add', [CouponController::class, 'addService'])->name('service.add');
-    // Route::post('/services/update', [CouponController::class, 'editService'])->name('service.edit');
-    // Route::post('/service-delete', [CouponController::class, 'deleteService']);
-    // Route::post('/services/bulk-delete', [CouponController::class, 'bulkDeleteService']);
+    Route::get('/services/vlist', [CouponController::class, 'serviceVlist'])->name('services.vlist');
+    Route::post('/services/add', [CouponController::class, 'addService'])->name('service.add');
+    Route::post('/services/update', [CouponController::class, 'editService'])->name('service.edit');
+    Route::post('/service-delete', [CouponController::class, 'deleteService']);
+    Route::post('/services/bulk-delete', [CouponController::class, 'bulkDeleteService']);
 });
 
 

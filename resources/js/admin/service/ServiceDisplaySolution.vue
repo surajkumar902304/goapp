@@ -114,7 +114,7 @@
                 <v-card-actions>
                     <v-spacer />
                     <template v-if="editedIndex !== -1 || isImageSelected">
-                        <v-btn class="btn-32-text-12" type="submit" color="success" small :disabled="!fsvalid || submitting" >
+                        <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small :disabled="!fsvalid || submitting" >
                             {{ editedIndex === -1 ? 'Add Service' : 'Update Service' }}
                         </v-btn>
                     </template>
@@ -163,11 +163,11 @@ export default {
             services: [],
             servicesHeaders: [
                 { text: '', value: 'data-table-select', width: '10px' },
-                { text: 'Image', value: 'service_solution_image', sortable: false, width: '150px' },
-                { text: 'Title', value: 'service_solution_title', width: '375px' },
-                { text: 'Action', value: 'actions1', sortable: false, width: '250px' },
-                { text: 'Action', value: 'actions2', sortable: false, width: '250px' },
-                { text: '', value: 'delete', sortable: false }
+                { text: 'Image', value: 'service_solution_image', sortable: false },
+                { text: 'Title', value: 'service_solution_title' },
+                { text: 'Action', value: 'actions1', sortable: false },
+                { text: 'Action', value: 'actions2', sortable: false },
+                { text: '', value: 'delete', sortable: false, width: '130px' }
             ],
             addSdialog: false,
             editedIndex: -1,
