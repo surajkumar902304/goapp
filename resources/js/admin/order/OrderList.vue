@@ -198,6 +198,7 @@ export default {
         { text: 'Fulfillment status', value: 'fulfillment_status' },
         { text: 'Items', value: 'total_items' },
         { text: 'Delivery status', value: '' },
+        { text: 'Royal Mail', value: 'cnd_status' },
         { text: 'Delivery method', value: 'delivery_method' },
       ];
 

@@ -55,6 +55,7 @@ class OrderController extends Controller
                     'total_items' => (int) $order->items_sum_quantity,
                     'delivery_method' => $deliveryMethodName,
                     'has_receipt' => $hasReceipt,
+                    'cnd_status' => $order->cnd_status,
                 ];
             });
 
