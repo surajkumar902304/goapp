@@ -139,7 +139,32 @@ class BannerController extends Controller
         $uid = auth()->id();
         $allTags = Mtag::pluck('mtag_name', 'mtag_id');
 
-        $transformVariants = function ($sliderMap, $sliderKeyName) use ($allTags, $uid) {
+        $tagType = null;
+        $tagId = null;
+        $percent = null;
+
+        if ($uid) {
+            $user = User::select('id', 'user_tag_id')->find($uid);
+            if ($user && $user->user_tag_id) {
+                $tag = UserTag::where('user_tag_id', $user->user_tag_id)
+                    ->where('is_active', 1)
+                    ->first(['user_tag_id', 'type', 'discount']);
+
+                if ($tag) {
+                    $t = strtolower($tag->type ?? '');
+                    if ($t === 'custom') {
+                        $tagType = 'custom';
+                        $tagId = (int) $tag->user_tag_id;
+                    } elseif ($t === 'percentage') {
+                        $tagType = 'percentage';
+                        $raw = (float) ($tag->discount ?? 0);
+                        $percent = max(0.0, min(100.0, $raw));
+                    }
+                }
+            }
+        }
+
+        $transformVariants = function ($sliderMap, $sliderKeyName) use ($allTags, $uid, $tagType, $tagId, $percent) {
             $variantIds = $sliderMap->keys();
 
             $variants = Mvariant::whereIn('mvariant_id', $variantIds)
@@ -160,18 +185,44 @@ class BannerController extends Controller
                 ])
                 ->get();
 
+            $tagPriceMap = collect();
+            if ($tagType === 'custom' && $tagId) {
+                $tagPriceMap = UserTagPrice::where('user_tag_id', $tagId)
+                    ->whereIn('mvariant_id', $variantIds)
+                    ->pluck('tag_price', 'mvariant_id');
+            }
+
             return $variants->filter(fn($v) => $v->product)
-                ->map(function ($v) use ($sliderMap, $sliderKeyName, $allTags, $uid) {
-                    $optVals = collect($v->details)->reduce(fn($carry, $d) => array_merge($carry, (array) $d->option_value), []);
-                    $optKeys = collect($v->details)->flatMap(fn($d) => $d->options)->unique()->values();
+                ->map(function ($v) use ($sliderMap, $sliderKeyName, $allTags, $uid, $tagType, $percent, $tagPriceMap) {
+                    $optVals = collect($v->details)->reduce(
+                        fn($carry, $d) => array_merge($carry, (array) $d->option_value),
+                        []
+                    );
+                    $optKeys = collect($v->details)
+                        ->flatMap(fn($d) => $d->options)
+                        ->unique()
+                        ->values();
+
                     $p = $v->product;
                     $brand = $p?->brand;
                     $type = $p?->type;
 
-                    $inWishlist = Wishlist::where([
-                        ['mvariant_id', '=', $v->mvariant_id],
-                        ['user_id', '=', $uid],
-                    ])->exists();
+                    $inWishlist = $uid
+                        ? Wishlist::where([['mvariant_id', '=', $v->mvariant_id], ['user_id', '=', $uid]])->exists()
+                        : false;
+
+                    $basePrice = (float) $v->price;
+                    $effective = $basePrice;
+
+                    if ($tagType === 'custom') {
+                        if (isset($tagPriceMap[$v->mvariant_id])) {
+                            $effective = (float) $tagPriceMap[$v->mvariant_id];
+                        }
+                    } elseif ($tagType === 'percentage' && $percent !== null) {
+                        $effective = round($basePrice * (1 - $percent / 100), 2);
+                        if ($effective < 0)
+                            $effective = 0.0;
+                    }
 
                     return [
                         $sliderKeyName => $sliderMap[$v->mvariant_id] ?? null,
@@ -193,7 +244,7 @@ class BannerController extends Controller
                             'mvariant_id' => $v->mvariant_id,
                             'sku' => $v->sku,
                             'image' => $v->mvariant_image,
-                            'price' => $v->price,
+                            'price' => $effective,  
                             'quantity' => $v->mstock?->quantity ?? 0,
                             'compare_price' => $v->compare_price,
                             'cost_price' => $v->cost_price,
