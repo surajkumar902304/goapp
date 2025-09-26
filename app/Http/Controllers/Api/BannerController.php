@@ -15,6 +15,9 @@ use App\Models\Mvariant;
 use App\Models\NewProduct;
 use App\Models\SliderHeader;
 use App\Models\TopSeller;
+use App\Models\User;
+use App\Models\UserTag;
+use App\Models\UserTagPrice;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
 
@@ -23,7 +26,7 @@ class BannerController extends Controller
     public function homeBanner()
     {
         $roundSliders = HomeRoundBanner::orderBy('home_round_banner_position')->get()->makeHidden(['created_at', 'updated_at']);
-        $bigSliders   = HomeLargeBanner::orderBy('home_large_banner_position')->get()->makeHidden(['created_at', 'updated_at']);
+        $bigSliders = HomeLargeBanner::orderBy('home_large_banner_position')->get()->makeHidden(['created_at', 'updated_at']);
         $smallSliders = HomeSmallBanner::orderBy('home_small_banner_position')->get()->makeHidden(['created_at', 'updated_at']);
         $dealsSliders = HomeExploreDealBanner::orderBy('home_explore_deal_banner_position')->get()->makeHidden(['created_at', 'updated_at']);
         $fruitSliders = HomeFruitBanner::orderBy('home_fruit_banner_position')->get()->makeHidden(['created_at', 'updated_at']);
@@ -32,16 +35,16 @@ class BannerController extends Controller
         $fruitHeader = SliderHeader::where('header_name', 'second banner slider')->value('header_value');
 
         return response()->json([
-            'status'        => true,
-            'message'       => 'Fetch all Sliders Successfully',
-            'cdnURL'        => config('cdn.url'),
-            'roundSliders'  => $roundSliders,
-            'bigSliders'    => $bigSliders,
-            'smallSliders'  => $smallSliders,
-            'dealsHeader'   => $dealHeader,
-            'dealsSliders'  => $dealsSliders,
-            'fruitHeader'   => $fruitHeader,
-            'fruitSliders'  => $fruitSliders,
+            'status' => true,
+            'message' => 'Fetch all Sliders Successfully',
+            'cdnURL' => config('cdn.url'),
+            'roundSliders' => $roundSliders,
+            'bigSliders' => $bigSliders,
+            'smallSliders' => $smallSliders,
+            'dealsHeader' => $dealHeader,
+            'dealsSliders' => $dealsSliders,
+            'fruitHeader' => $fruitHeader,
+            'fruitSliders' => $fruitSliders,
         ]);
     }
 
@@ -50,9 +53,9 @@ class BannerController extends Controller
         $roundSliders = HomeRoundBanner::orderBy('home_round_banner_position')->get();
 
         return response()->json([
-            'status'     => true,
-            'message'    => 'Fetch all Round Sliders Successfully',
-            'cdnURL'     => config('cdn.url'),
+            'status' => true,
+            'message' => 'Fetch all Round Sliders Successfully',
+            'cdnURL' => config('cdn.url'),
             'roundSliders' => $roundSliders
         ]);
     }
@@ -62,9 +65,9 @@ class BannerController extends Controller
         $bigSliders = HomeLargeBanner::orderBy('home_large_banner_position')->get();
 
         return response()->json([
-            'status'     => true,
-            'message'    => 'Fetch all Big Sliders Successfully',
-            'cdnURL'     => config('cdn.url'),
+            'status' => true,
+            'message' => 'Fetch all Big Sliders Successfully',
+            'cdnURL' => config('cdn.url'),
             'bigSliders' => $bigSliders
         ]);
     }
@@ -74,10 +77,10 @@ class BannerController extends Controller
         $smallSliders = HomeSmallBanner::orderBy('home_small_banner_position')->get();
 
         return response()->json([
-            'status'        => true,
-            'message'       => 'Fetch all Small Sliders Successfully',
-            'cdnURL'        => config('cdn.url'),
-            'smallSliders'  => $smallSliders
+            'status' => true,
+            'message' => 'Fetch all Small Sliders Successfully',
+            'cdnURL' => config('cdn.url'),
+            'smallSliders' => $smallSliders
         ]);
     }
 
@@ -92,11 +95,11 @@ class BannerController extends Controller
             : null;
 
         return response()->json([
-            'status'        => true,
-            'message'       => 'Fetch all Deals Sliders Successfully',
-            'cdnURL'        => config('cdn.url'),
+            'status' => true,
+            'message' => 'Fetch all Deals Sliders Successfully',
+            'cdnURL' => config('cdn.url'),
             'slider_header' => $header,
-            'dealsSliders'  => $dealsSliders
+            'dealsSliders' => $dealsSliders
         ]);
     }
 
@@ -111,11 +114,11 @@ class BannerController extends Controller
             : null;
 
         return response()->json([
-            'status'        => true,
-            'message'       => 'Fetch all Fruit Sliders Successfully',
-            'cdnURL'        => config('cdn.url'),
+            'status' => true,
+            'message' => 'Fetch all Fruit Sliders Successfully',
+            'cdnURL' => config('cdn.url'),
             'slider_header' => $header,
-            'fruitSliders'  => $fruitSliders
+            'fruitSliders' => $fruitSliders
         ]);
     }
 
@@ -124,9 +127,9 @@ class BannerController extends Controller
         $browseSliders = Browsebanner::orderBy('browsebanner_position')->get();
 
         return response()->json([
-            'status'        => true,
-            'message'       => 'Fetch all Browse Sliders Successfully',
-            'cdnURL'        => config('cdn.url'),
+            'status' => true,
+            'message' => 'Fetch all Browse Sliders Successfully',
+            'cdnURL' => config('cdn.url'),
             'browseBanners' => $browseSliders
         ]);
     }
@@ -159,11 +162,11 @@ class BannerController extends Controller
 
             return $variants->filter(fn($v) => $v->product)
                 ->map(function ($v) use ($sliderMap, $sliderKeyName, $allTags, $uid) {
-                    $optVals = collect($v->details)->reduce(fn($carry, $d) => array_merge($carry, (array)$d->option_value), []);
+                    $optVals = collect($v->details)->reduce(fn($carry, $d) => array_merge($carry, (array) $d->option_value), []);
                     $optKeys = collect($v->details)->flatMap(fn($d) => $d->options)->unique()->values();
-                    $p       = $v->product;
-                    $brand   = $p?->brand;
-                    $type    = $p?->type;
+                    $p = $v->product;
+                    $brand = $p?->brand;
+                    $type = $p?->type;
 
                     $inWishlist = Wishlist::where([
                         ['mvariant_id', '=', $v->mvariant_id],
@@ -172,36 +175,36 @@ class BannerController extends Controller
 
                     return [
                         $sliderKeyName => $sliderMap[$v->mvariant_id] ?? null,
-                        'mvariant_id'  => $v->mvariant_id,
+                        'mvariant_id' => $v->mvariant_id,
                         'product' => [
-                            'mproduct_id'       => $p?->mproduct_id,
-                            'mproduct_title'    => $p?->mproduct_title,
-                            'mproduct_image'    => $p?->mproduct_image,
-                            'mproduct_slug'     => $p?->mproduct_slug,
-                            'mproduct_desc'     => $p?->mproduct_desc,
-                            'status'            => $p?->status,
-                            'saleschannel'      => $p?->saleschannel,
-                            'brand_id'          => $brand?->mbrand_id,
-                            'brand_name'        => $brand?->mbrand_name,
-                            'type_id'           => $type?->mproduct_type_id,
-                            'product_type'      => $type?->mproduct_type_name,
-                            'tag_ids'           => $p->mtags ?? [],
-                            'tag_names'         => collect($p->mtags ?? [])->map(fn($id) => $allTags[$id] ?? null)->filter()->values()->toArray(),
-                            'mvariant_id'       => $v->mvariant_id,
-                            'sku'               => $v->sku,
-                            'image'             => $v->mvariant_image,
-                            'price'             => $v->price,
-                            'quantity'          => $v->mstock?->quantity ?? 0,
-                            'compare_price'     => $v->compare_price,
-                            'cost_price'        => $v->cost_price,
-                            'taxable'           => $v->taxable,
-                            'barcode'           => $v->barcode,
-                            'options'           => $optKeys,
-                            'option_value'      => (object)$optVals,
-                            'mlocation_id'      => $v->mstock?->mlocation_id,
-                            'product_deal_tag'  => optional($v->productoffer)->product_deal_tag,
-                            'product_offer'     => optional($v->productoffer)->product_offer,
-                            'user_info_wishlist'=> $inWishlist,
+                            'mproduct_id' => $p?->mproduct_id,
+                            'mproduct_title' => $p?->mproduct_title,
+                            'mproduct_image' => $p?->mproduct_image,
+                            'mproduct_slug' => $p?->mproduct_slug,
+                            'mproduct_desc' => $p?->mproduct_desc,
+                            'status' => $p?->status,
+                            'saleschannel' => $p?->saleschannel,
+                            'brand_id' => $brand?->mbrand_id,
+                            'brand_name' => $brand?->mbrand_name,
+                            'type_id' => $type?->mproduct_type_id,
+                            'product_type' => $type?->mproduct_type_name,
+                            'tag_ids' => $p->mtags ?? [],
+                            'tag_names' => collect($p->mtags ?? [])->map(fn($id) => $allTags[$id] ?? null)->filter()->values()->toArray(),
+                            'mvariant_id' => $v->mvariant_id,
+                            'sku' => $v->sku,
+                            'image' => $v->mvariant_image,
+                            'price' => $v->price,
+                            'quantity' => $v->mstock?->quantity ?? 0,
+                            'compare_price' => $v->compare_price,
+                            'cost_price' => $v->cost_price,
+                            'taxable' => $v->taxable,
+                            'barcode' => $v->barcode,
+                            'options' => $optKeys,
+                            'option_value' => (object) $optVals,
+                            'mlocation_id' => $v->mstock?->mlocation_id,
+                            'product_deal_tag' => optional($v->productoffer)->product_deal_tag,
+                            'product_offer' => optional($v->productoffer)->product_offer,
+                            'user_info_wishlist' => $inWishlist,
                         ],
                     ];
                 })->sortBy($sliderKeyName)->values();
@@ -216,13 +219,13 @@ class BannerController extends Controller
         $topSellerBanners = $transformVariants($topSellerMap, 'top_seller_id')->take(10);
 
         return response()->json([
-            'status'             => true,
-            'message'            => 'Fetched product sliders successfully.',
-            'cdnURL'             => config('cdn.url'),
-            'newProductHeader'   => $newProductHeader,
-            'newProductBanners'  => $newProductBanners,
-            'topSellerHeader'    => $topSellerHeader,
-            'topSellerBanners'   => $topSellerBanners,
+            'status' => true,
+            'message' => 'Fetched product sliders successfully.',
+            'cdnURL' => config('cdn.url'),
+            'newProductHeader' => $newProductHeader,
+            'newProductBanners' => $newProductBanners,
+            'topSellerHeader' => $topSellerHeader,
+            'topSellerBanners' => $topSellerBanners,
         ]);
     }
 
@@ -253,60 +256,101 @@ class BannerController extends Controller
             ->get();
 
         $allTags = Mtag::pluck('mtag_name', 'mtag_id');
-        $uid     = auth()->id();
+        $uid = auth()->id();
 
-        $payload = $variants->filter(fn($v) => $v->product) 
-            ->map(function ($v) use ($sliderMap, $allTags, $uid) {
+        $tagType = null;
+        $percent = null;
+        $tagPriceMap = collect();
+
+        if ($uid) {
+            $user = User::select('id', 'user_tag_id')->find($uid);
+
+            if ($user && $user->user_tag_id) {
+                $tag = UserTag::where('user_tag_id', $user->user_tag_id)
+                    ->where('is_active', 1)
+                    ->first(['user_tag_id', 'type', 'discount']);
+
+                if ($tag) {
+                    $t = strtolower($tag->type ?? '');
+                    if ($t === 'custom') {
+                        $tagType = 'custom';
+                        $tagPriceMap = UserTagPrice::where('user_tag_id', $tag->user_tag_id)
+                            ->whereIn('mvariant_id', $variantIds)
+                            ->pluck('tag_price', 'mvariant_id');
+
+                    } elseif ($t === 'percentage') {
+                        $tagType = 'percentage';
+                        $raw = (float) ($tag->discount ?? 0);
+                        $percent = max(0.0, min(100.0, $raw));
+                    }
+                }
+            }
+        }
+
+        $payload = $variants->filter(fn($v) => $v->product)
+            ->map(function ($v) use ($sliderMap, $allTags, $uid, $tagType, $percent, $tagPriceMap) {
                 $optVals = collect($v->details)->reduce(
-                    fn($carry, $d) => array_merge($carry, (array)$d->option_value), []
+                    fn($carry, $d) => array_merge($carry, (array) $d->option_value),
+                    []
                 );
-
                 $optKeys = collect($v->details)
                     ->flatMap(fn($d) => $d->options)
                     ->unique()
                     ->values();
 
-                $p     = $v->product;
+                $p = $v->product;
                 $brand = $p?->brand;
-                $type  = $p?->type;
+                $type = $p?->type;
 
-                $inWishlist = Wishlist::where([
-                    ['mvariant_id', '=', $v->mvariant_id],
-                    ['user_id', '=', $uid],
-                ])->exists();
+                $inWishlist = $uid
+                    ? Wishlist::where([['mvariant_id', '=', $v->mvariant_id], ['user_id', '=', $uid]])->exists()
+                    : false;
+
+                $basePrice = (float) $v->price;
+                $effective = $basePrice;
+
+                if ($tagType === 'custom') {
+                    if (isset($tagPriceMap[$v->mvariant_id])) {
+                        $effective = (float) $tagPriceMap[$v->mvariant_id];
+                    }
+                } elseif ($tagType === 'percentage' && $percent !== null) {
+                    $effective = round($basePrice * (1 - $percent / 100), 2);
+                    if ($effective < 0)
+                        $effective = 0.0;
+                }
 
                 return [
                     'new_product_id' => $sliderMap[$v->mvariant_id] ?? null,
-                    'mvariant_id'    => $v->mvariant_id,
+                    'mvariant_id' => $v->mvariant_id,
                     'product' => [
-                        'mproduct_id'       => $p?->mproduct_id,
-                        'mproduct_title'    => $p?->mproduct_title,
-                        'mproduct_image'    => $p?->mproduct_image,
-                        'mproduct_slug'     => $p?->mproduct_slug,
-                        'mproduct_desc'     => $p?->mproduct_desc,
-                        'status'            => $p?->status,
-                        'saleschannel'      => $p?->saleschannel,
-                        'brand_id'          => $brand?->mbrand_id,
-                        'brand_name'        => $brand?->mbrand_name,
-                        'type_id'           => $type?->mproduct_type_id,
-                        'product_type'      => $type?->mproduct_type_name,
-                        'tag_ids'           => $p->mtags ?? [],
-                        'tag_names'         => collect($p->mtags ?? [])->map(fn($id) => $allTags[$id] ?? null)->filter()->values()->toArray(),
-                        'mvariant_id'       => $v->mvariant_id,
-                        'sku'               => $v->sku,
-                        'image'             => $v->mvariant_image,
-                        'price'             => $v->price,
-                        'quantity'          => $v->mstock?->quantity ?? 0,
-                        'compare_price'     => $v->compare_price,
-                        'cost_price'        => $v->cost_price,
-                        'taxable'           => $v->taxable,
-                        'barcode'           => $v->barcode,
-                        'options'           => $optKeys,
-                        'option_value'      => (object)$optVals,
-                        'mlocation_id'      => $v->mstock?->mlocation_id,
-                        'product_deal_tag'  => optional($v->productoffer)->product_deal_tag,
-                        'product_offer'     => optional($v->productoffer)->product_offer,
-                        'user_info_wishlist'=> $inWishlist,
+                        'mproduct_id' => $p?->mproduct_id,
+                        'mproduct_title' => $p?->mproduct_title,
+                        'mproduct_image' => $p?->mproduct_image,
+                        'mproduct_slug' => $p?->mproduct_slug,
+                        'mproduct_desc' => $p?->mproduct_desc,
+                        'status' => $p?->status,
+                        'saleschannel' => $p?->saleschannel,
+                        'brand_id' => $brand?->mbrand_id,
+                        'brand_name' => $brand?->mbrand_name,
+                        'type_id' => $type?->mproduct_type_id,
+                        'product_type' => $type?->mproduct_type_name,
+                        'tag_ids' => $p->mtags ?? [],
+                        'tag_names' => collect($p->mtags ?? [])->map(fn($id) => $allTags[$id] ?? null)->filter()->values()->toArray(),
+                        'mvariant_id' => $v->mvariant_id,
+                        'sku' => $v->sku,
+                        'image' => $v->mvariant_image,
+                        'price' => $effective,
+                        'quantity' => $v->mstock?->quantity ?? 0,
+                        'compare_price' => $v->compare_price,
+                        'cost_price' => $v->cost_price,
+                        'taxable' => $v->taxable,
+                        'barcode' => $v->barcode,
+                        'options' => $optKeys,
+                        'option_value' => (object) $optVals,
+                        'mlocation_id' => $v->mstock?->mlocation_id,
+                        'product_deal_tag' => optional($v->productoffer)->product_deal_tag,
+                        'product_offer' => optional($v->productoffer)->product_offer,
+                        'user_info_wishlist' => $inWishlist,
                     ],
                 ];
             })
@@ -320,10 +364,10 @@ class BannerController extends Controller
             : null;
 
         return response()->json([
-            'status'            => true,
-            'message'           => 'Fetch all New product Sliders Successfully',
-            'cdnURL'            => config('cdn.url'),
-            'slider_header'     => $header,
+            'status' => true,
+            'message' => 'Fetch all New product Sliders Successfully',
+            'cdnURL' => config('cdn.url'),
+            'slider_header' => $header,
             'newProductBanners' => $payload,
         ]);
     }
@@ -355,60 +399,99 @@ class BannerController extends Controller
             ->get();
 
         $allTags = Mtag::pluck('mtag_name', 'mtag_id');
-        $uid     = auth()->id();
+        $uid = auth()->id();
+
+        $tagType = null;
+        $percent = null;
+        $tagPriceMap = collect();
+
+        if ($uid) {
+            $user = User::select('id', 'user_tag_id')->find($uid);
+            if ($user && $user->user_tag_id) {
+                $tag = UserTag::where('user_tag_id', $user->user_tag_id)
+                    ->where('is_active', 1)
+                    ->first(['user_tag_id', 'type', 'discount']);
+
+                if ($tag) {
+                    $t = strtolower($tag->type ?? '');
+                    if ($t === 'custom') {
+                        $tagType = 'custom';
+                        $tagPriceMap = UserTagPrice::where('user_tag_id', $tag->user_tag_id)
+                            ->whereIn('mvariant_id', $variantIds)
+                            ->pluck('tag_price', 'mvariant_id');
+                    } elseif ($t === 'percentage') {
+                        $tagType = 'percentage';
+                        $raw = (float) ($tag->discount ?? 0);
+                        $percent = max(0.0, min(100.0, $raw));
+                    }
+                }
+            }
+        }
 
         $payload = $variants->filter(fn($v) => $v->product)
-            ->map(function ($v) use ($sliderMap, $allTags, $uid) {
+            ->map(function ($v) use ($sliderMap, $allTags, $uid, $tagType, $percent, $tagPriceMap) {
                 $optVals = collect($v->details)->reduce(
-                    fn($carry, $d) => array_merge($carry, (array)$d->option_value), []
+                    fn($carry, $d) => array_merge($carry, (array) $d->option_value),
+                    []
                 );
-
                 $optKeys = collect($v->details)
                     ->flatMap(fn($d) => $d->options)
                     ->unique()
                     ->values();
 
-                $p     = $v->product;
+                $p = $v->product;
                 $brand = $p?->brand;
-                $type  = $p?->type;
+                $type = $p?->type;
 
-                $inWishlist = Wishlist::where([
-                    ['mvariant_id', '=', $v->mvariant_id],
-                    ['user_id', '=', $uid],
-                ])->exists();
+                $inWishlist = $uid
+                    ? Wishlist::where([['mvariant_id', '=', $v->mvariant_id], ['user_id', '=', $uid]])->exists()
+                    : false;
+
+                $basePrice = (float) $v->price;
+                $effective = $basePrice;
+
+                if ($tagType === 'custom') {
+                    if (isset($tagPriceMap[$v->mvariant_id])) {
+                        $effective = (float) $tagPriceMap[$v->mvariant_id];
+                    }
+                } elseif ($tagType === 'percentage' && $percent !== null) {
+                    $effective = round($basePrice * (1 - $percent / 100), 2);
+                    if ($effective < 0)
+                        $effective = 0.0;
+                }
 
                 return [
                     'top_seller_id' => $sliderMap[$v->mvariant_id] ?? null,
                     'mvariant_id' => $v->mvariant_id,
                     'product' => [
-                        'mproduct_id'       => $p?->mproduct_id,
-                        'mproduct_title'    => $p?->mproduct_title,
-                        'mproduct_image'    => $p?->mproduct_image,
-                        'mproduct_slug'     => $p?->mproduct_slug,
-                        'mproduct_desc'     => $p?->mproduct_desc,
-                        'status'            => $p?->status,
-                        'saleschannel'      => $p?->saleschannel,
-                        'brand_id'          => $brand?->mbrand_id,
-                        'brand_name'        => $brand?->mbrand_name,
-                        'type_id'           => $type?->mproduct_type_id,
-                        'product_type'      => $type?->mproduct_type_name,
-                        'tag_ids'           => $p->mtags ?? [],
-                        'tag_names'         => collect($p->mtags ?? [])->map(fn($id) => $allTags[$id] ?? null)->filter()->values()->toArray(),
-                        'mvariant_id'       => $v->mvariant_id,
-                        'sku'               => $v->sku,
-                        'image'             => $v->mvariant_image,
-                        'price'             => $v->price,
-                        'quantity'          => $v->mstock?->quantity ?? 0,
-                        'compare_price'     => $v->compare_price,
-                        'cost_price'        => $v->cost_price,
-                        'taxable'           => $v->taxable,
-                        'barcode'           => $v->barcode,
-                        'options'           => $optKeys,
-                        'option_value'      => (object)$optVals,
-                        'mlocation_id'      => $v->mstock?->mlocation_id,
-                        'product_deal_tag'  => optional($v->productoffer)->product_deal_tag,
-                        'product_offer'     => optional($v->productoffer)->product_offer,
-                        'user_info_wishlist'=> $inWishlist,
+                        'mproduct_id' => $p?->mproduct_id,
+                        'mproduct_title' => $p?->mproduct_title,
+                        'mproduct_image' => $p?->mproduct_image,
+                        'mproduct_slug' => $p?->mproduct_slug,
+                        'mproduct_desc' => $p?->mproduct_desc,
+                        'status' => $p?->status,
+                        'saleschannel' => $p?->saleschannel,
+                        'brand_id' => $brand?->mbrand_id,
+                        'brand_name' => $brand?->mbrand_name,
+                        'type_id' => $type?->mproduct_type_id,
+                        'product_type' => $type?->mproduct_type_name,
+                        'tag_ids' => $p->mtags ?? [],
+                        'tag_names' => collect($p->mtags ?? [])->map(fn($id) => $allTags[$id] ?? null)->filter()->values()->toArray(),
+                        'mvariant_id' => $v->mvariant_id,
+                        'sku' => $v->sku,
+                        'image' => $v->mvariant_image,
+                        'price' => $effective,
+                        'quantity' => $v->mstock?->quantity ?? 0,
+                        'compare_price' => $v->compare_price,
+                        'cost_price' => $v->cost_price,
+                        'taxable' => $v->taxable,
+                        'barcode' => $v->barcode,
+                        'options' => $optKeys,
+                        'option_value' => (object) $optVals,
+                        'mlocation_id' => $v->mstock?->mlocation_id,
+                        'product_deal_tag' => optional($v->productoffer)->product_deal_tag,
+                        'product_offer' => optional($v->productoffer)->product_offer,
+                        'user_info_wishlist' => $inWishlist,
                     ],
                 ];
             })
@@ -422,11 +505,11 @@ class BannerController extends Controller
             : null;
 
         return response()->json([
-            'status'            => true,
-            'message'           => 'Fetch all Top seller Sliders Successfully',
-            'cdnURL'            => config('cdn.url'),
-            'slider_header'     => $header,
-            'topSellerBanners'  => $payload,
+            'status' => true,
+            'message' => 'Fetch all Top seller Sliders Successfully',
+            'cdnURL' => config('cdn.url'),
+            'slider_header' => $header,
+            'topSellerBanners' => $payload,
         ]);
     }
 
@@ -435,10 +518,10 @@ class BannerController extends Controller
         $loyaltyRewardBanner = LoyaltyRewardBanner::get();
 
         return response()->json([
-            'status'        => true,
-            'message'       => 'Fetch Loyalty Reward Banner Successfully',
-            'cdnURL'        => config('cdn.url'),
-            'loyaltyRewardBanner'  => $loyaltyRewardBanner
+            'status' => true,
+            'message' => 'Fetch Loyalty Reward Banner Successfully',
+            'cdnURL' => config('cdn.url'),
+            'loyaltyRewardBanner' => $loyaltyRewardBanner
         ]);
     }
 
