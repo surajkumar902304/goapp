@@ -58,7 +58,7 @@ class AdminController extends Controller
     // User
     public function userVlist()
     {
-        $users = User::with('repcustomer:rep_id,rep_code','wallet:user_id,balance')->get();
+        $users = User::with('repcustomer:rep_id,rep_code', 'tagcustomer:user_tag_id,user_tag_name','wallet:user_id,balance')->get();
 
         foreach ($users as $user) {
             $user->total_order = Order::where('user_id', $user->id)->count();

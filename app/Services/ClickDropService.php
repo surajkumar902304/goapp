@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\DeliveryMethod;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\Order;
 
@@ -34,235 +35,204 @@ class ClickDropService
         return ['ok' => $r->ok(), 'body' => $r->json(), 'status' => $r->status()];
     }
 
+    private function toKg($w, $unit): float
+    {
+        $w = (float) ($w ?? 0);
+        $u = strtolower((string) ($unit ?: 'g'));
+        if ($w <= 0)
+            return 0.0;
+        return in_array($u, ['g', 'gram', 'grams']) ? round($w / 1000, 3) : round($w, 3);
+    }
+
+    private function toGramsFromKg($kg): int
+    {
+        $g = (int) round(((float) $kg) * 1000);
+        return max(1, $g);
+    }
+
     public function mapFromModel(Order $o): array
     {
-        $ship = optional($o->userCompanyAddress);  
+        $ship = optional($o->userCompanyAddress);
         $usr = optional($o->user);
 
-        $ship_company = $ship->user_company_name ?? null;
-        $ship_full = $usr->name ?? null;
-        $ship_addr1 = $ship->company_address1 ?? null;
-        $ship_addr2 = $ship->company_address2 ?? null;
-        $ship_city = $ship->company_city ?? null;
-        $ship_post = $ship->company_postcode ?? null;
-        $ship_ccode = strtoupper((string) ($ship->company_country ?? 'GB'));
-        $ship_phone = $usr->mobile ?? null;
-        $ship_email = $usr->email ?? null;
+        $recipient = [
+            'companyName' => $ship->user_company_name ?? '',
+            'fullName' => $usr->name ?? '',
+            'addressLine1' => $ship->company_address1 ?? '',
+            'addressLine2' => $ship->company_address2 ?? null,
+            'city' => $ship->company_city ?? '',
+            'county' => null,
+            'postcode' => $ship->company_postcode ?? null,
+            'countryCode' => strtoupper((string) ($ship->company_country ?? 'GB')),
+        ];
+        $billing = [
+            'companyName' => $usr->company_name ?? ($ship->user_company_name ?? ''),
+            'fullName' => $usr->name ?? '',
+            'addressLine1' => $usr->address1 ?? ($ship->company_address1 ?? ''),
+            'addressLine2' => $usr->address2 ?? ($ship->company_address2 ?? null),
+            'city' => $usr->city ?? ($ship->company_city ?? ''),
+            'county' => null,
+            'postcode' => $usr->postcode ?? ($ship->company_postcode ?? null),
+            'countryCode' => strtoupper((string) ($usr->country ?? $ship->company_country ?? 'GB')),
+        ];
 
-        $bill_company = $usr->company_name ?? null;
-        $bill_full = $usr->name ?? null;
-        $bill_addr1 = $usr->address1 ?? null;
-        $bill_addr2 = $usr->address2 ?? null;
-        $bill_city = $usr->city ?? null;
-        $bill_post = $usr->postcode ?? null;
-        $bill_ccode = strtoupper((string) ($usr->country ?? 'GB'));
+        if ($o->items->isEmpty()) {
+            throw new \InvalidArgumentException('Order has no items to ship.');
+        }
+
+        $contents = [];
+        $calcSubtotal = 0.0;
+        $totalWeightGrams = 0;
+
+        foreach ($o->items as $it) {
+            $v = optional($it->variant);
+            $p = optional($v)->product;
+
+            $qty = (int) ($it->quantity ?? 0);
+            $price = (float) ($it->unit_price ?? 0);
+            $sku = $v->sku ?: ('SKU-' . $it->order_item_id);
+            $name = $p->mproduct_title ?? $p->name ?? 'Unknown';
+
+            $unitWeightKg = $this->toKg($v->weight ?? 0, $v->weightunit ?? 'g');
+            $unitWeightG = $this->toGramsFromKg(max(0.001, $unitWeightKg));
+
+            $contents[] = [
+                'name' => $name,
+                'SKU' => $sku,
+                'quantity' => $qty,
+                'unitValue' => $price,
+                'orderTax' => (float) ($o->vat ?? 0),
+                'unitWeightInGrams' => $unitWeightG,
+                // Optional customs fields (intl):
+                // 'customsDescription' => '',
+                // 'customsCode'        => '',
+                // 'originCountryCode'  => 'GB',
+                // 'stockLocation'      => '',
+            ];
+
+            $calcSubtotal += $price * $qty;
+            $totalWeightGrams += $unitWeightG * $qty;
+        }
+
+        $totalWeightGrams = max($totalWeightGrams, 100);
+
+        $dimensions = [
+            'heightInMms' => 100,
+            'widthInMms' => 200,
+            'depthInMms' => 300,
+        ];
+        $package = [
+            'packageFormatIdentifier' => $totalWeightGrams > 2000 ? 'largeParcel'
+                : ($totalWeightGrams > 1000 ? 'mediumParcel' : 'smallParcel'),
+            'weightInGrams' => $totalWeightGrams,
+            'dimensions' => $dimensions,
+            'contents' => $contents,
+        ];
 
         return [
             'order_id' => $o->order_id,
-            'product_total_amount' => (float) $o->product_total_amount,
+            'product_total_amount' => $o->product_total_amount,
             'shipping_fee' => (float) $this->guessShippingFee($o),
-            'tax_amount' => (float) $o->vat ?? 0,
+            'tax_amount' => (float) ($o->vat ?? 0),
             'total_amount' => (float) $o->total_amount,
-
-            'ship_company_name' => $ship_company,
-            'ship_full_name' => $ship_full,
-            'ship_phone' => $ship_phone,
-            'ship_email' => $ship_email,
-            'ship_address1' => $ship_addr1,
-            'ship_address2' => $ship_addr2,
-            'ship_city' => $ship_city,
-            'ship_post_town' => $ship_city,    
-            'ship_postcode' => $ship_post,
-            'ship_country_code' => $ship_ccode,
-
-            'bill_company_name' => $bill_company,
-            'bill_full_name' => $bill_full,
-            'bill_address1' => $bill_addr1,
-            'bill_address2' => $bill_addr2,
-            'bill_city' => $bill_city,
-            'bill_postcode' => $bill_post,
-            'bill_country_code' => $bill_ccode,
+            'ship_phone' => $usr->mobile ?? null,
+            'ship_email' => $usr->email ?? null,
+            'recipient' => $recipient,
+            'billing' => $billing,
+            'packages' => [$package],
+            'serviceCode' => $this->getServiceCode($o),
         ];
     }
-
 
     private function guessShippingFee(Order $o): float
     {
         $freeLimit = (float) (Setting::where('key', 'min_order_free_delivery')->value('value') ?? 0);
         if ($o->product_total_amount < $freeLimit) {
-            return (float) (DeliveryMethod::where('delivery_method_id', $o->delivery_method_id)->value('delivery_method_amount') ?? 0);
+            return (float) (DeliveryMethod::where('delivery_method_id', $o->delivery_method_id)
+                ->value('delivery_method_amount') ?? 0);
         }
         return 0.0;
     }
 
-    private function validateForRoyalMail(array $order): array
+    private function getServiceCode(Order $o): string
     {
-        $missing = [];
-        if (empty($order['company_name']) && empty($order['full_name']))
-            $missing[] = 'company_name|full_name (one required)';
-        if (empty($order['address1']))
-            $missing[] = 'address1';
-        if (empty($order['city']) && empty($order['post_town']))
-            $missing[] = 'city|post_town (one required)';
-        if (empty($order['country_code']))
-            $missing[] = 'country_code';
-        // Postcode is strongly recommended for GB; make it required if your business rules say so
-        // if ($order['country_code'] === 'GB' && empty($order['postcode'])) $missing[] = 'postcode';
-
-        return $missing;
+        $maps = [
+            1 => 'RM_48',
+            2 => 'RM_24',
+        ];
+        return $maps[$o->delivery_method_id] ?? 'RM_48';
     }
 
-    public function pushOrder(array $order): array
+    public function pushOrder(array $mapped): array
     {
-        $missing = [];
-        if (empty($order['ship_company_name']) && empty($order['ship_full_name']))
-            $missing[] = 'ship_company_name|ship_full_name';
-        if (empty($order['ship_address1']))
-            $missing[] = 'ship_address1';
-        if (empty($order['ship_city']))
-            $missing[] = 'ship_city';
-        if (empty($order['ship_country_code']))
-            $missing[] = 'ship_country_code';
-        if (($order['ship_country_code'] ?? '') === 'GB' && empty($order['ship_postcode']))
-            $missing[] = 'ship_postcode';
-        if ($missing) {
+        $addr = $mapped['recipient'] ?? [];
+        $miss = [];
+        if (empty($addr['addressLine1']))
+            $miss[] = 'ship_address1';
+        if (empty($addr['city']))
+            $miss[] = 'ship_city';
+        if (empty($addr['countryCode']))
+            $miss[] = 'ship_country_code';
+        if (($addr['countryCode'] ?? '') === 'GB' && empty($addr['postcode']))
+            $miss[] = 'ship_postcode';
+
+        if ($miss) {
             return [
                 'successCount' => 0,
                 'errorsCount' => 1,
                 'failedOrders' => [
                     [
-                        'order' => ['orderReference' => (string) $order['order_id']],
-                        'errors' => [
-                            [
-                                'errorCode' => 422,
-                                'errorMessage' => 'Missing required fields (shipping): ' . implode(', ', $missing),
-                            ]
-                        ]
+                        'order' => ['orderReference' => (string) $mapped['order_id']],
+                        'errors' => [['errorCode' => 422, 'errorMessage' => 'Missing: ' . implode(', ', $miss)]],
                     ]
-                ]
+                ],
             ];
         }
 
-        $recipientAddress = [
-            'companyName' => $order['ship_company_name'] ?? '',
-            'fullName' => $order['ship_full_name'] ?? '',
-            'addressLine1' => $order['ship_address1'] ?? null,
-            'addressLine2' => $order['ship_address2'] ?? null,
-            'postTown' => $order['ship_post_town'] ?? $order['ship_city'] ?? null,
-            'city' => $order['ship_city'] ?? null,
-            'postcode' => $order['ship_postcode'] ?? null,
-            'countryCode' => $order['ship_country_code'] ?? 'GB',
-        ];
-
-        $billingAddress = [
-            'companyName' => $order['bill_company_name'] ?? $order['ship_company_name'] ?? '',
-            'fullName' => $order['bill_full_name'] ?? $order['ship_full_name'] ?? '',
-            'addressLine1' => $order['bill_address1'] ?? $order['ship_address1'] ?? null,
-            'addressLine2' => $order['bill_address2'] ?? $order['ship_address2'] ?? null,
-            'postTown' => $order['bill_city'] ?? $order['ship_city'] ?? null, // RM uses postTown/city
-            'city' => $order['bill_city'] ?? $order['ship_city'] ?? null,
-            'postcode' => $order['bill_postcode'] ?? $order['ship_postcode'] ?? null,
-            'countryCode' => $order['bill_country_code'] ?? $order['ship_country_code'] ?? 'GB',
-        ];
-
-        $billMissing = [];
-        if (empty($billingAddress['companyName']) && empty($billingAddress['fullName']))
-            $billMissing[] = 'billing company/full name';
-        if (empty($billingAddress['addressLine1']))
-            $billMissing[] = 'billing addressLine1';
-        if (empty($billingAddress['city']))
-            $billMissing[] = 'billing city';
-        if (($billingAddress['countryCode'] ?? '') === 'GB' && empty($billingAddress['postcode']))
-            $billMissing[] = 'billing postcode';
-        if ($billMissing) {
-            // We *could* automatically mirror shipping here, but we already did via fallback.
-            // If still missing, return a friendly error:
+        $packages = $mapped['packages'] ?? [];
+        if (empty($packages) || empty($packages[0]['contents'])) {
             return [
                 'successCount' => 0,
                 'errorsCount' => 1,
                 'failedOrders' => [
                     [
-                        'order' => ['orderReference' => (string) $order['order_id']],
-                        'errors' => [
-                            [
-                                'errorCode' => 422,
-                                'errorMessage' => 'Missing required fields (billing): ' . implode(', ', $billMissing),
-                            ]
-                        ]
+                        'order' => ['orderReference' => (string) $mapped['order_id']],
+                        'errors' => [['errorCode' => 422, 'errorMessage' => 'No package contents (products)']],
                     ]
-                ]
+                ],
             ];
         }
 
         $payload = [
             'items' => [
                 [
-                    'orderReference' => Str::limit((string) $order['order_id'], 40, ''),
+                    'orderReference' => Str::limit((string) $mapped['order_id'], 40, ''),
                     'orderDate' => now()->toIso8601String(),
-                    'subtotal' => (float) $order['product_total_amount'],
-                    'shippingCostCharged' => (float) ($order['shipping_fee'] ?? 0),
-                    'orderTax' => (float) $order['tax_amount'] ?? 0,
-                    'total' => (float) $order['total_amount'],
+                    'subtotal' => (float) $mapped['product_total_amount'],
+                    'shippingCostCharged' => (float) ($mapped['shipping_fee'] ?? 0),
+                    'orderTax' => (float) ($mapped['tax_amount'] ?? 0),
+                    'total' => (float) $mapped['total_amount'],
                     'currencyCode' => 'GBP',
+
                     'recipient' => [
-                        'phoneNumber' => $order['ship_phone'] ?? $order['phone'] ?? null,
-                        'emailAddress' => $order['ship_email'] ?? $order['email'] ?? null,
-                        'address' => $recipientAddress,
+                        'phoneNumber' => $mapped['ship_phone'] ?? null,
+                        'emailAddress' => $mapped['ship_email'] ?? null,
+                        'address' => $mapped['recipient'],
                     ],
                     'billing' => [
-                        'address' => $billingAddress
+                        'address' => $mapped['billing'],
                     ],
+
+                    'packages' => $packages,
                 ]
-            ]
+            ],
         ];
 
+        Log::info('C&D payload', $payload);
+
         $r = Http::withHeaders($this->authHeaders())->post($this->base . '/orders', $payload);
-        return $r->json() ?: ['ok' => false, 'status' => $r->status(), 'body' => $r->body()];
-    }
 
-
-    public function pushMany(array $ordersPayload): array
-    {
-        // optionally validate each and split good/bad
-        $items = [];
-        foreach ($ordersPayload as $order) {
-            if ($this->validateForRoyalMail($order)) {
-                continue;
-            }
-            $items[] = [
-                'orderReference' => Str::limit((string) $order['order_id'], 40, ''),
-                'orderDate' => now()->toIso8601String(),
-                'subtotal' => (float) $order['product_total_amount'],
-                'shippingCostCharged' => (float) ($order['shipping_fee'] ?? 0),
-                'orderTax'          => (float) $order['tax_amount'] ?? 0,
-                'total' => (float) $order['total_amount'],
-                'currencyCode' => 'GBP',
-                'recipient' => [
-                    'phoneNumber' => $order['phone'] ?? null,
-                    'emailAddress' => $order['email'] ?? null,
-                    'address' => [
-                        'companyName' => $order['company_name'] ?? '',
-                        'fullName' => $order['full_name'] ?? '',
-
-                        'addressLine1' => $order['address1'] ?? null,
-                        'addressLine2' => $order['address2'] ?? null,
-
-                        'postTown' => $order['post_town'] ?? null,
-                        'city' => $order['city'] ?? null,
-
-                        'postcode' => $order['postcode'] ?? null,
-                        'countryCode' => $order['country_code'] ?? 'GB',
-                    ],
-                ],
-            ];
-        }
-
-        if (empty($items)) {
-            return ['successCount' => 0, 'errorsCount' => 1, 'failedOrders' => [['errors' => [['errorMessage' => 'No valid items to push']]]]];
-        }
-
-        $payload = ['items' => array_values($items)];
-        $r = Http::withHeaders($this->authHeaders())->post($this->base . '/orders', $payload);
+        Log::info('C&D response', ['status' => $r->status(), 'body' => $r->body()]);
         return $r->json() ?: ['ok' => false, 'status' => $r->status(), 'body' => $r->body()];
     }
 }

@@ -14,6 +14,8 @@ use App\Models\OrderCommission;
 use App\Models\OrderItem;
 use App\Models\Referral;
 use App\Models\Setting;
+use App\Models\UserTag;
+use App\Models\UserTagPrice;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
@@ -179,23 +181,64 @@ class OrderController extends Controller
                 ], 422);
             }
 
+            $tagType     = null;  
+            $percent     = null;  
+            $tagPriceMap = collect();
+
+            if ($user && $user->user_tag_id) {
+                $tag = UserTag::where('user_tag_id', $user->user_tag_id)
+                    ->where('is_active', 1)
+                    ->first(['user_tag_id', 'type', 'discount']);
+
+                if ($tag) {
+                    $t = strtolower($tag->type ?? '');
+                    if ($t === 'custom') {
+                        $tagType = 'custom';
+                        $variantIdsInCart = $cartItems->pluck('mvariant_id')->all();
+
+                        $tagPriceMap = UserTagPrice::where('user_tag_id', $tag->user_tag_id)
+                            ->whereIn('mvariant_id', $variantIdsInCart)
+                            ->pluck('tag_price', 'mvariant_id');
+
+                    } elseif ($t === 'percentage') {
+                        $tagType = 'percentage';
+                        $raw = (float) ($tag->discount ?? 0);
+                        $percent = max(0.0, min(100.0, $raw));
+                    }
+                }
+            }
+
             $vatPercent = DB::table('product_vats')->value('product_vat') ?? 20;
             $vatPercent = $vatPercent / 100;
 
             $productTotal = 0.0;
             $totalvat = 0.0;
+            $effectiveUnit = [];
 
             foreach ($cartItems as $cart) {
                 $quantity = (int) $cart->quantity;
-                $unit_price = (float) $cart->mvariant->price;
-                $vatAmount = 0.0;
+                $basePrice = (float) $cart->mvariant->price;
 
-                if ((int) $cart->mvariant->taxable === 1) {
-                    $vatAmount = $unit_price * $vatPercent;
+                $eff = $basePrice;
+                if ($tagType === 'custom') {
+                    if (isset($tagPriceMap[$cart->mvariant_id])) {
+                        $eff = (float) $tagPriceMap[$cart->mvariant_id];
+                    }
+                } elseif ($tagType === 'percentage' && $percent !== null) {
+                    $eff = round($basePrice * (1 - $percent / 100), 2);
+                    if ($eff < 0)
+                        $eff = 0.0;
                 }
 
-                $productTotal += $unit_price * $quantity;
-                $totalvat += $vatAmount * $quantity;
+                $effectiveUnit[$cart->mvariant_id] = $eff;
+
+                $vatAmountPerUnit = 0.0;
+                if ((int) $cart->mvariant->taxable === 1) {
+                    $vatAmountPerUnit = $eff * $vatPercent;
+                }
+
+                $productTotal += $eff * $quantity;
+                $totalvat += $vatAmountPerUnit * $quantity;
             }
 
             $freeDeliveryLimit = (float) (Setting::where('key', 'min_order_free_delivery')->value('value') ?? 0);
@@ -283,11 +326,7 @@ class OrderController extends Controller
 
             foreach ($cartItems as $cart) {
                 $quantity = (int) $cart->quantity;
-                $unit_price = (float) $cart->mvariant->price;
-
-                if ((int) $cart->mvariant->taxable === 1) {
-                    $unit_price += $unit_price * 0.20;
-                }
+                $unit_price = $effectiveUnit[$cart->mvariant_id] ?? (float) $cart->mvariant->price;
 
                 OrderItem::create([
                     'order_id' => $order->order_id,

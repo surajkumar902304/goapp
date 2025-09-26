@@ -351,7 +351,7 @@ class OrderController extends Controller
                 'variant' => [
                     'sku' => $variant->sku,
                     'image' => $variant->mvariant_image,
-                    'price' => (float) $variant->price,
+                    'price' => (float) $itm->unit_price,
                     'compare_price' => (float) $variant->compare_price,
                     'cost_price' => (float) $variant->cost_price,
                     'weight' => $variant->weight,
@@ -395,7 +395,7 @@ class OrderController extends Controller
                         'variant' => [
                             'sku' => $variant->sku,
                             'image' => $variant->mvariant_image,
-                            'price' => (float) $variant->price,
+                            'price' => (float) $oi->unit_price,
                             'option_value' => $parsedOptionValue,
                         ],
                         'product' => [

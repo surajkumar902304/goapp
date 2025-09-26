@@ -154,6 +154,11 @@
               <v-list-item-title>Delivery Method</v-list-item-title>
             </router-link>
 
+            <router-link tag="v-list-item" to="/admin/customer-tags" active-class="active-link">
+              <v-list-item-icon><v-icon>mdi-file-document-outline</v-icon></v-list-item-icon>
+              <v-list-item-title>Customer Tags</v-list-item-title>
+            </router-link>
+
             <router-link tag="v-list-item" to="/admin/services" active-class="active-link">
               <v-list-item-icon><v-icon>mdi-new-box</v-icon></v-list-item-icon>
               <v-list-item-title>Service</v-list-item-title>
@@ -222,6 +227,7 @@ export default {
     },
     isShopGroupOpen() {
       return this.$route.path.startsWith('/admin/delivery-method')
+          || this.$route.path.startsWith('/admin/customer-tags')
           || this.$route.path.startsWith('/admin/services')
           || this.$route.path.startsWith('#')
           || this.$route.path.startsWith('/admin/payment-method')

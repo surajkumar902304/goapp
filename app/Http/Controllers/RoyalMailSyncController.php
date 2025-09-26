@@ -21,8 +21,12 @@ class RoyalMailSyncController extends Controller
 
     public function pushEligibleBatch(ClickDropService $svc, int $limit = 200): int
     {
-        $orders = Order::with(['user', 'userCompanyAddress', 'deliveryMethod'])
-            ->where('fulfillment_status', 'unfulfilled')
+        $orders = Order::with([
+            'user',
+            'userCompanyAddress',
+            'deliveryMethod',
+            'items.variant.product',
+        ])->where('fulfillment_status', 'unfulfilled')
             ->where(function ($q) {
                 $q->whereNull('royalmail_order_identifier')
                     ->orWhere('cnd_status', '!=', 'created');
@@ -55,4 +59,5 @@ class RoyalMailSyncController extends Controller
 
         return $count;
     }
+
 }

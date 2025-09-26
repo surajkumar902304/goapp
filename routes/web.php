@@ -254,8 +254,9 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     // User Tag routes
     Route::get('/user-tags/vlist', [UserTagController::class, 'userTagVlist']);
     Route::post('/user-tag/add', [UserTagController::class, 'addUserTag']);
-    // Route::post('/user-tag/update', [UserTagController::class, 'editUserTag']);
+    Route::post('/user-tag/update', [UserTagController::class, 'editUserTag']);
     Route::post('/user-tag/delete', [UserTagController::class, 'deleteUserTag']);
+    Route::post('/user-tag/status-toggle/{id}', [UserTagController::class, 'userTagToggleStatus']);
     Route::get('/user-tag-price/list',[UserTagController::class,'variantForTagPrice']);
     Route::post('/user-tag-price/update',[UserTagController::class,'updateTagPrice']);
     Route::post('/users/assign-tag', [UserTagController::class, 'assignTag']);  

@@ -35,6 +35,8 @@ import RepList from './admin/rep/RepList.vue';
 import OrderList from './admin/order/OrderList.vue';
 import OrderDetail from './admin/order/OrderDetail.vue';
 import ServiceDisplaySolution from './admin/service/ServiceDisplaySolution.vue';
+import UserTagList from './admin/user/UserTagList.vue';
+import UserTagPrice from './admin/user/UserTagPrice.vue';
 
 
 const routes = [
@@ -68,6 +70,8 @@ const routes = [
   { path: '/admin/orders', component: OrderList, name: 'order-list' },
   { path: '/admin/orders/:orderid', component: OrderDetail, name: 'order-detail', props: route => ({ orderid: Number(route.params.orderid) }) },
   { path: '/admin/services', component: ServiceDisplaySolution, name: 'service-list' },
+  { path: '/admin/customer-tags', component: UserTagList, name: 'tags-list'},
+  { path: '/admin/customer-tag-price/:usertagid', component: UserTagPrice, name: 'user-tag-price', props: true },
 
   { path: '*', component: AdminNotFound, name: 'AdminNotFound', meta: { layout: 'none' } },
 ];

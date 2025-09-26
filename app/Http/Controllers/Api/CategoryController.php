@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\MainCategory;
 use App\Models\Mcategory;
 use App\Models\Msubcategory;
+use App\Models\UserTag;
+use App\Models\UserTagPrice;
 use App\Models\Wishlist;
 use App\Models\Mcollection_auto;
 use App\Models\Mproduct;
@@ -16,48 +18,66 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        $user       = $request->user();
-        $needle     = mb_strtolower(trim($request->query('search', '')));
-        $brandIds   = $request->query('mbrand_id');
-        $brandIds   = $brandIds ? explode(',', $brandIds) : null;
+        $user = $request->user();
+        $needle = mb_strtolower(trim($request->query('search', '')));
+        $brandIds = $request->query('mbrand_id');
+        $brandIds = $brandIds ? explode(',', $brandIds) : null;
+
+        $tagCtx = null;
+        if ($user && $user->user_tag_id) {
+            $tag = UserTag::where('user_tag_id', $user->user_tag_id)
+                ->where('is_active', 1)
+                ->first(['user_tag_id', 'type', 'discount']);
+
+            if ($tag) {
+                $tagCtx = [
+                    'id' => (int) $tag->user_tag_id,
+                    'type' => strtolower($tag->type ?? ''),
+                    'discount' => $tag->discount !== null ? (float) $tag->discount : null,
+                ];
+            }
+        }
 
         $wishlistVariantIds = $user
             ? Wishlist::where('user_id', $user->id)->pluck('mvariant_id')->toArray()
             : [];
 
-        $mainCats = MainCategory::where('status', 1) 
+        $mainCats = MainCategory::where('status', 1)
             ->with([
-                'categories' => fn($q) => $q->where('status', 1) 
+                'categories' => fn($q) => $q->where('status', 1)
                     ->with([
                         'subcategories' => fn($q2) =>
-                            $q2->where('status', 1) 
+                            $q2->where('status', 1)
                                 ->whereJsonContains('msubcat_publish', 'Online Store')
                     ])
             ])
             ->orderBy('main_mcat_position')
             ->get();
 
-        $mainCats->each(fn ($main) =>
-            $main->categories->each(fn ($cat) =>
-                $cat->subcategories->each(fn ($sub) =>
+        $mainCats->each(
+            fn($main) =>
+            $main->categories->each(
+                fn($cat) =>
+                $cat->subcategories->each(
+                    fn($sub) =>
                     $sub->setRelation(
                         'products',
-                        $this->buildProductsForSub($sub, $brandIds, $wishlistVariantIds)
+                        $this->buildProductsForSub($sub, $brandIds, $wishlistVariantIds, $tagCtx)
                     )
                 )
             )
         );
 
         if ($needle === '' && !$brandIds) {
-            return $this->jsonResponse($mainCats);    
+            return $this->jsonResponse($mainCats);
         }
 
-        if ($needle === '' && $brandIds) {             
+        if ($needle === '' && $brandIds) {
             $mainCats = $mainCats->map(function ($main) {
                 $cats = $main->categories->map(function ($cat) {
                     $subs = $cat->subcategories
-                                ->filter(fn ($s) => $s->products->isNotEmpty())
-                                ->values();
+                        ->filter(fn($s) => $s->products->isNotEmpty())
+                        ->values();
                     $cat->setRelation('subcategories', $subs);
                     return $subs->isNotEmpty() ? $cat : null;
                 })->filter()->values();
@@ -77,11 +97,11 @@ class CategoryController extends Controller
             );
 
             $cats = $main->categories->map(function ($cat) use ($needle, $mainNameMatches) {
-                                                    
+
                 if ($mainNameMatches) {
                     $subs = $cat->subcategories
-                                ->filter(fn ($s) => $s->products->isNotEmpty())
-                                ->values();
+                        ->filter(fn($s) => $s->products->isNotEmpty())
+                        ->values();
                     $cat->setRelation('subcategories', $subs);
                     return $subs->isNotEmpty() ? $cat : null;
                 }
@@ -92,7 +112,8 @@ class CategoryController extends Controller
                         return $sub->products->isNotEmpty() ? $sub : null;
                     }
 
-                    $matched = $sub->products->filter(fn ($p) =>
+                    $matched = $sub->products->filter(
+                        fn($p) =>
                         str_contains(mb_strtolower($p['mproduct_title']), $needle)
                     );
 
@@ -105,8 +126,8 @@ class CategoryController extends Controller
 
                 if (str_contains(mb_strtolower($cat->mcat_name), $needle)) {
                     $subs = $cat->subcategories
-                                ->filter(fn ($s) => $s->products->isNotEmpty())
-                                ->values();
+                        ->filter(fn($s) => $s->products->isNotEmpty())
+                        ->values();
                 }
 
                 $cat->setRelation('subcategories', $subs);
@@ -121,9 +142,38 @@ class CategoryController extends Controller
         return $this->jsonResponse($mainCats);
     }
 
-    private function buildProductsForSub($sub, ?array $brandIds = null, array $wishlistVariantIds = [])
-    {
+    private function buildProductsForSub(
+        $sub,
+        ?array $brandIds = null,
+        array $wishlistVariantIds = [],
+        $tagParam = null // int (legacy) OR array ['id'=>int,'type'=>'custom|percentage','discount'=>float]
+    ) {
         $allTags = Mtag::select('mtag_id', 'mtag_name')->get()->keyBy('mtag_id');
+
+        $tagType = null;
+        $tagId = null;
+        $percent = null;
+
+        if (is_array($tagParam)) {
+            $tagType = strtolower($tagParam['type'] ?? '');
+            $tagId = isset($tagParam['id']) ? (int) $tagParam['id'] : null;
+
+            if ($tagType === 'percentage') {
+                $raw = (float) ($tagParam['discount'] ?? 0);
+                $percent = max(0.0, min(100.0, $raw)); // clamp 0..100
+            }
+        } elseif (is_int($tagParam)) {
+            // legacy: passing a plain tag id means “custom” pricing
+            $tagType = 'custom';
+            $tagId = $tagParam;
+        }
+
+        // Preload custom prices only if type is custom
+        $tagPriceMap = collect();
+        if ($tagType === 'custom' && $tagId) {
+            $tagPriceMap = UserTagPrice::where('user_tag_id', $tagId)
+                ->pluck('tag_price', 'mvariant_id'); // mvariant_id => tag_price
+        }
 
         $manualProducts = collect();
         if (!empty($sub->product_ids)) {
@@ -134,9 +184,9 @@ class CategoryController extends Controller
                 'mvariantsApi.mstock',
                 'mvariantsApi.productoffer',
             ])
-            ->whereIn('mproduct_id', $sub->product_ids)
-            ->where('status', 'Active')
-            ->whereJsonContains('saleschannel', 'Online Store');
+                ->whereIn('mproduct_id', $sub->product_ids)
+                ->where('status', 'Active')
+                ->whereJsonContains('saleschannel', 'Online Store');
 
             if ($brandIds) {
                 $manualQuery->whereIn('mbrand_id', $brandIds);
@@ -163,19 +213,19 @@ class CategoryController extends Controller
         $flat = collect();
         foreach ($products as $p) {
             $base = [
-                'mproduct_id'    => $p->mproduct_id,
+                'mproduct_id' => $p->mproduct_id,
                 'mproduct_title' => $p->mproduct_title,
                 'mproduct_image' => $p->mproduct_image,
-                'mproduct_slug'  => $p->mproduct_slug,
-                'mproduct_desc'  => $p->mproduct_desc,
-                'status'         => $p->status,
-                'saleschannel'   => $p->saleschannel,
-                'brand_id'       => $p->mbrand_id,
-                'brand_name'     => optional($p->brand)->mbrand_name,
-                'type_id'        => $p->mproduct_type_id,
-                'product_type'   => optional($p->type)->mproduct_type_name,
-                'tag_ids'        => $p->mtags ?? [],
-                'tag_names'      => collect($p->mtags ?? [])
+                'mproduct_slug' => $p->mproduct_slug,
+                'mproduct_desc' => $p->mproduct_desc,
+                'status' => $p->status,
+                'saleschannel' => $p->saleschannel,
+                'brand_id' => $p->mbrand_id,
+                'brand_name' => optional($p->brand)->mbrand_name,
+                'type_id' => $p->mproduct_type_id,
+                'product_type' => optional($p->type)->mproduct_type_name,
+                'tag_ids' => $p->mtags ?? [],
+                'tag_names' => collect($p->mtags ?? [])
                     ->map(fn($id) => $allTags[$id]->mtag_name ?? null)
                     ->filter()->values()->toArray(),
             ];
@@ -185,21 +235,34 @@ class CategoryController extends Controller
                 // if ((int)$v->quantity <= 0) {
                 //     continue;
                 // }
+
+                $basePrice = (float) $v->price;
+                $effectivePrice = $basePrice;
+
+                // Apply tag logic
+                if ($tagType === 'custom') {
+                    $effectivePrice = isset($tagPriceMap[$v->mvariant_id]) ? (float) $tagPriceMap[$v->mvariant_id] : $basePrice;
+                } elseif ($tagType === 'percentage' && $percent !== null) {
+                    $effectivePrice = round($basePrice * (1 - $percent / 100), 2);
+                    if ($effectivePrice < 0)
+                        $effectivePrice = 0.0;
+                }
+
                 $row = array_merge($base, [
-                    'mvariant_id'       => $v->mvariant_id,
-                    'sku'               => $v->sku,
-                    'image'             => $v->mvariant_image,
-                    'price'             => $v->price,
-                    'quantity'          => $v->quantity,
-                    'compare_price'     => $v->compare_price,
-                    'cost_price'        => $v->cost_price,
-                    'taxable'           => $v->taxable,
-                    'barcode'           => $v->barcode,
-                    'options'           => json_decode($v->options, true),
-                    'option_value'      => json_decode($v->option_value, true),
-                    'mlocation_id'      => $v->mlocation_id,
-                    'product_deal_tag'  => optional($v->productoffer)->product_deal_tag,
-                    'product_offer'     => optional($v->productoffer)->product_offer,
+                    'mvariant_id' => $v->mvariant_id,
+                    'sku' => $v->sku,
+                    'image' => $v->mvariant_image,
+                    'price' => $effectivePrice,
+                    'quantity' => $v->quantity,
+                    'compare_price' => $v->compare_price,
+                    'cost_price' => $v->cost_price,
+                    'taxable' => $v->taxable,
+                    'barcode' => $v->barcode,
+                    'options' => json_decode($v->options, true),
+                    'option_value' => json_decode($v->option_value, true),
+                    'mlocation_id' => $v->mlocation_id,
+                    'product_deal_tag' => optional($v->productoffer)->product_deal_tag,
+                    'product_offer' => optional($v->productoffer)->product_offer,
                     'user_info_wishlist' => $inWishlist,
                 ]);
 
@@ -212,9 +275,10 @@ class CategoryController extends Controller
 
                 $keep = $logic === 'all'
                     ? !in_array(false, $results, true)
-                    : in_array(true,  $results, true);
+                    : in_array(true, $results, true);
 
-                if ($keep) $flat->push($row);
+                if ($keep)
+                    $flat->push($row);
             }
         }
 
@@ -224,53 +288,53 @@ class CategoryController extends Controller
     private function variantMatchesRule(array $row, $rule): bool
     {
         $field = $rule->field_name;
-        $op    = $rule->query_name;
-        $val   = mb_strtolower((string)$rule->value);
+        $op = $rule->query_name;
+        $val = mb_strtolower((string) $rule->value);
 
         $actual = match ($field) {
-            'Title'            => mb_strtolower($row['mproduct_title']),
-            'Brand'            => (string)$row['brand_id'],
-            'Type'             => (string)$row['type_id'],
-            'Tag'              => array_map('strval', $row['tag_ids']),
-            'Price'            => (float)$row['price'],
-            'Inventory stock'  => (int)  $row['quantity'],
-            default            => null,
+            'Title' => mb_strtolower($row['mproduct_title']),
+            'Brand' => (string) $row['brand_id'],
+            'Type' => (string) $row['type_id'],
+            'Tag' => array_map('strval', $row['tag_ids']),
+            'Price' => (float) $row['price'],
+            'Inventory stock' => (int) $row['quantity'],
+            default => null,
         };
 
-        if (in_array($field, ['Price','Inventory stock'], true)) {
+        if (in_array($field, ['Price', 'Inventory stock'], true)) {
             return match ($op) {
-                'is equal to'     => $actual == (float)$val,
-                'is not equal to' => $actual != (float)$val,
-                'greater than'    => $actual >  (float)$val,
-                'less than'       => $actual <  (float)$val,
-                default           => false,
+                'is equal to' => $actual == (float) $val,
+                'is not equal to' => $actual != (float) $val,
+                'greater than' => $actual > (float) $val,
+                'less than' => $actual < (float) $val,
+                default => false,
             };
         }
 
-        if (in_array($field, ['Brand','Type'], true)) {
+        if (in_array($field, ['Brand', 'Type'], true)) {
             return match ($op) {
-                'is equal to'     => $actual === $val,
+                'is equal to' => $actual === $val,
                 'is not equal to' => $actual !== $val,
-                default           => false,
+                default => false,
             };
         }
 
         if ($field === 'Tag') {
             return match ($op) {
-                'is equal to'              => in_array($val, $actual),
-                default                    => false,
+                'is equal to' => in_array($val, $actual),
+                default => false,
             };
         }
 
         if ($field === 'Title') {
             return match ($op) {
-                'is equal to'        => $actual === $val,
-                'is not equal to'    => $actual !== $val,
-                'contains'           => str_contains($actual,$val),
-                'does not contains'  => !str_contains($actual,$val),
-                'starts with'        => str_starts_with($actual,$val),
-                'ends with'          => str_ends_with($actual,$val),
-                default              => false,
+                'is equal to' => $actual === $val,
+                'is not equal to' => $actual !== $val,
+                'contains' => str_contains($actual, $val),
+                'does not contains' => !str_contains($actual, $val),
+                'starts with' => str_starts_with($actual, $val),
+                'ends with' => str_ends_with($actual, $val),
+                default => false,
             };
         }
         return false;
@@ -278,21 +342,21 @@ class CategoryController extends Controller
 
     private function getSmartCollectionProducts($sub, ?array $brandIds = null)
     {
-   
+
         $rules = Mcollection_auto::where('msubcat_id', $sub->msubcat_id)->get();
 
         $logic = $sub->logical_operator === 'any' ? 'orWhere' : 'where';
 
-        $query = Mproduct::where('status','Active')
-                ->whereJsonContains('saleschannel','Online Store');
+        $query = Mproduct::where('status', 'Active')
+            ->whereJsonContains('saleschannel', 'Online Store');
 
         if ($brandIds) {
-            $query->whereIn('mbrand_id',$brandIds);
+            $query->whereIn('mbrand_id', $brandIds);
         }
 
         foreach ($rules as $r) {
             $val = $r->value;
-            $field = $r->field_name;  
+            $field = $r->field_name;
 
             switch ($field) {
                 case 'Title':
@@ -313,7 +377,9 @@ class CategoryController extends Controller
 
                 case 'Price':
                     $query->$logic(function ($q) use ($r, $val) {
-                        $q->whereHas('mvariants', fn($v) =>
+                        $q->whereHas(
+                            'mvariants',
+                            fn($v) =>
                             $this->applyNumericRule($v, 'price', $r->query_name, $val)
                         );
                     });
@@ -334,36 +400,43 @@ class CategoryController extends Controller
         return $query->with([
             'type:mproduct_type_id,mproduct_type_name',
             'brand:mbrand_id,mbrand_name',
-            'mvariantsApi'      => fn($q)=>$q
-                ->join('mvariant_details','mvariant_details.mvariant_id','=','mvariants.mvariant_id')
-                ->join('mstocks','mstocks.mvariant_id','=','mvariants.mvariant_id')
+            'mvariantsApi' => fn($q) => $q
+                ->join('mvariant_details', 'mvariant_details.mvariant_id', '=', 'mvariants.mvariant_id')
+                ->join('mstocks', 'mstocks.mvariant_id', '=', 'mvariants.mvariant_id')
                 ->select(
-                    'mvariants.mvariant_id','mvariants.sku','mvariants.mvariant_image',
-                    'mvariants.price','mvariants.compare_price','mvariants.cost_price',
-                    'mvariants.taxable','mvariants.barcode',
-                    'mvariant_details.options','mvariant_details.option_value',
-                    'mstocks.quantity','mstocks.mlocation_id'
+                    'mvariants.mvariant_id',
+                    'mvariants.sku',
+                    'mvariants.mvariant_image',
+                    'mvariants.price',
+                    'mvariants.compare_price',
+                    'mvariants.cost_price',
+                    'mvariants.taxable',
+                    'mvariants.barcode',
+                    'mvariant_details.options',
+                    'mvariant_details.option_value',
+                    'mstocks.quantity',
+                    'mstocks.mlocation_id'
                 )
         ])->get();
     }
 
-    private function applyNumericRule($q,string $col,string $op,$val)
+    private function applyNumericRule($q, string $col, string $op, $val)
     {
         return match ($op) {
-            'is equal to'     => $q->where($col,$val),
-            'is not equal to' => $q->where($col,'!=',$val),
-            'greater than'    => $q->where($col,'>',$val),
-            'less than'       => $q->where($col,'<',$val),
-            default           => $q,
+            'is equal to' => $q->where($col, $val),
+            'is not equal to' => $q->where($col, '!=', $val),
+            'greater than' => $q->where($col, '>', $val),
+            'less than' => $q->where($col, '<', $val),
+            default => $q,
         };
     }
 
     private function jsonResponse($payload)
     {
         return response()->json([
-            'status'     => true,
-            'message'    => 'Fetch all Categories Successfully',
-            'cdnURL'     => config('cdn.url'),
+            'status' => true,
+            'message' => 'Fetch all Categories Successfully',
+            'cdnURL' => config('cdn.url'),
             'main_categories' => $payload,
         ]);
     }

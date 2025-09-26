@@ -349,13 +349,13 @@ export default {
       ]
 
       if (this.activeTab === 0) {
-        // base.push({ text: 'Tag', value: 'user_tag_name', sortable: false })
+        base.push({ text: 'Tag', value: 'user_tag_name', sortable: false })
         base.push({ text: 'Order', value: 'total_order' })
         base.push({ text: 'Spend', value: 'total_spend' })
         base.push({ text: 'Action', value: 'action2', sortable: false })
         base.push({ text: 'Edit', value: 'action3', sortable: false })
       } else {
-        // base.push({ text: 'Tag', value: 'user_tag_name', sortable: false })
+        base.push({ text: 'Tag', value: 'user_tag_name', sortable: false })
         base.push({ text: 'Action', value: 'action1', sortable: false })
         if (this.activeTab === 1) 
         base.push({ text: 'Action', value: 'action2', sortable: false })
@@ -383,10 +383,10 @@ export default {
       const { data } = await axios.get('/admin/reps/vlist')
       this.reps = data.reps
     },
-    // async loadTags () {
-    //   const { data } = await axios.get('/admin/user-tags/vlist')
-    //   this.userTags = data.userTags
-    // },
+    async loadTags () {
+      const { data } = await axios.get('/admin/user-tags/vlist')
+      this.userTags = data.userTags
+    },
     async checkEmailUnique() {
       if (!this.selectedUser.email) {
         this.emailError = 'Email is required';
