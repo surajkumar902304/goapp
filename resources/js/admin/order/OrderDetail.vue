@@ -33,7 +33,8 @@
           Refund
         </v-btn>
 
-        <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled' && order.cnd_status !== 'created'" class="btn-32-text-12 ml-1" small outlined
+        <v-btn v-if="order.payment_status.toLowerCase() !== 'cancelled' && order.cnd_status !== 'created'"
+          class="btn-32-text-12 ml-1" small outlined
           style="color: red; background-color: white !important; border: 1px solid red !important;"
           @click="dialogCancel = true">
           Cancel
@@ -304,7 +305,7 @@
     <v-dialog v-model="fulfilDialog" max-width="700px">
       <v-card elevation="5">
         <v-card-title class="headline grey lighten-2">
-          Fulfil&nbsp;Item&nbsp;Details
+          Fulfill&nbsp;Item&nbsp;Details
         </v-card-title>
         <v-divider />
 
@@ -320,11 +321,13 @@
               </v-col>
 
               <v-col cols="5">
-                <div class="subtitle-2 font-weight-medium">
-                  {{ itm.product.mproduct_title }}
-                </div>
-                <div class="caption grey--text text--medium">
-                  SKU:&nbsp;{{ itm.variant.sku }}
+                <strong>{{ itm.product.mproduct_title }}</strong>
+                <div class="caption" v-if="itm.variant?.option_value">
+                  <div v-for="(val, key) in itm.variant.option_value" :key="key">
+                    <span style="background-color: #eee; font-size: 12px; font-weight: 500; display: inline-block;"
+                      class="rounded-pill px-2 py-1 lh-1 mb-1"><span class="fw-bold">{{ key }}</span>: {{ val
+                      }}</span>
+                  </div>
                 </div>
               </v-col>
 

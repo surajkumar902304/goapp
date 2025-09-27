@@ -16,7 +16,7 @@ class AddWalletDiscountToOrdersTable extends Migration
         Schema::table('orders', function (Blueprint $table) {
             $table->decimal('wallet_discount', 10, 2)->default(0.00)->after('total_amount');
             $table->decimal('coupon_discount', 10, 2)->default(0.00)->after('wallet_discount');
-            $table->enum('fulfillment_status', ['fulfilled', 'unfulfilled'])
+            $table->enum('fulfillment_status', ['fulfilled', 'unfulfilled', 'partiallyfulfilled'])
                   ->default('unfulfilled')->after('status');
         });
     }

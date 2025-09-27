@@ -673,4 +673,16 @@ class OrderController extends Controller
         return response()->json(['status' => true]);
     }
 
+
+    public function countOrders()
+    {
+        $count = Order::where(function ($q) {
+            $q->whereNull('royalmail_order_identifier')
+                ->orWhere('cnd_status', '!=', 'created');
+        })->count();
+
+        return response()->json(['count' => $count]);
+    }
+
+
 }

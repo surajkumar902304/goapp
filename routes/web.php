@@ -235,6 +235,7 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::post('/order/cancel', [OrderController::class, 'cancelOrder']);
     Route::get('/order/packing-slip/{order_id}', [OrderController::class, 'packingSlip'])->name('admin.order.packingSlip');
     Route::get('/orders-bulk/packing-slips', [OrderController::class, 'bulkPackingSlips'])->name('admin.order.bulkpackingSlip');
+    Route::get('/orders/count', [OrderController::class, 'countOrders']);
 
     // routes/ Click & drop royal mail
     Route::post('/royalmail/sync', [RoyalMailSyncController::class, 'sync']);

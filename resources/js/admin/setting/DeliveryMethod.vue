@@ -101,7 +101,7 @@
 
     <v-row class="mt-8">
       <v-col cols="12">
-        <h2 class="text-h6 mb-1">Minimum Order Requirement</h2>
+        <h2 class="text-h6 mb-1">Free Delivery Minimum Order</h2>
       </v-col>
     </v-row>
 
