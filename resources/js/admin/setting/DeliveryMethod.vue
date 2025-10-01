@@ -137,12 +137,64 @@
         </v-card-title>
         <v-form v-model="minFormValid" @submit.prevent="saveMinRequirement">
           <v-card-text>
-            <v-text-field v-model="defaultMinItem.value" type="number" :rules="[v=>!!v||'Required', v=>v>0||'Must be >0']" label="Minimum Order Amount" outlined/>
+            <v-text-field v-model="defaultMinItem.value" type="number" :rules="[ v => (!!v && v.toString().trim() !== '') || 'Amount is required.', v => (/^[0-9]+$/.test(v)) || 'Only whole numbers allowed.']" 
+              label="Minimum Order Amount" outlined/>
           </v-card-text>
           <v-card-actions>
             <v-spacer/>
             <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small :loading="savingMin" :disabled="!minFormValid">
               {{ editedMinIndex===-1 ? 'Add' : 'Update' }}
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
+
+    <v-row class="mt-8">
+      <v-col cols="12">
+        <h2 class="text-h6 mb-1">Minimum Order Place</h2>
+      </v-col>
+    </v-row>
+
+    <v-row class="mt-0">
+      <v-col cols="12">
+        <v-card elevation="5">
+          <v-data-table :headers="OrderPlaceHeaders" :items="OrderPlace" :items-per-page="-1" hide-default-footer>
+            <template #item.value="{ item }">
+              £{{ item.value }}
+            </template>
+            <template #item.is_active="{ item }">
+              <v-switch v-model="item.is_active" @change="toggleMinOrderPlace(item)" dense inset style="transform:scale(0.75);"/>
+            </template>
+            <template #header.actions><div class="text-center">Action</div></template>
+            <template #item.actions="{ item }">
+              <div class="text-center">
+                <v-chip color="primary" class="white--text" outlined pill small @click="openMinOrderPlace(item)" style="cursor:pointer;">
+                  <v-icon small left>mdi-pencil</v-icon>Edit
+                </v-chip>
+              </div>
+            </template>
+          </v-data-table>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <v-dialog v-model="addOrderPlace" max-width="600" @update:model-value="MinOrderPlaceDialogToggle">
+      <v-card elevation="5">
+        <v-card-title>
+          {{ orderPlaceIndex === -1 ? 'Add Minimum Order Place' : 'Edit Minimum Order Place'}}
+          <v-spacer/>
+          <v-icon @click="addOrderPlace = false">mdi-close</v-icon>
+        </v-card-title>
+        <v-form v-model="orderPlaceFormValid" @submit.prevent="saveMinOrderPlace">
+          <v-card-text>
+            <v-text-field v-model="defaultOrderPlaceItem.value" type="number" :rules="[ v => (!!v && v.toString().trim() !== '') || 'Amount is required.', v => (/^[0-9]+$/.test(v)) || 'Only whole numbers allowed.']" 
+              label="Minimum Order Amount" outlined/>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer/>
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small :loading="savingOrderPlace" :disabled="!orderPlaceFormValid">
+              {{ orderPlaceIndex===-1 ? 'Add' : 'Update' }}
             </v-btn>
           </v-card-actions>
         </v-form>
@@ -184,7 +236,8 @@
         </v-card-title>
         <v-form v-model="vatFormValid" @submit.prevent="saveVat">
           <v-card-text>
-            <v-text-field v-model="defaultVatItem.product_vat" type="number" :rules="[v=>!!v||'Required', v=>v>0||'Must be >0']" label="Product Vat" outlined/>
+            <v-text-field v-model="defaultVatItem.product_vat" type="number" :rules="[ v => (!!v && v.toString().trim() !== '') || 'Vat is required.', v => (/^[0-9]+$/.test(v)) || 'Only whole numbers allowed.',
+              v => (parseInt(v) >= 1 && parseInt(v) <= 99) || 'Value must be between 1 and 99.']" label="Product Vat" outlined/>
           </v-card-text>
           <v-card-actions>
             <v-spacer/>
@@ -231,8 +284,8 @@ export default {
       ],
       amountRules: [
         v => !!v || 'Delivery Amount is required',
-        v => !isNaN(parseFloat(v)) || 'Delivery Amount must be a number',
-        v => parseFloat(v) > 0 || 'Delivery Amount must be greater than 0',
+        (v) => v === "" || (!isNaN(v) && v >= 0) || "Amount must be a positive number",
+        v => v === "" || /^\d+(\.\d{1,2})?$/.test(v) || "Amount up to 2 decimal places"
       ],
       deleteDialog: false,
       deliveryMethodToDelete: null,
@@ -249,6 +302,18 @@ export default {
       minFormValid: false,
       savingMin: false,
       defaultMinItem: { setting_id:null, value:null },
+
+      OrderPlace: [],
+      OrderPlaceHeaders: [
+        { text:'Amount',    value:'value' },
+        { text:'Status',    value:'is_active' },
+        { text:'Action',    value:'actions',  sortable:false },
+      ],
+      addOrderPlace: false,
+      orderPlaceIndex: -1,
+      orderPlaceFormValid: false,
+      savingOrderPlace: false,
+      defaultOrderPlaceItem: { setting_id:null, value:null },
 
       vatRequirements: [],
       vatHeaders: [
@@ -267,6 +332,7 @@ export default {
     this.getAlldeliverymethods();
     this.getAllSettings();
     this.getAllVat();
+    this.getMinOrderPlace();
   },
   watch: {
     addSdialog(val) {
@@ -275,12 +341,8 @@ export default {
   },
   methods: {
     async getAllSettings() {
-      const res = await axios.get('/admin/settings/vlist')
-      this.minRequirements = res.data.deliverymethods
-    },
-    async getAllVat() {
-      const res = await axios.get('/admin/product-vat/vlist')
-      this.vatRequirements = res.data.vat
+      const res = await axios.get('/admin/settings/min-order/vlist')
+      this.minRequirements = res.data.minOrder
     },
     async toggleMinStatus(item) {
       try {
@@ -325,6 +387,58 @@ export default {
       } finally {
         this.savingMin = false
       }
+    },
+    async getMinOrderPlace() {
+      const res = await axios.get('/admin/settings/min-order-place/vlist')
+      this.OrderPlace = res.data.minOrderPlace
+    },
+    async toggleMinOrderPlace(item) {
+      try {
+        await axios.post(`/admin/settings/toggle/min-order-place/${item.setting_id}`, {
+          is_active: item.is_active
+        });
+        this.$toast.success('Status updated');
+      } catch (e) {
+        this.$toast.error('Could not update status');
+      }
+    },
+    openMinOrderPlace(item=null) {
+      if (item) {
+        this.defaultOrderPlaceItem = { ...item }
+        this.orderPlaceIndex = item.setting_id
+        this.orderPlaceFormValid = true
+      } else {
+        this.defaultOrderPlaceItem = { setting_id:null, value:null }
+        this.orderPlaceIndex = -1
+        this.orderPlaceFormValid = false
+      }
+      this.addOrderPlace = true
+    },
+    MinOrderPlaceDialogToggle(open) {
+      if (!open) {
+        this.defaultOrderPlaceItem = { setting_id:null, value:null }
+        this.orderPlaceFormValid = false
+        this.savingOrderPlace = false
+      }
+    },
+    async saveMinOrderPlace() {
+      this.savingOrderPlace = true
+      try {
+        await axios.post('/admin/settings/min-order-place', {
+          value: this.defaultOrderPlaceItem.value
+        })
+        this.$toast.success('Saved!')
+        await this.getMinOrderPlace()
+        this.addOrderPlace = false
+      } catch (e) {
+        this.$toast.error('Save failed')
+      } finally {
+        this.savingOrderPlace = false
+      }
+    },
+    async getAllVat() {
+      const res = await axios.get('/admin/product-vat/vlist')
+      this.vatRequirements = res.data.vat
     },
     openVatDialog(item=null) {
       if (item) {

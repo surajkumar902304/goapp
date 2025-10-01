@@ -18,5 +18,10 @@ class MinOrderDelivery extends Seeder
         ['key'   => 'min_order_free_delivery'],
             ['value' => '500',]
         );
+
+        Setting::updateOrCreate(
+            ['key' => 'min_order_place'],
+            ['value' => '200'] 
+        );
     }
 }

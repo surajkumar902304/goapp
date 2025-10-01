@@ -12,8 +12,11 @@ class SettingController extends Controller
     // Min Ddelivery Order
     public function getMinOrder()
     {
-        $setting = Setting::where('key', 'min_order_free_delivery')->first();
-        return response()->json(['value' => $setting->value ?? '']);
+       $minOrder= Setting::where('key', 'min_order_free_delivery')->get();
+        return response()->json([
+            'status' => true,
+            'minOrder' => $minOrder,
+        ],200);
     }
 
     public function saveMinOrder(Request $request)
@@ -26,17 +29,42 @@ class SettingController extends Controller
         return response()->json(['message' => 'Updated']);
     }
 
-    public function getListSettings()
+    public function toggle(Setting $setting, Request $request)
     {
-        $settings= Setting::where('key', 'min_order_free_delivery')->get();
-        return response()->json([
-            'status' => true,
-            'deliverymethods' => $settings,
-        ],200);
+        $request->validate([
+            'is_active' => 'required|boolean'
+        ]);
 
+        $setting->is_active = $request->input('is_active');
+        $setting->save();
+
+        return response()->json([
+            'status'  => true,
+            'setting' => $setting,
+        ], 200);
     }
 
-    public function toggle(Setting $setting, Request $request)
+    // Min Order Place
+    public function getMinOrderPlace()
+    {
+       $minOrderPlace= Setting::where('key', 'min_order_place')->get();
+        return response()->json([
+            'status' => true,
+            'minOrderPlace' => $minOrderPlace,
+        ],200);
+    }
+
+    public function saveMinOrderPlace(Request $request)
+    {
+        Setting::updateOrCreate(
+            ['key' => 'min_order_place'],
+            ['value' => $request->value]
+        );
+
+        return response()->json(['message' => 'Updated']);
+    }
+
+    public function toggleMinOrderPlace(Setting $setting, Request $request)
     {
         $request->validate([
             'is_active' => 'required|boolean'

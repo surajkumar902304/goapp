@@ -10,11 +10,12 @@ class SettingController extends Controller
 {
     public function getMinOrder()
     {
-        $value = Setting::where('key', 'min_order_free_delivery')->value('value') ?? '0';
+        $orderFree = Setting::where('key', 'min_order_free_delivery')->value('value') ?? '0';
+        $orderPlace = Setting::where('key', 'min_order_place')->value('value') ?? '0';
         return response()->json([
             'status' => true,
-            'message' => 'Minimum Order Free Delivery',
-            'min_order_free_delivery' => $value,
+            'min_order_free_delivery' => $orderFree,
+            'min_order_place' => $orderPlace,
         ]);
     }
 }

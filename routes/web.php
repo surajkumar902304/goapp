@@ -201,10 +201,14 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::post('/users/assign-rep', [RepController::class, 'assignRep']);  
 
     // Setting Min order delivery
-    Route::get('/settings/min-order', [SettingController::class, 'getMinOrder']);
+    Route::get('/settings/min-order/vlist', [SettingController::class, 'getMinOrder']);
     Route::post('/settings/min-order', [SettingController::class, 'saveMinOrder']);
-    Route::get('/settings/vlist', [SettingController::class, 'getListSettings']);
-    Route::post('/settings/toggle/{setting}', [SettingController::class, 'toggle'])->name('settings.toggle');
+    Route::post('/settings/toggle/{setting}', [SettingController::class, 'toggle']);
+
+    // Setting Min order place
+    Route::get('/settings/min-order-place/vlist', [SettingController::class, 'getMinOrderPlace']);
+    Route::post('/settings/min-order-place', [SettingController::class, 'saveMinOrderPlace']);
+    Route::post('/settings/toggle/min-order-place/{setting}', [SettingController::class, 'toggleMinOrderPlace']);
 
     // Bank Details routes
     Route::get('/bank-detail/vlist', [BankDetailController::class, 'index'])->name('bankdetails.vlist');
