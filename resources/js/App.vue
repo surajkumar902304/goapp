@@ -25,7 +25,7 @@
             <router-link tag="v-list-item" to="/admin/orders" active-class="active-link">
               <v-list-item-icon><v-icon>mdi-cart-outline</v-icon></v-list-item-icon>
               <v-list-item-title>
-                Order <v-chip small color="grey" class="ml-4 mb-2 white--text">{{ orderCount }}</v-chip>
+                Order <v-chip x-small color="grey" class="ml-4 mb-1 white--text">{{ orderCount }}</v-chip>
               </v-list-item-title>
             </router-link>
 
@@ -171,24 +171,25 @@
                 <v-list-item-title>Shipping</v-list-item-title>
               </router-link>
 
-              <!-- <router-link tag="v-list-item" to="#">
-              <v-list-item-icon><v-icon>mdi-file-document-outline</v-icon></v-list-item-icon>
-              <v-list-item-title>Pages</v-list-item-title>
-            </router-link> -->
-
               <router-link tag="v-list-item" to="/admin/payment-method" active-class="active-link">
                 <v-list-item-icon><v-icon>mdi-credit-card-outline</v-icon></v-list-item-icon>
                 <v-list-item-title>Payment Method</v-list-item-title>
               </router-link>
 
             </v-list-group>
-
-            <v-list-item :href="'/admin/logout'" active-class="active-link">
-              <v-list-item-icon><v-icon>mdi-logout</v-icon></v-list-item-icon>
-              <v-list-item-title>Log Out</v-list-item-title>
-            </v-list-item>
           </v-list-item-group>
         </v-list>
+
+        <template v-slot:append>
+          <v-list>
+            <v-list-item :href="'/admin/logout'" active-class="active-link">
+              <v-list-item-icon>
+                <v-icon>mdi-logout</v-icon>
+              </v-list-item-icon>
+              <v-list-item-title style="font-size: 13px !important;">Log Out</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </template>
       </v-navigation-drawer>
 
       <v-main style="padding-left: 66px; background-color: #eeeeee;" class="py-5 pe-3">
@@ -264,15 +265,21 @@ export default {
   color: white !important;
 }
 
-.v-navigation-drawer .v-list-item-group>.v-list-item:last-child {
+.v-navigation-drawer .v-list-item-group > .v-list-item:last-child {
   position: absolute;
-  top: auto;
   bottom: 0;
   left: 8px;
   right: 8px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }
 
 .v-navigation-drawer .v-list-item-group {
   position: static;
+  margin: 0 !important;
 }
+
 </style>
