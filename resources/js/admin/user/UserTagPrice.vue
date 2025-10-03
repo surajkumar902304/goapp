@@ -28,7 +28,7 @@
 
             <template #item.tag_price="{ item }">
               <div style="cursor:pointer" @click="openTagDialog(item)">
-                {{ formatMoney(item.tag_price) }}
+                {{ item.tag_price }}
               </div>
             </template>
           </v-data-table>
@@ -112,10 +112,6 @@ export default {
     img(src) {
       return src ? this.cdn + String(src).replace(/^\/+/, '') : '/images/no-image-available.png';
     },
-    formatMoney(v) {
-      const n = parseFloat(v);
-      return isNaN(n) ? '0.00' : n.toFixed(2);
-    },
     async fetchVariants() {
       const { data } = await axios.get(`/admin/user-tag-price/list`, {
         params: { UserTagPrice: this.user_tag_id },
@@ -147,7 +143,7 @@ export default {
     openTagDialog(item) {
       this.currentVariantId = item.mvariant_id;
       this.tagValueInput = item.tag_price === '' || item.tag_price == null ? '' : String(item.tag_price);
-      this.priceValid = false;
+      this.priceValid = true;
       this.showTagDialog = true;
     },
     closeDialog() {

@@ -109,8 +109,8 @@ class UserTagController extends Controller
                 return [
                     'mvariant_id' => $variant->mvariant_id,
                     'variant_image' => $variant->mvariant_image,
-                    'price' => $variant->price,
-                    'tag_price' => $existingPrice ?? null,
+                    'price' => (float) $variant->price,
+                    'tag_price' => (float) ($existingPrice ?? $variant->price),
                     'product' => $variant->product,
                     'details' => $variant->details,
                 ];
