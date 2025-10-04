@@ -24,10 +24,10 @@
                         <template v-slot:top>
                             <v-row dense class="mx-1 pb-1">
                                 <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details
-                                    prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Tag name" />
+                                    prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Customer Tag" />
                             </v-row>
                         </template>
-                        <template #item.user_tag_name="{ item }">
+                        <!-- <template #item.user_tag_name="{ item }">
                             <span v-if="(item.type || '').toLowerCase() !== 'custom'">
                                 {{ item.user_tag_name }}
                             </span>
@@ -36,7 +36,7 @@
                                 class="link-dark" title="Set custom tag prices">
                                 {{ item.user_tag_name }}
                             </router-link>
-                        </template>
+                        </template> -->
                         <template #item.is_active="{ item }">
                             <v-switch v-model="item.is_active" :input-value="item.is_active === 1"
                                 @change="toggleStatus(item)" dense inset style="transform: scale(0.75);"></v-switch>
@@ -163,7 +163,7 @@ export default {
             userTagsHeaders: [
                 { text: 'Tag name', value: 'user_tag_name' },
                 { text: 'Type', value: 'type' },
-                { text: 'Discount', value: 'discount' },
+                { text: 'Discount (%)', value: 'discount' },
                 { text: 'Status', value: 'is_active' },
                 { text: 'Action', value: 'actions1', sortable: false },
                 { text: 'Action', value: 'actions2', sortable: false },

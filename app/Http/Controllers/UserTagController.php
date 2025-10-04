@@ -84,7 +84,7 @@ class UserTagController extends Controller
 
     public function variantForTagPrice(Request $request)
     {
-        $tag = UserTag::where('user_tag_id', $request->UserTagPrice)
+        $tag = UserTag::where('user_tag_id', $request->user_tag_id)
             ->where('type', 'custom')
             ->first();
 
