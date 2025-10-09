@@ -1,5 +1,5 @@
 <template>
-    <div class="page-margin-20-40">
+    <div class="page-margin-20-40 user-custom-price">
         <v-container fluid class="pt-0">
             <v-row class="mt-0 pt-0 align-center">
                 <v-col cols="6" class="p-0 d-flex align-center">
@@ -11,7 +11,7 @@
                 <v-col cols="6" class="p-0 d-flex justify-end align-center">
                     <span class="mr-4" style="font-size: 16px !important;">Select Tag</span>
                     <v-select v-model="selectedTag" :items="userTags" item-text="user_tag_name" item-value="user_tag_id"
-                        outlined dense hide-details class="ma-0" style="max-width: 260px;" @change="onTagChange" />
+                        outlined dense hide-details class="ma-0" style="max-width: 150px" @change="onTagChange" />
                 </v-col>
             </v-row>
         </v-container>
@@ -20,7 +20,8 @@
         <v-row class="mt-0">
             <v-col cols="12">
                 <v-card elevation="5">
-                    <v-data-table :items="allVariants" :headers="headers" :search="mainSearch" item-key="mvariant_id"
+                    <v-data-table v-model="selected" :items="allVariants" :headers="headers" :search="mainSearch"
+                        item-key="mvariant_id" :show-select="true"
                         :footer-props="{ 'items-per-page-options': [10, 25, 50], 'items-per-page-text': 'Rows per page:' }">
                         <template v-slot:top>
                             <v-row dense class="mx-1 pb-1">
@@ -34,8 +35,32 @@
                         </template>
 
                         <template #item.tag_price="{ item }">
-                            <div style="cursor:pointer" @click="openTagDialog(item)">
+                            <div style="cursor:pointer; background-color: #e0e0e0; padding: 6px; border-radius: 4px;"
+                                @click="openTagDialog(item)">
                                 {{ item.tag_price }}
+                            </div>
+                        </template>
+                        <template #header.delete>
+                            <div class="d-flex justify-end align-center">
+                                <span v-if="!selected.length"></span>
+
+                                <v-menu v-if="selected.length" offset-y>
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <div class="d-flex align-center">
+                                            <span class="mr-2 font-weight-medium text-caption">{{ selected.length }}
+                                                selected</span>
+                                            <v-icon color="primary" v-bind="attrs" v-on="on" style="cursor: pointer;">
+                                                mdi-dots-vertical
+                                            </v-icon>
+                                        </div>
+                                    </template>
+
+                                    <v-list dense>
+                                        <v-list-item @click="openBulkDialog">
+                                            <v-list-item-title>Bulk Update</v-list-item-title>
+                                        </v-list-item>
+                                    </v-list>
+                                </v-menu>
                             </div>
                         </template>
                     </v-data-table>
@@ -45,13 +70,13 @@
 
         <v-dialog v-model="showTagDialog" max-width="400">
             <v-card elevation="5">
-                <v-card-title><span>Update Tag Price</span>
+                <v-card-title><span>Update Custom Price</span>
                     <v-spacer></v-spacer>
                     <v-icon @click="showTagDialog = false">mdi-close</v-icon>
                 </v-card-title>
                 <v-form v-model="priceValid" @submit.prevent="updateTagValue">
                     <v-card-text>
-                        <v-text-field v-model="tagValueInput" label="Tag Price" type="number" step="0.01"
+                        <v-text-field v-model="tagValueInput" label="Custom Price" type="number" step="0.01"
                             :rules="priceRules" autofocus />
                     </v-card-text>
                     <v-card-actions>
@@ -65,6 +90,29 @@
                 </v-form>
             </v-card>
         </v-dialog>
+
+        <v-dialog v-model="bulkUpdateDialog" max-width="400">
+            <v-card elevation="5">
+                <v-card-title><span>Update Multi Custom Price</span>
+                    <v-spacer></v-spacer>
+                    <v-icon @click="bulkUpdateDialog = false">mdi-close</v-icon>
+                </v-card-title>
+                <v-form v-model="priceValid" @submit.prevent="updateMultiTagValue">
+                    <v-card-text>
+                        <v-text-field v-model="tagValueInput" label="Custom Price" type="number" step="0.01"
+                            :rules="priceRules" autofocus />
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer />
+                        <v-btn class="btn-32-text-12" type="submit"
+                            style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"
+                            small :loading="bulkUpdateLoading" :disabled="bulkUpdateLoading || !priceValid">
+                            Update
+                        </v-btn>
+                    </v-card-actions>
+                </v-form>
+            </v-card>
+        </v-dialog>
     </div>
 </template>
 
@@ -72,11 +120,11 @@
 import axios from 'axios';
 
 export default {
-    name: 'UserTagPrice',
+    name: 'UserCustomPrice',
     props: {
         usertagid: {
             type: [String, Number],
-            required: true,
+            default: null,
         },
     },
     data() {
@@ -86,11 +134,13 @@ export default {
             mainSearch: '',
             allVariants: [],
             headers: [
+                { text: '', value: 'data-table-select', width: '10px' },
                 { text: 'Image', value: 'img', sortable: false },
                 { text: 'Product', value: 'product' },
                 { text: 'Variants', value: 'variantLabel' },
-                { text: 'Price', value: 'price' },
-                { text: 'Tag Price', value: 'tag_price' },
+                { text: 'Base Price', value: 'price' },
+                { text: 'Custom Price', value: 'tag_price', width: '150px' },
+                { text: '', value: 'delete', sortable: false, width: '130px' }
             ],
             showTagDialog: false,
             priceValid: false,
@@ -104,15 +154,23 @@ export default {
 
             user_tag_id: this.$route.params?.usertagid || null,
             priceRules: [
-                v => (v !== '' && v !== null) || 'Tag price is required.',
+                v => (v !== '' && v !== null) || 'Custom Price is required.',
                 v => !isNaN(v) || 'Value must be a number.',
                 v => parseFloat(v) >= 0 || 'Must be a positive number.',
                 v => /^\d+(\.\d{1,2})?$/.test(String(v)) || 'Max 2 decimal places allowed.',
             ],
 
-            selectedTag: null,
-            userTags: [],
+            selected: [],
+            bulkUpdateDialog: false,
+            bulkUpdateLoading: false,
         };
+    },
+    computed: {
+        initialTagId() {
+            const fromProp = this.usertagid != null ? Number(this.usertagid) : null;
+            const fromRoute = this.$route?.params?.usertagid != null ? Number(this.$route.params.usertagid) : null;
+            return fromProp ?? fromRoute ?? null;
+        },
     },
     mounted() {
         axios.get('/admin/user-tags/vlist')
@@ -120,15 +178,12 @@ export default {
                 const all = data.userTags || [];
                 this.userTags = all.filter(t => t.type === 'custom');
 
-                const routeTagId = this.$route.params?.usertagid
-                    ? Number(this.$route.params.usertagid)
-                    : null;
+                const candidate = this.initialTagId;
+                const isValid = candidate && this.userTags.some(t => t.user_tag_id === candidate);
 
-                if (routeTagId && this.userTags.some(t => t.user_tag_id === routeTagId)) {
-                    this.selectedTag = routeTagId;
-                } else if (this.userTags.length) {
-                    this.selectedTag = this.userTags[0].user_tag_id;
-                }
+                this.selectedTag = isValid
+                    ? candidate
+                    : (this.userTags[0]?.user_tag_id || null);
 
                 if (this.selectedTag) {
                     this.onTagChange(this.selectedTag);
@@ -137,6 +192,14 @@ export default {
             .catch(err => {
                 console.error('Error fetching customer tags:', err);
             });
+    },
+    watch: {
+        '$route.params.usertagid'(nv) {
+            const newId = nv != null ? Number(nv) : null;
+            if (newId && this.userTags.some(t => t.user_tag_id === newId)) {
+                this.onTagChange(newId);
+            }
+        },
     },
     methods: {
         img(src) {
@@ -205,21 +268,82 @@ export default {
                         this.tagValueInput === '' ? '' : parseFloat(this.tagValueInput);
                 }
 
-                this.$toast?.success('Tag price updated!', { timeout: 500 });
+                this.$toast?.success('Custom price updated!', { timeout: 500 });
                 this.closeDialog();
             } catch (e) {
                 console.error(e);
-                this.$toast?.error('Failed to update tag price', { timeout: 600 });
+                this.$toast?.error('Failed to update custom price', { timeout: 700 });
             } finally {
                 this.isUpdating = false;
             }
         },
+        openBulkDialog() {
+            if (!this.selectedTag) {
+                this.$toast?.error('Please select a tag first.', { timeout: 700 });
+                return;
+            }
+            if (!this.selected || this.selected.length === 0) {
+                this.$toast?.error('Select at least one variant.', { timeout: 700 });
+                return;
+            }
+            this.tagValueInput = '';
+            this.priceValid = false;
+            this.bulkUpdateDialog = true;
+        },
+        async updateMultiTagValue() {
+            if (this.bulkUpdateLoading || !this.priceValid) return;
+
+            const commonPrice = this.tagValueInput === '' ? null : parseFloat(this.tagValueInput);
+            const items = (this.selected || []).map(row => ({
+                mvariant_id: row.mvariant_id,
+                tag_price: commonPrice,
+            }));
+
+            if (!this.selectedTag || items.length === 0) {
+                this.$toast?.error('Invalid tag or no items selected.', { timeout: 700 });
+                return;
+            }
+
+            this.bulkUpdateLoading = true;
+            try {
+                await axios.post('/admin/user-tag-price/update', {
+                    user_tag_id: this.selectedTag,
+                    items,
+                });
+
+                const setIds = new Set(items.map(i => i.mvariant_id));
+                this.allVariants = this.allVariants.map(v =>
+                    setIds.has(v.mvariant_id)
+                        ? { ...v, tag_price: commonPrice === null ? '' : commonPrice }
+                        : v
+                );
+
+                this.$toast?.success('Bulk custom prices updated!', { timeout: 500 });
+                this.bulkUpdateDialog = false;
+                this.selected = [];
+            } catch (e) {
+                console.error(e);
+                this.$toast?.error('Bulk update failed', { timeout: 700 });
+            } finally {
+                this.bulkUpdateLoading = false;
+            }
+        },
+
+
     },
 };
 </script>
 
-<style scoped>
+<style>
 .v-input {
     font-size: 12px !important;
+}
+
+.user-custom-price .v-input__control {
+    height: 24px !important;
+}
+
+.user-custom-price .v-select.v-input--dense .v-select__selection--comma {
+    margin: 7px 0 7px 0;
 }
 </style>

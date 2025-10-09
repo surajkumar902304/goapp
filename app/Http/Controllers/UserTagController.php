@@ -7,8 +7,7 @@ use App\Models\User;
 use App\Models\UserTag;
 use App\Models\UserTagPrice;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class UserTagController extends Controller
@@ -124,28 +123,62 @@ class UserTagController extends Controller
     }
 
     public function updateTagPrice(Request $request)
-    {
-        $request->validate([
-            'user_tag_id' => 'required|exists:user_tags,user_tag_id',
-            'mvariant_id' => 'required|exists:mvariants,mvariant_id',
-            'tag_price' => 'required|numeric|min:0',
+{
+    // If bulk payload present
+    if ($request->has('items')) {
+        $validated = $request->validate([
+            'user_tag_id'        => 'required|exists:user_tags,user_tag_id',
+            'items'              => 'required|array|min:1',
+            'items.*.mvariant_id'=> 'required|exists:mvariants,mvariant_id',
+            'items.*.tag_price'  => 'nullable|numeric|min:0', // allow null to clear
         ]);
 
-        UserTagPrice::updateOrCreate(
-            [
-                'user_tag_id' => $request->user_tag_id,
-                'mvariant_id' => $request->mvariant_id,
-            ],
-            [
-                'tag_price' => $request->tag_price,
-            ]
-        );
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['items'] as $row) {
+                $tagPrice = $row['tag_price'];
+                $keys = [
+                    'user_tag_id' => $validated['user_tag_id'],
+                    'mvariant_id' => $row['mvariant_id'],
+                ];
+
+                if (is_null($tagPrice)) {
+                    // Clear: delete existing record if any
+                    UserTagPrice::where($keys)->delete();
+                } else {
+                    UserTagPrice::updateOrCreate($keys, ['tag_price' => $tagPrice]);
+                }
+            }
+        });
 
         return response()->json([
-            'status' => true,
-            'message' => 'Tag price saved successfully',
+            'status'  => true,
+            'message' => 'Tag prices saved successfully (bulk).',
         ]);
     }
+
+    // Single-item payload
+    $validated = $request->validate([
+        'user_tag_id' => 'required|exists:user_tags,user_tag_id',
+        'mvariant_id' => 'required|exists:mvariants,mvariant_id',
+        'tag_price'   => 'nullable|numeric|min:0', // allow null to clear
+    ]);
+
+    $keys = [
+        'user_tag_id' => $validated['user_tag_id'],
+        'mvariant_id' => $validated['mvariant_id'],
+    ];
+
+    if (is_null($validated['tag_price'])) {
+        UserTagPrice::where($keys)->delete();
+    } else {
+        UserTagPrice::updateOrCreate($keys, ['tag_price' => $validated['tag_price']]);
+    }
+
+    return response()->json([
+        'status'  => true,
+        'message' => 'Tag price saved successfully.',
+    ]);
+}
 
     // Admin Assign Manual rep code
     public function assignTag(Request $request)
