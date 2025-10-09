@@ -25,8 +25,14 @@
                             <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Title"/>
                         </v-row>
                     </template>
-                    <template #item.service_solution_image="{ item }">
-                        <img :src="cdn + item.service_solution_image || 'https://via.placeholder.com/50'" width="50" />
+                    <template v-slot:item.service_solution_image="{ item }">
+                        <v-img :src="item.service_solution_image ? cdn + item.service_solution_image : ''" cover width="50" height="50" class="ma-1" style="border: 1px solid #e0e0e0; border-radius: 10px;">
+                            <template #placeholder>
+                            <div class="d-flex align-center justify-center fill-height">
+                                <v-icon color="grey">mdi-image</v-icon>
+                            </div>
+                            </template>
+                        </v-img>
                     </template>
                     <template #item.service_solution_title="{ item }">
                         <span>{{ item.service_solution_title }}</span>

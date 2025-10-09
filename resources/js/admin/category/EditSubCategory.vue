@@ -240,8 +240,15 @@
 
         <v-data-table v-model="productSelection" :items="allProducts" :headers="productHeaders" :search="productSearch" show-select item-key="mproduct_id" 
           return-object :footer-props="{ 'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:' }">
-          <template #item.mproduct_image="{ item }">
-            <img :src="item.mproduct_image ? cdn+item.mproduct_image : '/images/no-image-available.png'" width="50"/>
+          <template v-slot:item.mproduct_image="{ item }">
+            <v-img :src="item.mproduct_image ? cdn + item.mproduct_image : ''" cover width="50"
+              height="50" class="ma-1" style="border: 1px solid #e0e0e0; border-radius: 10px;">
+              <template #placeholder>
+                <div class="d-flex align-center justify-center fill-height">
+                  <v-icon color="grey">mdi-image</v-icon>
+                </div>
+              </template>
+            </v-img>
           </template>
         </v-data-table>
 

@@ -25,13 +25,18 @@
                         :footer-props="{ 'items-per-page-options': [10, 25, 50], 'items-per-page-text': 'Rows per page:' }">
                         <template v-slot:top>
                             <v-row dense class="mx-1 pb-1">
-                                <v-text-field v-model="mainSearch" class="m-2" clearable dense outlined hide-details
-                                    prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Custom Price" />
+                                <v-text-field v-model="mainSearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Custom Price" />
                             </v-row>
                         </template>
 
-                        <template #item.img="{ item }">
-                            <img :src="img(item.img)" width="50" height="50" style="object-fit:contain" />
+                        <template v-slot:item.img="{ item }">
+                            <v-img :src="item.img ? cdn + item.img : ''" cover width="50" height="50" class="ma-1" style="border: 1px solid #e0e0e0; border-radius: 10px;">  
+                                <template #placeholder>
+                                    <div class="d-flex align-center justify-center fill-height">
+                                        <v-icon color="grey">mdi-image</v-icon>
+                                    </div>
+                                </template>
+                            </v-img>
                         </template>
 
                         <template #item.tag_price="{ item }">
