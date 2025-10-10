@@ -29,6 +29,9 @@ class Order extends Model
         'pushed_to_cnd_at',
         'cnd_status',
         'cnd_last_error',
+        'payment_status',
+        'payment_provider',
+        'payment_reference',
     ];
 
     protected $casts = [

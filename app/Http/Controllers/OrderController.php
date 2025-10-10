@@ -209,9 +209,9 @@ class OrderController extends Controller
 
             if ($validated['bulkfulfilled'] === 'fulfilled') {
                 foreach ($orders as $order) {
-                    if (!empty($order->royalmail_order_identifier) && $order->cnd_status === 'created') {
-                        continue;
-                    }
+                    // if (!empty($order->royalmail_order_identifier) && $order->cnd_status === 'created') {
+                    //     continue;
+                    // }
 
                     $remainingItems = $order->items->filter(function ($it) {
                         $remaining = max(0, ($it->quantity ?? 0) - ($it->fulfilled_quantity ?? 0));
@@ -260,9 +260,9 @@ class OrderController extends Controller
                 }
             } else {
                 foreach ($orders as $order) {
-                    if (!empty($order->royalmail_order_identifier) && $order->cnd_status === 'created') {
-                        continue;
-                    }
+                    // if (!empty($order->royalmail_order_identifier) && $order->cnd_status === 'created') {
+                    //     continue;
+                    // }
 
                     $itemsUpdated += OrderItem::where('order_id', $order->order_id)
                         ->update(['fulfilled_quantity' => 0]);

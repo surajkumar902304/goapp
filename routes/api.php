@@ -16,6 +16,8 @@ use App\Http\Controllers\RepController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\StripeController;
+use App\Http\Controllers\StripeWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -116,6 +118,9 @@ Route::middleware(['auth.api'])->group(function () {
 
     // Bank Detail Routes 
     Route::get('/bank-detail',[BankDetailController::class, 'index']); 
+
+    Route::post('/create-payment-intent', [StripeController::class, 'createPaymentIntent']);
+    Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
 
 });
 
