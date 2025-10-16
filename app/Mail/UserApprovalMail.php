@@ -30,7 +30,7 @@ class UserApprovalMail extends Mailable
     public function build()
     {
         return $this->subject('Your Account Has Been Approved')
-                    ->markdown('emails.users.user-approved')
+                    ->view('emails.users.user-approved')
                     ->with([
                         'user' => $this->user,
                     ]);

@@ -31,7 +31,7 @@ class ReferralCodeMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Your Referral Code')
+        return $this->subject('You’ve Been Invited to Join')
                     ->view('emails.users.referral')
                     ->with([
                         'name' => $this->user->name,

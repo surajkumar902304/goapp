@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Str;
 
 class OrderPlacedMail extends Mailable
 {
@@ -29,10 +30,8 @@ class OrderPlacedMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Your Order Has Been Placed')
-                    ->markdown('emails.orders.order-placed')
-                    ->with([
-                        'order' => $this->order,
-                    ]);            
+    return $this->subject('Order #TR00' . $this->order->order_id.'confirmed')
+                ->view('emails.orders.order-placed')
+                ->with(['order' => $this->order]);          
     }
 }

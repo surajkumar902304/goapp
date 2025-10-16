@@ -29,7 +29,7 @@ class ServiceInterestMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('New Service Interest Enquiry')
+        return $this->subject('New Service Interest Submission')
                     ->view('emails.service_interest')
                     ->with('data', $this->data);
     }

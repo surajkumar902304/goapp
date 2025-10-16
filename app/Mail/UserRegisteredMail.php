@@ -29,8 +29,8 @@ class UserRegisteredMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Welcome to Our Platform')
-                    ->markdown('emails.users.registered')
+        return $this->subject('Welcome to our platform')
+                    ->view('emails.users.registered')
                     ->with([
                         'user' => $this->user,
                     ]);

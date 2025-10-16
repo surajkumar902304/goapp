@@ -29,8 +29,8 @@ class PasswordChangedMail extends Mailable
      */
     public function build()
     {
-        return $this->subject('Your Password Was Changed')
-                    ->markdown('emails.users.password-changed')
+        return $this->subject('Your Password Has Been Changed')
+                    ->view('emails.users.password-changed')
                     ->with([
                         'user' => $this->user,
                     ]);

@@ -414,7 +414,13 @@ class OrderController extends Controller
 
             DB::commit();
 
-            $order->load(['items', 'user:id,name,email']);
+            $order->load([
+                'items.variant.product',
+                'user:id,name,email',
+                'userCompanyAddress',
+                'deliveryMethod',
+                'coupon'
+            ]);
 
             Mail::to($order->user->email)->send(new OrderPlacedMail($order));
 

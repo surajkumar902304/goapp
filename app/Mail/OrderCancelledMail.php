@@ -29,8 +29,8 @@ class OrderCancelledMail extends Mailable
      */
     public function build()
     {
-        return $this->markdown('emails.orders.cancelled')
-                ->subject('Your Order has been Cancelled');
+        return $this->view('emails.orders.cancelled')
+                ->subject('Order #TR00' . $this->order->order_id.'Cancelled');
 
     }
 }
