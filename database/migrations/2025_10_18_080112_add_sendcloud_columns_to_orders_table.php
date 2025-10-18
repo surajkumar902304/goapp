@@ -15,6 +15,7 @@ class AddSendcloudColumnsToOrdersTable extends Migration
     {
         Schema::table('orders', function (Blueprint $table) {
             $table->string('sendcloud_parcel_id')->nullable()->after('order_id');
+            $table->string('tracking_number')->nullable()->after('sendcloud_parcel_id');
             $table->string('label_url')->nullable()->after('tracking_number');
         });
     }
