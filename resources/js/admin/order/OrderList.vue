@@ -6,7 +6,9 @@
           <h2 class="text-h6 mb-1">Orders</h2>
         </v-col>
         <v-col cols="12" md="6" class="p-0 d-flex justify-end">
-          <v-btn class="text-none btn-32-text-12" small style="color: #1976d2; font-weight: bold; background-color: white !important; border: 1px solid #1976d2 !important;" @click="syncOrders" :disabled="saving">
+          <v-btn class="text-none btn-32-text-12" small
+            style="color: #1976d2; font-weight: bold; background-color: white !important; border: 1px solid #1976d2 !important;"
+            @click="syncOrders" :disabled="saving">
             Sync Royal Mail
           </v-btn>
 
@@ -73,6 +75,9 @@
               <router-link :to="{ name: 'order-detail', params: { orderid: item.order_id } }" class="link-dark">
                 #TR00{{ item.order_id }}
               </router-link>
+            </template>
+            <template v-slot:item.created_at="{ item }">
+              {{ formatDate(item.created_at) }}
             </template>
             <template v-slot:item.total_amount="{ item }">
               £{{ item.total_amount }}
@@ -191,14 +196,14 @@ export default {
     orderHeaders() {
       const headers = [
         { text: 'Order Id', value: 'order_id' },
-        { text: 'Date', value: 'created_at' },
+        { text: 'Date & Time', value: 'created_at' },
         { text: 'Customer', value: 'name' },
         { text: 'Total amount', value: 'total_amount' },
         { text: 'Payment status', value: 'status' },
         { text: 'Fulfillment status', value: 'fulfillment_status' },
         { text: 'Items', value: 'total_items' },
         { text: 'Delivery status', value: '' },
-        { text: 'Royal Mail', value: 'cnd_status' },
+        { text: 'Send Cloud', value: 'cnd_status' },
         { text: 'Delivery method', value: 'delivery_method' },
       ];
 
@@ -233,6 +238,18 @@ export default {
       } catch (err) {
         console.error('Error fetching orders:', err);
       }
+    },
+    formatDate(date) {
+      const d = new Date(date);
+      return d.toLocaleString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
     },
     statusColor(status) {
       switch (status.toLowerCase()) {

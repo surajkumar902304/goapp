@@ -40,5 +40,12 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'sendcloud' => [
+        'base'   => env('SENDCLOUD_API_BASE', 'https://panel.sendcloud.sc/api/v2'),
+        'public' => env('SENDCLOUD_PUBLIC_KEY'),
+        'secret' => env('SENDCLOUD_SECRET_KEY'),
+    ],
+
+
 
 ];

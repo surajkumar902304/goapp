@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\RoyalMailSyncController;
+use App\Http\Controllers\SendcloudSyncController;
 use App\Http\Controllers\BankDetailController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\DashboardController;
@@ -242,7 +242,7 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::get('/orders/count', [OrderController::class, 'countOrders']);
 
     // routes/ Click & drop royal mail
-    Route::post('/royalmail/sync', [RoyalMailSyncController::class, 'sync']);
+    Route::post('/royalmail/sync', [SendcloudSyncController::class, 'syncSendcloud']);
 
 
     // Delivery Methods routes
