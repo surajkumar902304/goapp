@@ -32,6 +32,8 @@ class Order extends Model
         'payment_status',
         'payment_provider',
         'payment_reference',
+        'sendcloud_parcel_id',
+        'label_url',
     ];
 
     protected $casts = [

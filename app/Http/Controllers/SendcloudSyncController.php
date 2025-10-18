@@ -13,10 +13,8 @@ class SendcloudSyncController extends Controller
     public function syncSendcloud(SendcloudService $svc)
 {
     $orders = Order::whereNull('sendcloud_parcel_id')
-        ->where('fulfillment_status', 'unfulfilled')
-        ->where('cnd_status', 'null')
-        ->limit(10)
-        ->get();
+    ->where('fulfillment_status', 'unfulfilled')
+    ->get();
 
     foreach ($orders as $order) {
         $svc->pushToIncomingOrders($order);
