@@ -15,7 +15,7 @@ class SendcloudSyncController extends Controller
     $orders = Order::whereNull('sendcloud_parcel_id')
     ->where('fulfillment_status', 'unfulfilled')
     ->get();
-
+dd('suraj',$orders);
     foreach ($orders as $order) {
         $svc->pushToIncomingOrders($order);
     }
