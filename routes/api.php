@@ -16,8 +16,8 @@ use App\Http\Controllers\RepController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\StripeController;
-use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\Api\StripeController;
+use App\Http\Controllers\Api\StripeWebhookController;
 
 /*
 |--------------------------------------------------------------------------
