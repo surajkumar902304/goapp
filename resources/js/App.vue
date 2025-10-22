@@ -213,17 +213,35 @@ export default {
 
   data() {
     return {
-      orderCount: 0
+      orderCount: 0,
+      refreshInterval: null,
     }
   },
   mounted() {
-    axios.get('/admin/orders/count')
-      .then(res => {
-        this.orderCount = res.data.count || 0
-      })
-      .catch(() => {
-        this.orderCount = 0
-      })
+    this.fetchOrderCount();
+
+    // Auto-refresh every 10 seconds (adjust as needed)
+    this.refreshInterval = setInterval(() => {
+      this.fetchOrderCount();
+    }, 10000);
+
+    // Optional: listen for a custom event from child components
+    this.$root.$on('order-updated', this.fetchOrderCount);
+  },
+
+  beforeUnmount() {
+    clearInterval(this.refreshInterval);
+  },
+  methods: {
+    fetchOrderCount() {
+      axios.get('/admin/orders/count')
+        .then(res => {
+          this.orderCount = res.data.count || 0;
+        })
+        .catch(() => {
+          this.orderCount = 0;
+        });
+    }
   },
 
   computed: {

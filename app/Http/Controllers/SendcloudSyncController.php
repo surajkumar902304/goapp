@@ -6,62 +6,40 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Services\SendcloudService;
-use App\Services\ClickDropService;
 
 class SendcloudSyncController extends Controller
 {
     public function syncSendcloud(SendcloudService $svc)
-{
-    $orders = Order::whereNull('sendcloud_parcel_id')
-    ->where('fulfillment_status', 'unfulfilled')
-    ->get();
-
-    foreach ($orders as $order) {
-        $svc->pushToIncomingOrders($order);
-    }
-
-    return response()->json(['ok' => true, 'pushed_now' => $orders->count()]);
-}
-
-    public function pushEligibleBatch(ClickDropService $svc, int $limit = 200): int
     {
-        $orders = Order::with([
-            'user',
-            'userCompanyAddress',
-            'deliveryMethod',
-            'items.variant.product',
-        ])->where('fulfillment_status', 'unfulfilled')
-            ->where(function ($q) {
-                $q->whereNull('royalmail_order_identifier')
-                    ->orWhere('cnd_status', '!=', 'created');
-            })
-            ->orderBy('order_id')
-            ->limit($limit)
+        $orders = Order::whereNull('sendcloud_parcel_id')
+            ->where('fulfillment_status', 'unfulfilled')
             ->get();
 
-        $count = 0;
+        $success = 0;
+        $failed  = 0;
+        $errors  = [];
 
-        foreach ($orders as $o) {
-            $res = $svc->pushOrder($svc->mapFromModel($o));
+        foreach ($orders as $order) {
+            $result = $svc->pushToIncomingOrders($order);
 
-            $identifier = data_get($res, 'createdOrders.0.orderIdentifier')
-                ?? data_get($res, 'orders.0.orderIdentifier')
-                ?? data_get($res, 'items.0.orderIdentifier')
-                ?? data_get($res, 'orderIdentifier');
-
-            $success = (int) data_get($res, 'successCount', 0) > 0;
-
-            $o->update([
-                'royalmail_order_identifier' => $identifier,
-                'pushed_to_cnd_at' => now(),
-                'cnd_status' => $success ? 'created' : 'failed',
-                'cnd_last_error' => $success ? null : json_encode($res),
-            ]);
-
-            $count++;
+            if (isset($result['parcel']['id'])) {
+                $success++;
+            } else {
+                $failed++;
+                $errors[] = [
+                    'order_id' => $order->order_id,
+                    'error'    => $result['error'] ?? 'Unknown Sendcloud error'
+                ];
+            }
         }
 
-        return $count;
+        return response()->json([
+            'ok' => true,
+            'total_orders' => $orders->count(),
+            'successful' => $success,
+            'failed' => $failed,
+            'errors' => $errors,
+            'pushed_now' => $success
+        ]);
     }
-
 }

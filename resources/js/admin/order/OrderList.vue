@@ -9,7 +9,7 @@
           <v-btn class="text-none btn-32-text-12" small
             style="color: #1976d2; font-weight: bold; background-color: white !important; border: 1px solid #1976d2 !important;"
             @click="syncOrders" :disabled="saving">
-            Sync Royal Mail
+            Sync Send Cloud
           </v-btn>
 
           <v-overlay :value="saving" opacity="0.6" absolute>
