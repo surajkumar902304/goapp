@@ -254,7 +254,7 @@
           </div>
 
           <v-card-actions class="justify-end">
-            <v-btn class="btn-32-text-12 mr-2"
+            <v-btn class="btn-32-text-12 mr-2" v-if="order.payment_status.toLowerCase() !== 'paid'"
               style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small
               outlined :loading="loadingInvoice" :disabled="loadingInvoice" @click="sendInvoice">
               Send Invoice

@@ -14,7 +14,6 @@ class AddClickdropColumnsToOrdersTable extends Migration
     public function up()
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->unsignedBigInteger('royalmail_order_identifier')->nullable()->index();
             $table->timestamp('pushed_to_cnd_at')->nullable();
             $table->string('cnd_status')->nullable();    
             $table->json('cnd_last_error')->nullable();

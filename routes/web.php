@@ -218,10 +218,15 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::post('/bank-detail/status-toggle/{id}', [BankDetailController::class, 'bankDetailToggleStatus']);
 
     // Sendcloud Integration routes
-    Route::get('/sendcloud-integration/vlist', [BankDetailController::class, 'integrationVlist']);
-    Route::post('/sendcloud-integration/add', [BankDetailController::class, 'addIntegration']);
-    Route::post('/sendcloud-integration/update', [BankDetailController::class, 'editIntegration']);
-    Route::post('/sendcloud-integration/status-toggle/{id}', [BankDetailController::class, 'integrationToggleStatus']);
+    Route::get('/sendcloud-integration/vlist', [BankDetailController::class, 'sendcloudVlist']);
+    Route::post('/sendcloud-integration/add', [BankDetailController::class, 'addSendcloud']);
+    Route::post('/sendcloud-integration/update', [BankDetailController::class, 'editSendcloud']);
+    Route::post('/sendcloud-integration/status-toggle/{id}', [BankDetailController::class, 'sendcloudToggleStatus']);
+
+    // Stripe Integration routes
+    Route::get('/stripe-integration/vlist', [BankDetailController::class, 'stripeVlist']);
+    Route::post('/stripe-integration/update', [BankDetailController::class, 'editStripe']);
+    Route::post('/stripe-integration/status-toggle/{id}', [BankDetailController::class, 'stripeToggleStatus']);
 
     // Coupons routes
     Route::get('/coupons/vlist', [CouponController::class, 'index'])->name('coupons.vlist');

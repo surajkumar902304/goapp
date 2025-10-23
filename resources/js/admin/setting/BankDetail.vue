@@ -1,68 +1,72 @@
 <template>
-<div class="page-margin-20-40 page-bank-detail">
+  <div class="page-margin-20-40 page-bank-detail">
     <v-container fluid class="pt-0">
       <v-row class="mt-0 pt-0">
         <v-col cols="12" md="11" class="p-0">
-          <h2 class="text-h6 mb-1">Bank Details</h2> 
+          <h2 class="text-h6 mb-1">Bank Details</h2>
         </v-col>
 
         <v-col cols="12" md="1" class="p-0 ps-2 text-end">
           <v-btn color="secondary" small class="text-none w-100 btn-32-text-12" style="color: #1976d2; font-weight: bold; background-color: white !important; 
               border: 1px solid #1976d2 !important;" @click="openDialog">
-              Add Bank
+            Add Bank
           </v-btn>
         </v-col>
       </v-row>
     </v-container>
 
     <v-row class="mt-0">
-        <v-col cols="12">
-            <v-card elevation="5">
-                <v-data-table :headers="bankdetailsHeaders" :items="bankdetails" :search="ssearch" 
-                    :footer-props="{ 'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:' }">
-                    <template v-slot:top>
-                      <v-row dense class="mx-1 pb-1">
-                        <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Bank Details"/>
-                      </v-row>
-                    </template>
-                    <template #item.company_name="{ item }">
-                        <span>{{ item.company_name }}</span>
-                    </template>
-                    <template #item.bank_name="{ item }">
-                        <span>{{ item.bank_name }}</span>
-                    </template>
-                    <template #item.code="{ item }">
-                        <span>{{ item.account_number }}</span>
-                    </template>
-                    <template #item.sort_code="{ item }">
-                        <span>{{ item.sort_code }}</span>
-                    </template>
-                    <template #item.is_active="{ item }">
-                        <v-switch v-model="item.is_active" :input-value="item.is_active === 1" @change="toggleStatus(item)" dense inset style="transform: scale(0.75);"></v-switch>
-                    </template>
-                    <template #header.actions1>
-                        <div class="text-center">Action</div>
-                    </template>
-                    <template #item.actions1="{ item }">
-                        <div class="text-center">
-                            <v-chip color="primary" class="white--text" outlined pill small @click="editItem(item)" style="cursor: pointer;">
-                              <v-icon small left>mdi-pencil</v-icon>Edit
-                            </v-chip>
-                        </div>
-                    </template>
-                    <template #header.actions2>
-                        <div class="text-center">Action</div>
-                    </template>
-                    <template #item.actions2="{ item }">
-                        <div class="text-center">
-                            <v-chip color="red" class="white--text" outlined pill small @click="confirmDelete(item)" style="cursor: pointer;" >
-                                <v-icon small left>mdi-delete</v-icon>Delete
-                            </v-chip>
-                        </div>
-                    </template>
-                </v-data-table>
-            </v-card>
-        </v-col>
+      <v-col cols="12">
+        <v-card elevation="5">
+          <v-data-table :headers="bankdetailsHeaders" :items="bankdetails" :search="ssearch"
+            :footer-props="{ 'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:' }">
+            <template v-slot:top>
+              <v-row dense class="mx-1 pb-1">
+                <v-text-field v-model="ssearch" class="m-2" clearable dense outlined hide-details
+                  prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Bank Details" />
+              </v-row>
+            </template>
+            <template #item.company_name="{ item }">
+              <span>{{ item.company_name }}</span>
+            </template>
+            <template #item.bank_name="{ item }">
+              <span>{{ item.bank_name }}</span>
+            </template>
+            <template #item.code="{ item }">
+              <span>{{ item.account_number }}</span>
+            </template>
+            <template #item.sort_code="{ item }">
+              <span>{{ item.sort_code }}</span>
+            </template>
+            <template #item.is_active="{ item }">
+              <v-switch v-model="item.is_active" :input-value="item.is_active === 1" @change="toggleStatus(item)" dense
+                inset style="transform: scale(0.75);"></v-switch>
+            </template>
+            <template #header.actions1>
+              <div class="text-center">Action</div>
+            </template>
+            <template #item.actions1="{ item }">
+              <div class="text-center">
+                <v-chip color="primary" class="white--text" outlined pill small @click="editItem(item)"
+                  style="cursor: pointer;">
+                  <v-icon small left>mdi-pencil</v-icon>Edit
+                </v-chip>
+              </div>
+            </template>
+            <template #header.actions2>
+              <div class="text-center">Action</div>
+            </template>
+            <template #item.actions2="{ item }">
+              <div class="text-center">
+                <v-chip color="red" class="white--text" outlined pill small @click="confirmDelete(item)"
+                  style="cursor: pointer;">
+                  <v-icon small left>mdi-delete</v-icon>Delete
+                </v-chip>
+              </div>
+            </template>
+          </v-data-table>
+        </v-card>
+      </v-col>
     </v-row>
 
     <v-dialog v-model="addSdialog" max-width="600" @update:model-value="onDialogToggle">
@@ -74,17 +78,21 @@
         </v-card-title>
         <v-form v-model="fsvalid" @submit.prevent="saveBankDetail">
           <v-card-text>
-            <v-text-field v-model="defaultItem.company_name" @input="defaultItem.company_name = defaultItem.company_name.toUpperCase()" 
-              :rules="companynameRules" label="Company Name"/>
-            <v-text-field v-model="defaultItem.bank_name" @input="defaultItem.bank_name = defaultItem.bank_name.toUpperCase()" 
-              :rules="banknameRules" label="Bank Name"/>
-            <v-text-field v-model="defaultItem.account_number" :rules="accountnumberRules" label="Account Number"/>
-            <v-text-field v-model="defaultItem.sort_code" :rules="sortcodeRules" label="Sort Code"/>
-            <v-text-field v-model="defaultItem.note" :rules="noteRules" label="Note"/>
+            <v-text-field v-model="defaultItem.company_name"
+              @input="defaultItem.company_name = defaultItem.company_name.toUpperCase()" :rules="companynameRules"
+              label="Company Name" />
+            <v-text-field v-model="defaultItem.bank_name"
+              @input="defaultItem.bank_name = defaultItem.bank_name.toUpperCase()" :rules="banknameRules"
+              label="Bank Name" />
+            <v-text-field v-model="defaultItem.account_number" :rules="accountnumberRules" label="Account Number" />
+            <v-text-field v-model="defaultItem.sort_code" :rules="sortcodeRules" label="Sort Code" />
+            <v-text-field v-model="defaultItem.note" :rules="noteRules" label="Note" />
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small :disabled="!fsvalid || submitting">
+            <v-btn class="btn-32-text-12" type="submit"
+              style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"
+              small :disabled="!fsvalid || submitting">
               {{ editedIndex === -1 ? 'Add' : 'Update' }}
             </v-btn>
           </v-card-actions>
@@ -103,74 +111,36 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn class="btn-32-text-12" text color="grey" @click="deleteDialog = false">Cancel</v-btn>
-          <v-btn class="btn-32-text-12" text color="red" :loading="deleteLoading" :disabled="deleteLoading" @click="performDelete">
+          <v-btn class="btn-32-text-12" text color="red" :loading="deleteLoading" :disabled="deleteLoading"
+            @click="performDelete">
             Delete
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <!-- <v-row class="mt-8">
-      <v-container fluid class="pt-0">
-        <v-col cols="12" md="11" class="p-0">
-          <h2 class="text-h6 mb-1">Stripe Settings</h2> 
-        </v-col>
-
-        <v-col cols="12" md="1" class="p-0 ps-2 text-end">
-          <v-btn color="secondary" small class="text-none w-100 btn-32-text-12" style="color: #1976d2; font-weight: bold; background-color: white !important; 
-              border: 1px solid #1976d2 !important;" @click="openDialogStripes">
-              Add Stripe
-          </v-btn>
-        </v-col>
-      </v-container>
-    </v-row>
-
-    <v-row class="mt-0">
-        <v-col cols="12">
-            <v-card elevation="5">
-                <v-data-table :headers="stripesHeaders" :items="stripes" :search="ssearchstripes" 
-                    :footer-props="{ 'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:' }">
-                    <template v-slot:top>
-                      <v-row dense class="mx-1 pb-1">
-                        <v-text-field v-model="ssearchstripes" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Stripe"/>
-                      </v-row>
-                    </template>
-                    <template #item.provider="{ item }">
-                        <span>{{ item.provider }}</span>
-                    </template>
-                    <template #item.public_key="{ item }">
-                        <span>{{ item.public_key }}</span>
-                    </template>
-                    <template #item.secret_key="{ item }">
-                        <span>{{ item.secret_key }}</span>
-                    </template>
-                    <template #item.is_active="{ item }">
-                        <v-switch v-model="item.is_active" :input-value="item.is_active === 1" @change="toggleStatusStripes(item)" dense inset style="transform: scale(0.75);"></v-switch>
-                    </template>
-                    <template #header.actions1>
-                        <div class="text-center">Action</div>
-                    </template>
-                    <template #item.actions1="{ item }">
-                        <div class="text-center">
-                            <v-chip color="primary" class="white--text" outlined pill small @click="editItemStripes(item)" style="cursor: pointer;">
-                              <v-icon small left>mdi-pencil</v-icon>Edit
-                            </v-chip>
-                        </div>
-                    </template>
-                    <template #header.actions2>
-                        <div class="text-center">Action</div>
-                    </template>
-                    <template #item.actions2="{ item }">
-                        <div class="text-center">
-                            <v-chip color="red" class="white--text" outlined pill small @click="confirmDeleteStripes(item)" style="cursor: pointer;" >
-                                <v-icon small left>mdi-delete</v-icon>Delete
-                            </v-chip>
-                        </div>
-                    </template>
-                </v-data-table>
-            </v-card>
-        </v-col>
-    </v-row> -->
+    <v-card class="mt-6 mx-auto p-4" style="height: 540px; width: 1200px;" elevation="5">
+      <v-card-title style="justify-content: center;">
+        <span>Stripe Integration</span>
+      </v-card-title>
+      <v-card-text class="p-2">
+        <label><strong>Test Mode</strong></label>
+        <v-radio-group v-model="stripeForm.test_mode" row class="pb-0">
+          <v-radio class="pb-0" label="True" :value="1"></v-radio>
+          <v-radio label="False" :value="0"></v-radio>
+        </v-radio-group>
+        <v-text-field v-model="stripeForm.publishable_key" label="publishable_key" outlined dense></v-text-field>
+        <v-text-field v-model="stripeForm.secret_key" label="secret_key" outlined dense></v-text-field>
+        <v-text-field v-model="stripeForm.webhook_secret" label="webhook_secret" outlined dense></v-text-field>
+        <v-text-field v-model="stripeForm.note" label="note" outlined dense></v-text-field>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn class="btn-32-text-12"
+          style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"
+          @click="saveStripeConfig">Update</v-btn>
+      </v-card-actions>
+    </v-card>
 
 
 
@@ -211,60 +181,40 @@ export default {
       },
       companynameRules: [
         v => !!v || 'Company Name is required',
-        v => (v && v.length <=255) || 'Company Name must be less than 255 characters',
+        v => (v && v.length <= 255) || 'Company Name must be less than 255 characters',
       ],
       banknameRules: [
         v => !!v || 'Bank Name is required',
-        v => (v && v.length <=255) || 'Bank Name must be less than 255 characters',
+        v => (v && v.length <= 255) || 'Bank Name must be less than 255 characters',
       ],
       accountnumberRules: [
         v => !!v || 'Account Number is required',
-        v => (v && v.length <=255) || 'Account Number must be less than 255 characters',
+        v => (v && v.length <= 255) || 'Account Number must be less than 255 characters',
       ],
       sortcodeRules: [
         v => !!v || 'Sort Code is required',
-        v => (v && v.length <=255) || 'Sort Code must be less than 255 characters',
+        v => (v && v.length <= 255) || 'Sort Code must be less than 255 characters',
       ],
       noteRules: [
         v => !!v || 'Note is required',
-        v => (v && v.length <=255) || 'Note must be less than 255 characters',
+        v => (v && v.length <= 255) || 'Note must be less than 255 characters',
       ],
       deleteDialog: false,
       bankdetailToDelete: null,
       deleteLoading: false,
 
-      ssearchstripes: '',
-      stripes: [],
-      stripesHeaders: [
-        { text: 'Provider name', value: 'provider' },
-        { text: 'Public Key', value: 'public_key' },
-        { text: 'Secret Key', value: 'secret_key' },
-        { text: 'Status', value: 'is_active' },
-        { text: 'Action', value: 'actions1', sortable: false },
-        { text: 'Action', value: 'actions2', sortable: false },
-      ],
-
-      addSdialogStripes: false,
-      editedIndexStripes: -1,
-      fsvalidStripes: false,
-      submittingStripes: false,
-
-      defaultItemStripes: {
-        stripe_setting_id: null,
-        provider: '',
-        public_key: '',
+      stripeForm: {
+        stripe_integration_id: null,
+        publishable_key: '',
         secret_key: '',
-      },
-
-      providernameRules: [
-        v => !!v || 'Company Name is required',
-        v => (v && v.length <=255) || 'Company Name must be less than 255 characters',
-      ],
-
-      deleteDialogStripes: false,
-      StripesToDelete: null,
-      deleteLoadingStripes: false,
+        webhook_secret: '',
+        note: '',
+        test_mode: 1,
+      }
     }
+  },
+  mounted() {
+    this.fetchStripeConfig();
   },
   created() {
     this.getAllbankdetails()
@@ -277,29 +227,30 @@ export default {
       if (!val) this.submittingStripes = false
     }
   },
+
   methods: {
     getAllbankdetails() {
       axios.get('/admin/bank-detail/vlist').then(res => {
         this.bankdetails = res.data.bankdetails;
       })
-      .catch(err => {
-        console.error(err)
-      })
+        .catch(err => {
+          console.error(err)
+        })
     },
     onDialogToggle(open) {
       if (!open) {
-      this.defaultItem = 
-      { 
-        bank_detail_id: null, 
-        company_name: '', 
-        bank_name: '', 
-        account_number: '', 
-        sort_code: '', 
-        note: '', 
-      };
-      this.fsvalid = false;
-      this.submitting = false;
-      this.editedIndex = -1;
+        this.defaultItem =
+        {
+          bank_detail_id: null,
+          company_name: '',
+          bank_name: '',
+          account_number: '',
+          sort_code: '',
+          note: '',
+        };
+        this.fsvalid = false;
+        this.submitting = false;
+        this.editedIndex = -1;
       }
     },
     openDialog() {
@@ -370,13 +321,13 @@ export default {
     },
     async toggleStatus(item) {
       try {
-          await axios.post(`/admin/bank-detail/status-toggle/${item.bank_detail_id}`, {
-              is_active: item.is_active
-          });
-          this.$toast?.success('Bank Detail Status updated', { timeout: 500 });
+        await axios.post(`/admin/bank-detail/status-toggle/${item.bank_detail_id}`, {
+          is_active: item.is_active
+        });
+        this.$toast?.success('Bank Detail Status updated', { timeout: 500 });
       } catch (error) {
-          console.error("Failed to toggle status", error);
-          this.$toast?.error('Failed to update status', { timeout: 500 });
+        console.error("Failed to toggle status", error);
+        this.$toast?.error('Failed to update status', { timeout: 500 });
       }
     },
     confirmDelete(item) {
@@ -392,15 +343,39 @@ export default {
         this.getAllbankdetails()
       } catch (err) {
         console.error(err)
-        this.$toast.error('Failed to delete Bank Detail.', { timeout: 2000 })
+        this.$toast.error('Failed to delete Bank Detail.', { timeout: 800 })
       } finally {
         this.deleteLoading = false
         this.deleteDialog = false
         this.bankdetailToDelete = null
       }
     },
+    async fetchStripeConfig() {
+      try {
+        const res = await axios.get('/admin/stripe-integration/vlist');
+        if (res.data.status && res.data.stripe.length > 0) {
+          const stripe = res.data.stripe[0];
+          this.stripeForm.stripe_integration_id = stripe.stripe_integration_id;
+          this.stripeForm.publishable_key = stripe.publishable_key;
+          this.stripeForm.secret_key = stripe.secret_key;
+          this.stripeForm.webhook_secret = stripe.webhook_secret;
+          this.stripeForm.note = stripe.note;
+          this.stripeForm.test_mode = stripe.test_mode ? 1 : 0;
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    },
 
-    
+    async saveStripeConfig() {
+      try {
+        await axios.post('/admin/stripe-integration/update', this.stripeForm);
+        this.$toast.success('Stripe configuration updated!', { timeout: 500 })
+      } catch (error) {
+        console.error('Update error:', error);
+        this.$toast.error('Failed to updated.', { timeout: 800 })
+      }
+    }
 
   }
 }
@@ -413,6 +388,10 @@ export default {
 </style>
 <style>
 .page-bank-detail .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
-  height: 32px!important;
+  height: 32px !important;
+}
+
+.page-bank-detail .v-input--radio-group__input label {
+  padding-bottom: 0 !important;
 }
 </style>

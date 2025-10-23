@@ -84,7 +84,7 @@ class SendcloudService
                 'name'                     => (string) ($order->user->name ?? 'Customer'),
                 'company_name'             => (string) ($order->userCompanyAddress->user_company_name ?? ''),
                 'address'                  => $address,
-                'address_2'                => $addr2 ?: null,
+                'address_2'                => $addr2 ? $addr1 : null,
                 'house_number'             => $houseNumber,
                 'city'                     => (string) ($order->userCompanyAddress->company_city ?? ''),
                 'postal_code'              => (string) ($order->userCompanyAddress->company_postcode ?? ''),
