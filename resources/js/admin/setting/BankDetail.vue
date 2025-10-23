@@ -110,7 +110,7 @@
       </v-card>
     </v-dialog>
 
-    <v-row class="mt-8">
+    <!-- <v-row class="mt-8">
       <v-container fluid class="pt-0">
         <v-col cols="12" md="11" class="p-0">
           <h2 class="text-h6 mb-1">Stripe Settings</h2> 
@@ -170,7 +170,7 @@
                 </v-data-table>
             </v-card>
         </v-col>
-    </v-row>
+    </v-row> -->
 
     <v-dialog v-model="addSdialogStripes" max-width="600" @update:model-value="onDialogToggleStripes">
       <v-card elevation="5">

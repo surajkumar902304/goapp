@@ -3,7 +3,7 @@
     <v-container fluid class="pt-0">
       <v-row class="mt-0 pt-0">
         <v-col cols="12" md="11" class="p-0">
-          <h2 class="text-h6 mb-1">Shipping Settings</h2> 
+          <h2 class="text-h6 mb-1">Shipping Sendcloud Integration</h2> 
         </v-col>
 
         <!-- <v-col cols="12" md="1" class="p-0 ps-2 text-end">
@@ -50,13 +50,6 @@
                     <template #header.actions2>
                         <div class="text-center">Action</div>
                     </template>
-                    <template #item.actions2="{ item }">
-                        <div class="text-center">
-                            <v-chip color="red" class="white--text" outlined pill small @click="confirmDeleteIntegrations(item)" style="cursor: pointer;" >
-                                <v-icon small left>mdi-delete</v-icon>Delete
-                            </v-chip>
-                        </div>
-                    </template>
                 </v-data-table>
             </v-card>
         </v-col>
@@ -85,24 +78,6 @@
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="deleteDialogIntegrations" max-width="400">
-      <v-card elevation="5">
-        <v-card-title class="text-h6">
-          Confirm Delete
-        </v-card-title>
-        <v-card-text>
-          Are you sure you want to delete this Integration?
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn class="btn-32-text-12" text color="grey" @click="deleteDialogIntegrations = false">Cancel</v-btn>
-          <v-btn class="btn-32-text-12" text color="red" :loading="deleteLoadingIntegrations" :disabled="deleteLoadingIntegrations" @click="performDeleteIntegrations">
-            Delete
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
   </div>
 </template>
 
@@ -121,7 +96,6 @@ export default {
         { text: 'Secret Key', value: 'secret_key' },
         { text: 'Status', value: 'is_active' },
         { text: 'Action', value: 'actions1', sortable: false },
-        { text: 'Action', value: 'actions2', sortable: false },
       ],
 
       addSdialogIntegrations: false,
@@ -136,9 +110,6 @@ export default {
         secret_key: '',
       },
 
-      deleteDialogIntegrations: false,
-      IntegrationsToDelete: null,
-      deleteLoadingIntegrations: false,
     }
   },
   created() {
@@ -151,7 +122,7 @@ export default {
   },
   methods: {
     getAllintegrations() {
-      axios.get('/admin/integration/vlist').then(res => {
+      axios.get('/admin/sendcloud-integration/vlist').then(res => {
         this.integrations = res.data.integrations;
       })
       .catch(err => {
@@ -215,7 +186,7 @@ export default {
         payload.integration_setting_id = this.editedIndexIntegrations;
       }
 
-      const url = this.editedIndexIntegrations === -1 ? '/admin/integration/add' : '/admin/integration/update';
+      const url = this.editedIndexIntegrations === -1 ? '/admin/sendcloud-integration/add' : '/admin/sendcloud-integration/update';
 
       try {
         await axios.post(url, payload, {
@@ -234,7 +205,7 @@ export default {
     },
     async toggleStatusIntegrations(item) {
       try {
-          await axios.post(`/admin/integration/status-toggle/${item.integration_setting_id}`, {
+          await axios.post(`/admin/sendcloud-integration/status-toggle/${item.integration_setting_id}`, {
               is_active: item.is_active
           });
           this.$toast?.success('Integration Status updated', { timeout: 500 });
@@ -243,27 +214,6 @@ export default {
           this.$toast?.error('Failed to update status', { timeout: 500 });
       }
     },
-    confirmDeleteIntegrations(item) {
-      this.IntegrationsToDelete = item
-      this.deleteDialogIntegrations = true
-    },
-    async performDeleteIntegrations() {
-      if (!this.IntegrationsToDelete) return
-      this.deleteLoadingIntegrations = true
-      try {
-        await axios.post('/admin/integration-delete', { integration_setting_id: this.IntegrationsToDelete.integration_setting_id })
-        this.$toast.success('Integration deleted successfully!', { timeout: 500 })
-        this.getAllintegrations()
-      } catch (err) {
-        console.error(err)
-        this.$toast.error('Failed to delete Integration.', { timeout: 2000 })
-      } finally {
-        this.deleteLoadingIntegrations = false
-        this.deleteDialogIntegrations = false
-        this.IntegrationsToDelete = null
-      }
-    },
-
   }
 }
 </script>
