@@ -62,7 +62,7 @@
           <v-spacer></v-spacer>
           <v-icon @click="addSdialogIntegrations = false">mdi-close</v-icon>
         </v-card-title>
-        <v-form v-model="fsvalid" @submit.prevent="saveIntegrations">
+        <v-form v-model="fsvalidIntegrations" @submit.prevent="saveIntegrations">
           <v-card-text>
             <v-text-field v-model="defaultItemIntegrations.provider" disabled label="Provider Name"/>
             <v-text-field v-model="defaultItemIntegrations.public_key" label="Public Key"/>
@@ -71,7 +71,7 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small :disabled="!fsvalidIntegrations || submittingIntegrations">
-              {{ editedIndex === -1 ? 'Add' : 'Update' }}
+              {{ editedIndexIntegrations === -1 ? 'Add' : 'Update' }}
             </v-btn>
           </v-card-actions>
         </v-form>
@@ -138,7 +138,7 @@ export default {
         public_key: '', 
         secret_key: '', 
       };
-      this.fsvalid = false;
+      this.fsvalidIntegrations = false;
       this.submittingIntegrations = false;
       this.editedIndexIntegrations = -1;
       }

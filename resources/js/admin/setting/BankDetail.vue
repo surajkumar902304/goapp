@@ -172,46 +172,7 @@
         </v-col>
     </v-row> -->
 
-    <v-dialog v-model="addSdialogStripes" max-width="600" @update:model-value="onDialogToggleStripes">
-      <v-card elevation="5">
-        <v-card-title>
-          <span>{{ editedIndexStripes === -1 ? 'Add Stripe' : 'Edit Stripe' }}</span>
-          <v-spacer></v-spacer>
-          <v-icon @click="addSdialogStripes = false">mdi-close</v-icon>
-        </v-card-title>
-        <v-form v-model="fsvalid" @submit.prevent="saveStripes">
-          <v-card-text>
-            <v-text-field v-model="defaultItemStripes.provider" :rules="companynameRules" label="Provider Name"/>
-            <v-text-field v-model="defaultItemStripes.public_key" label="Public Key"/>
-            <v-text-field v-model="defaultItemStripes.secret_key" label="Secret Key"/>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small :disabled="!fsvalidStripes || submittingStripes">
-              {{ editedIndex === -1 ? 'Add' : 'Update' }}
-            </v-btn>
-          </v-card-actions>
-        </v-form>
-      </v-card>
-    </v-dialog>
 
-    <v-dialog v-model="deleteDialogStripes" max-width="400">
-      <v-card elevation="5">
-        <v-card-title class="text-h6">
-          Confirm Delete
-        </v-card-title>
-        <v-card-text>
-          Are you sure you want to delete this Stripe?
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn class="btn-32-text-12" text color="grey" @click="deleteDialogStripes = false">Cancel</v-btn>
-          <v-btn class="btn-32-text-12" text color="red" :loading="deleteLoadingStripes" :disabled="deleteLoadingStripes" @click="performDeleteStripes">
-            Delete
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
 
   </div>
 </template>
@@ -306,8 +267,7 @@ export default {
     }
   },
   created() {
-    this.getAllbankdetails(),
-    this.getAllstripes()
+    this.getAllbankdetails()
   },
   watch: {
     addSdialog(val) {
@@ -440,119 +400,7 @@ export default {
       }
     },
 
-    getAllstripes() {
-      axios.get('/admin/stripe/vlist').then(res => {
-        this.stripes = res.data.stripes;
-      })
-      .catch(err => {
-        console.error(err)
-      })
-    },
-    onDialogToggleStripes(open) {
-      if (!open) {
-      this.defaultItemStripes = 
-      { 
-        stripe_setting_id: null, 
-        provider: '', 
-        public_key: '', 
-        secret_key: '', 
-      };
-      this.fsvalid = false;
-      this.submittingStripes = false;
-      this.editedIndexStripes = -1;
-      }
-    },
-    openDialogStripes() {
-      this.defaultItemStripes = {
-        stripe_setting_id: null,
-        provider: '',
-        public_key: '',
-        secret_key: '',
-      }
-      this.editedIndexStripes = -1
-      this.fsvalidStripes = false
-      this.addSdialogStripes = true
-    },
-    editItemStripes(item) {
-      this.defaultItemStripes = {
-        stripe_setting_id: item.stripe_setting_id,
-        provider: item.provider,
-        public_key: item.public_key,
-        secret_key: item.secret_key,
-      }
-      this.editedIndexStripes = item.stripe_setting_id
-      this.fsvalidStripes = true
-      this.addSdialogStripes = true
-    },
-    async saveStripes() {
-      this.submittingStripes = true;
-
-      let expiresAtValue = this.defaultItemStripes.expires_at;
-
-      if (expiresAtValue) {
-        expiresAtValue = `${expiresAtValue} 00:00:00`;
-      } else {
-        expiresAtValue = null;
-      }
-
-      const payload = {
-        provider: this.defaultItemStripes.provider.toUpperCase(),
-        public_key: this.defaultItemStripes.public_key.toUpperCase(),
-        secret_key: this.defaultItemStripes.secret_key,
-      };
-
-      if (this.editedIndexStripes !== -1) {
-        payload.stripe_setting_id = this.editedIndexStripes;
-      }
-
-      const url = this.editedIndexStripes === -1 ? '/admin/stripe/add' : '/admin/stripe/update';
-
-      try {
-        await axios.post(url, payload, {
-          headers: { 'Content-Type': 'application/json' }
-        });
-        this.$toast.success(
-          this.editedIndexStripes === -1 ? 'Stripe added successfully!' : 'Stripe updated successfully!',
-          { timeout: 500 }
-        );
-        this.getAllstripes();
-        this.addSdialogStripes = false;
-      } catch (error) {
-      } finally {
-        this.submittingStripes = false;
-      }
-    },
-    async toggleStatusStripes(item) {
-      try {
-          await axios.post(`/admin/stripe/status-toggle/${item.stripe_setting_id}`, {
-              is_active: item.is_active
-          });
-          this.$toast?.success('Stripe Status updated', { timeout: 500 });
-      } catch (error) {
-          console.error("Failed to toggle status", error);
-          this.$toast?.error('Failed to update status', { timeout: 500 });
-      }
-    },
-    confirmDeleteStripes(item) {
-      this.StripesToDelete = item
-      this.deleteDialogStripes = true
-    },
-    async performDeleteStripes() {
-      if (!this.StripesToDelete) return
-      this.deleteLoadingStripes = true
-      try {
-        await axios.post('/admin/stripe-delete', { stripe_setting_id: this.StripesToDelete.stripe_setting_id })
-        this.$toast.success('Stripe deleted successfully!', { timeout: 500 })
-        this.getAllstripes()
-      } catch (err) {
-        console.error(err)
-        this.$toast.error('Failed to delete Stripe.', { timeout: 2000 })
-      } finally {
-        this.deleteLoadingStripes = false
-        this.deleteDialogStripes = false
-        this.StripesToDelete = null
-      }
-    },
+    
 
   }
 }
