@@ -411,6 +411,7 @@ class OrderController extends Controller
             'order_id' => $order->order_id,
             'order_number' => '#00' . $order->order_id,
             'cnd_status' => $order->cnd_status,
+            'pay_by_bank' => $order->pay_by_bank,
             'user' => [
                 'id' => $order->user->id,
                 'name' => $order->user->name,

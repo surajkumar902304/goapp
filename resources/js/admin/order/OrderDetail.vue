@@ -211,7 +211,7 @@
         <v-card elevation="5" class="mt-4 rounded-3 px-4">
           <v-card-title class="py-2">
             <div class="subtitle-1 font-weight-bold">
-              {{ order.payment_status.toLowerCase() === 'paid' ? 'Paid' : 'Pending' }}
+              {{ order.pay_by_bank === true ? 'Paid By Bank' : 'Paid By Card' }}
             </div>
           </v-card-title>
           <div class="pp-table-wrap border border-1 rounded-3 overflow-hidden p-2">
