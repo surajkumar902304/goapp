@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\IntegrationSetting;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Models\Order;
@@ -21,9 +22,11 @@ class SendcloudService
 
     public function __construct()
     {
+        $settings = IntegrationSetting::where('provider', 'sendcloud')->where('is_active', true)->first();
+
         $this->base   = rtrim((string) config('services.sendcloud.base'), '/');
-        $this->public = (string) config('services.sendcloud.public');
-        $this->secret = (string) config('services.sendcloud.secret');
+        $this->public = $settings->public_key ?? null;
+        $this->secret = $settings->secret_key ?? null;
     }
 
     private function authHeaders(): array

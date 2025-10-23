@@ -217,6 +217,13 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::post('/bank-detail-delete', [BankDetailController::class, 'deleteBankDetail']);
     Route::post('/bank-detail/status-toggle/{id}', [BankDetailController::class, 'bankDetailToggleStatus']);
 
+    // Integration routes
+    Route::get('/integration/vlist', [BankDetailController::class, 'integrationVlist']);
+    Route::post('/integration/add', [BankDetailController::class, 'addIntegration']);
+    Route::post('/integration/update', [BankDetailController::class, 'editIntegration']);
+    Route::post('/integration-delete', [BankDetailController::class, 'deleteIntegration']);
+    Route::post('/integration/status-toggle/{id}', [BankDetailController::class, 'integrationToggleStatus']);
+
     // Coupons routes
     Route::get('/coupons/vlist', [CouponController::class, 'index'])->name('coupons.vlist');
     Route::post('/coupons/add', [CouponController::class, 'addCoupon'])->name('coupon.add');

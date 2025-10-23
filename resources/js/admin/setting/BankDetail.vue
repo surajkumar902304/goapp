@@ -110,6 +110,109 @@
       </v-card>
     </v-dialog>
 
+    <v-row class="mt-8">
+      <v-container fluid class="pt-0">
+        <v-col cols="12" md="11" class="p-0">
+          <h2 class="text-h6 mb-1">Stripe Settings</h2> 
+        </v-col>
+
+        <v-col cols="12" md="1" class="p-0 ps-2 text-end">
+          <v-btn color="secondary" small class="text-none w-100 btn-32-text-12" style="color: #1976d2; font-weight: bold; background-color: white !important; 
+              border: 1px solid #1976d2 !important;" @click="openDialogStripes">
+              Add Stripe
+          </v-btn>
+        </v-col>
+      </v-container>
+    </v-row>
+
+    <v-row class="mt-0">
+        <v-col cols="12">
+            <v-card elevation="5">
+                <v-data-table :headers="stripesHeaders" :items="stripes" :search="ssearchstripes" 
+                    :footer-props="{ 'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:' }">
+                    <template v-slot:top>
+                      <v-row dense class="mx-1 pb-1">
+                        <v-text-field v-model="ssearchstripes" class="m-2" clearable dense outlined hide-details prepend-inner-icon="mdi-magnify mb-2" placeholder="Search Stripe"/>
+                      </v-row>
+                    </template>
+                    <template #item.provider="{ item }">
+                        <span>{{ item.provider }}</span>
+                    </template>
+                    <template #item.public_key="{ item }">
+                        <span>{{ item.public_key }}</span>
+                    </template>
+                    <template #item.secret_key="{ item }">
+                        <span>{{ item.secret_key }}</span>
+                    </template>
+                    <template #item.is_active="{ item }">
+                        <v-switch v-model="item.is_active" :input-value="item.is_active === 1" @change="toggleStatusStripes(item)" dense inset style="transform: scale(0.75);"></v-switch>
+                    </template>
+                    <template #header.actions1>
+                        <div class="text-center">Action</div>
+                    </template>
+                    <template #item.actions1="{ item }">
+                        <div class="text-center">
+                            <v-chip color="primary" class="white--text" outlined pill small @click="editItemStripes(item)" style="cursor: pointer;">
+                              <v-icon small left>mdi-pencil</v-icon>Edit
+                            </v-chip>
+                        </div>
+                    </template>
+                    <template #header.actions2>
+                        <div class="text-center">Action</div>
+                    </template>
+                    <template #item.actions2="{ item }">
+                        <div class="text-center">
+                            <v-chip color="red" class="white--text" outlined pill small @click="confirmDeleteStripes(item)" style="cursor: pointer;" >
+                                <v-icon small left>mdi-delete</v-icon>Delete
+                            </v-chip>
+                        </div>
+                    </template>
+                </v-data-table>
+            </v-card>
+        </v-col>
+    </v-row>
+
+    <v-dialog v-model="addSdialogStripes" max-width="600" @update:model-value="onDialogToggleStripes">
+      <v-card elevation="5">
+        <v-card-title>
+          <span>{{ editedIndexStripes === -1 ? 'Add Stripe' : 'Edit Stripe' }}</span>
+          <v-spacer></v-spacer>
+          <v-icon @click="addSdialogStripes = false">mdi-close</v-icon>
+        </v-card-title>
+        <v-form v-model="fsvalid" @submit.prevent="saveStripes">
+          <v-card-text>
+            <v-text-field v-model="defaultItemStripes.provider" :rules="companynameRules" label="Provider Name"/>
+            <v-text-field v-model="defaultItemStripes.public_key" label="Public Key"/>
+            <v-text-field v-model="defaultItemStripes.secret_key" label="Secret Key"/>
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn class="btn-32-text-12" type="submit" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" small :disabled="!fsvalidStripes || submittingStripes">
+              {{ editedIndex === -1 ? 'Add' : 'Update' }}
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="deleteDialogStripes" max-width="400">
+      <v-card elevation="5">
+        <v-card-title class="text-h6">
+          Confirm Delete
+        </v-card-title>
+        <v-card-text>
+          Are you sure you want to delete this Stripe?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn class="btn-32-text-12" text color="grey" @click="deleteDialogStripes = false">Cancel</v-btn>
+          <v-btn class="btn-32-text-12" text color="red" :loading="deleteLoadingStripes" :disabled="deleteLoadingStripes" @click="performDeleteStripes">
+            Delete
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </div>
 </template>
 
@@ -168,14 +271,50 @@ export default {
       deleteDialog: false,
       bankdetailToDelete: null,
       deleteLoading: false,
+
+      ssearchstripes: '',
+      stripes: [],
+      stripesHeaders: [
+        { text: 'Provider name', value: 'provider' },
+        { text: 'Public Key', value: 'public_key' },
+        { text: 'Secret Key', value: 'secret_key' },
+        { text: 'Status', value: 'is_active' },
+        { text: 'Action', value: 'actions1', sortable: false },
+        { text: 'Action', value: 'actions2', sortable: false },
+      ],
+
+      addSdialogStripes: false,
+      editedIndexStripes: -1,
+      fsvalidStripes: false,
+      submittingStripes: false,
+
+      defaultItemStripes: {
+        stripe_setting_id: null,
+        provider: '',
+        public_key: '',
+        secret_key: '',
+      },
+
+      providernameRules: [
+        v => !!v || 'Company Name is required',
+        v => (v && v.length <=255) || 'Company Name must be less than 255 characters',
+      ],
+
+      deleteDialogStripes: false,
+      StripesToDelete: null,
+      deleteLoadingStripes: false,
     }
   },
   created() {
-    this.getAllbankdetails()
+    this.getAllbankdetails(),
+    this.getAllstripes()
   },
   watch: {
     addSdialog(val) {
       if (!val) this.submitting = false
+    },
+    addSdialogStripes(val) {
+      if (!val) this.submittingStripes = false
     }
   },
   methods: {
@@ -203,7 +342,6 @@ export default {
       this.editedIndex = -1;
       }
     },
-
     openDialog() {
       this.defaultItem = {
         bank_detail_id: null,
@@ -217,7 +355,6 @@ export default {
       this.fsvalid = false
       this.addSdialog = true
     },
-
     editItem(item) {
       this.defaultItem = {
         bank_detail_id: item.bank_detail_id,
@@ -231,7 +368,6 @@ export default {
       this.fsvalid = true
       this.addSdialog = true
     },
-
     async saveBankDetail() {
       this.submitting = true;
 
@@ -301,6 +437,120 @@ export default {
         this.deleteLoading = false
         this.deleteDialog = false
         this.bankdetailToDelete = null
+      }
+    },
+
+    getAllstripes() {
+      axios.get('/admin/stripe/vlist').then(res => {
+        this.stripes = res.data.stripes;
+      })
+      .catch(err => {
+        console.error(err)
+      })
+    },
+    onDialogToggleStripes(open) {
+      if (!open) {
+      this.defaultItemStripes = 
+      { 
+        stripe_setting_id: null, 
+        provider: '', 
+        public_key: '', 
+        secret_key: '', 
+      };
+      this.fsvalid = false;
+      this.submittingStripes = false;
+      this.editedIndexStripes = -1;
+      }
+    },
+    openDialogStripes() {
+      this.defaultItemStripes = {
+        stripe_setting_id: null,
+        provider: '',
+        public_key: '',
+        secret_key: '',
+      }
+      this.editedIndexStripes = -1
+      this.fsvalidStripes = false
+      this.addSdialogStripes = true
+    },
+    editItemStripes(item) {
+      this.defaultItemStripes = {
+        stripe_setting_id: item.stripe_setting_id,
+        provider: item.provider,
+        public_key: item.public_key,
+        secret_key: item.secret_key,
+      }
+      this.editedIndexStripes = item.stripe_setting_id
+      this.fsvalidStripes = true
+      this.addSdialogStripes = true
+    },
+    async saveStripes() {
+      this.submittingStripes = true;
+
+      let expiresAtValue = this.defaultItemStripes.expires_at;
+
+      if (expiresAtValue) {
+        expiresAtValue = `${expiresAtValue} 00:00:00`;
+      } else {
+        expiresAtValue = null;
+      }
+
+      const payload = {
+        provider: this.defaultItemStripes.provider.toUpperCase(),
+        public_key: this.defaultItemStripes.public_key.toUpperCase(),
+        secret_key: this.defaultItemStripes.secret_key,
+      };
+
+      if (this.editedIndexStripes !== -1) {
+        payload.stripe_setting_id = this.editedIndexStripes;
+      }
+
+      const url = this.editedIndexStripes === -1 ? '/admin/stripe/add' : '/admin/stripe/update';
+
+      try {
+        await axios.post(url, payload, {
+          headers: { 'Content-Type': 'application/json' }
+        });
+        this.$toast.success(
+          this.editedIndexStripes === -1 ? 'Stripe added successfully!' : 'Stripe updated successfully!',
+          { timeout: 500 }
+        );
+        this.getAllstripes();
+        this.addSdialogStripes = false;
+      } catch (error) {
+      } finally {
+        this.submittingStripes = false;
+      }
+    },
+    async toggleStatusStripes(item) {
+      try {
+          await axios.post(`/admin/stripe/status-toggle/${item.stripe_setting_id}`, {
+              is_active: item.is_active
+          });
+          this.$toast?.success('Stripe Status updated', { timeout: 500 });
+      } catch (error) {
+          console.error("Failed to toggle status", error);
+          this.$toast?.error('Failed to update status', { timeout: 500 });
+      }
+    },
+    confirmDeleteStripes(item) {
+      this.StripesToDelete = item
+      this.deleteDialogStripes = true
+    },
+    async performDeleteStripes() {
+      if (!this.StripesToDelete) return
+      this.deleteLoadingStripes = true
+      try {
+        await axios.post('/admin/stripe-delete', { stripe_setting_id: this.StripesToDelete.stripe_setting_id })
+        this.$toast.success('Stripe deleted successfully!', { timeout: 500 })
+        this.getAllstripes()
+      } catch (err) {
+        console.error(err)
+        this.$toast.error('Failed to delete Stripe.', { timeout: 2000 })
+      } finally {
+        this.deleteLoadingStripes = false
+        this.deleteDialogStripes = false
+        this.StripesToDelete = null
       }
     },
 

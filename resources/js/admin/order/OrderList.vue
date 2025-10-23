@@ -27,7 +27,7 @@
         <v-card elevation="5" style="background-color: transparent;">
           <v-row class="align-center">
             <v-col class="pt-0">
-              <v-tabs v-model="activeTab" active-class="grey lighten-3" height="30">
+              <v-tabs v-model="activeTab" @change="clearSelection" active-class="grey lighten-3" height="30">
                 <v-tab class="text-none" style="font-size: 12px;">All</v-tab>
                 <v-tab class="text-none" style="font-size: 12px;">Unfulfilled</v-tab>
                 <v-tab class="text-none" style="font-size: 12px;">Unpaid</v-tab>
@@ -65,7 +65,7 @@
           </v-row>
 
           <v-data-table dense v-model="selected" :show-select="true" item-key="order_id" :items="filteredOrders"
-            :headers="orderHeaders" :search="ssearch"
+            :headers="orderHeaders" :search="ssearch" :items-per-page="50"
             :footer-props="{ 'items-per-page-options': [10, 25, 50, 100], 'items-per-page-text': 'Rows per page:' }">
             <template v-slot:top>
               <v-text-field v-model="ssearch" class="px-2 py-1" clearable dense outlined hide-details
@@ -251,6 +251,9 @@ export default {
         hour12: false
       });
     },
+    clearSelection() {
+      this.selected = []; 
+    },
     statusColor(status) {
       switch (status.toLowerCase()) {
         case 'paid': return 'green';
@@ -378,7 +381,7 @@ export default {
         this.$toast.success(`Royal Mail sync: (pushed ${res.data.pushed_now} order)`, { timeout: 800 });
         this.getAllOrders();
       } catch (e) {
-        this.$toast.error('Sync failed.')
+        this.$toast.error('Sendcloud keys check.')
       } finally {
         this.saving = false
       }

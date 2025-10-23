@@ -171,7 +171,7 @@
                 <v-list-item-title>Service</v-list-item-title>
               </router-link>
 
-              <router-link tag="v-list-item" to="#">
+              <router-link tag="v-list-item" to="/admin/shipping-integration" active-class="active-link">
                 <v-list-item-icon><v-icon>mdi-truck-delivery-outline</v-icon></v-list-item-icon>
                 <v-list-item-title>Shipping</v-list-item-title>
               </router-link>
@@ -270,7 +270,7 @@ export default {
       return this.$route.path.startsWith('/admin/delivery-method')
         || this.$route.path.startsWith('/admin/customer-tags')
         || this.$route.path.startsWith('/admin/services')
-        || this.$route.path.startsWith('#')
+        || this.$route.path.startsWith('/admin/shipping-integration')
         || this.$route.path.startsWith('/admin/payment-method')
     }
   }

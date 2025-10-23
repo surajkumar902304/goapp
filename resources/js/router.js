@@ -38,6 +38,7 @@ import ServiceDisplaySolution from './admin/service/ServiceDisplaySolution.vue';
 import UserTagList from './admin/user/UserTagList.vue';
 // import UserTagPrice from './admin/user/UserTagPrice.vue';
 import UserCustomPrice from './admin/user/UserCustomPrice.vue';
+import ShippingIntegration from './admin/setting/ShippingIntegration.vue';
 
 
 const routes = [
@@ -74,6 +75,7 @@ const routes = [
   { path: '/admin/customer-tags', component: UserTagList, name: 'tags-list'},
   // { path: '/admin/customer-tag-price/:usertagid', component: UserTagPrice, name: 'user-tag-price', props: true },
   { path: '/admin/custom-price', component: UserCustomPrice, name: 'user-custom-price' },
+  { path: '/admin/shipping-integration', component: ShippingIntegration, name: 'shipping-integration' },
 
   { path: '*', component: AdminNotFound, name: 'AdminNotFound', meta: { layout: 'none' } },
 ];

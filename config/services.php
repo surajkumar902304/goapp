@@ -35,15 +35,15 @@ return [
         'key' => env('ROYALMAIL_CND_API_KEY'),
     ],
 
-    'stripe' => [
-        'secret' => env('STRIPE_SECRET_KEY'),
-        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
-    ],
+    // 'stripe' => [
+    //     'secret' => env('STRIPE_SECRET_KEY'),
+    //     'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    // ],
 
     'sendcloud' => [
         'base'   => env('SENDCLOUD_API_BASE', 'https://panel.sendcloud.sc/api/v2'),
-        'public' => env('SENDCLOUD_PUBLIC_KEY'),
-        'secret' => env('SENDCLOUD_SECRET_KEY'),
+        // 'public' => env('SENDCLOUD_PUBLIC_KEY'),
+        // 'secret' => env('SENDCLOUD_SECRET_KEY'),
     ],
 
 

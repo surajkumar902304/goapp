@@ -12,6 +12,7 @@ use App\Models\Mstock;
 use App\Models\Order;
 use App\Models\OrderCommission;
 use App\Models\OrderItem;
+use App\Models\Payment;
 use App\Models\Referral;
 use App\Models\Setting;
 use App\Models\UserTag;
@@ -162,7 +163,21 @@ class OrderController extends Controller
             'delivery_method_id' => ['required', 'integer', 'exists:delivery_methods,delivery_method_id'],
             'delivery_instructions' => ['nullable', 'string'],
             'coupon_id' => ['nullable', 'string', 'regex:/^\d+$/'],
-            'pay_by_bank' => ['boolean'],
+            'pay_by_bank' => ['required', 'boolean'],
+            'payment_status' => ['nullable', 'string'],
+            'payment_provider' => ['nullable', 'string'],
+            'payment_reference' => ['nullable', 'string'],
+
+            'payment_intent_id' => ['required', 'string'],
+            'payment_method_id' => ['nullable', 'string'],
+            'customer_id' => ['nullable', 'string'],
+            'currency' => ['required', 'string'],
+            'amount' => ['required', 'integer'],
+            'status' => ['required', 'string'],
+            'receipt_email' => ['nullable', 'string'],
+            'description' => ['nullable', 'string'],
+            'metadata' => ['nullable', 'string'],
+            'raw_payload' => ['nullable', 'string'],
         ]);
 
         $couponId = trim($validated['coupon_id'] ?? '') ?: null;
@@ -181,8 +196,8 @@ class OrderController extends Controller
                 ], 422);
             }
 
-            $tagType     = null;  
-            $percent     = null;  
+            $tagType = null;
+            $percent = null;
             $tagPriceMap = collect();
 
             if ($user && $user->user_tag_id) {
@@ -322,7 +337,29 @@ class OrderController extends Controller
                 'delivery_instructions' => $validated['delivery_instructions'] ?? null,
                 'coupon_id' => $couponId,
                 'pay_by_bank' => $payByBank,
+                'payment_status' => $validated['payment_status'] ?? null,
+                'payment_provider' => $validated['payment_provider'] ?? null,
+                'payment_reference' => $validated['payment_reference'] ?? null,
             ]);
+
+            if (!$payByBank) {
+                Payment::create([
+                    'order_id' => $order->order_id,
+                    'user_id' => $user->id,
+                    'provider' => 'stripe',
+
+                    'payment_intent_id' => $validated['payment_intent_id'],
+                    'payment_method_id' => $validated['payment_method_id'] ?? null,
+                    'customer_id' => $validated['customer_id'] ?? null,
+                    'currency' => $validated['currency'],
+                    'amount' => $validated['amount'], 
+                    'status' => $validated['status'], 
+                    'receipt_email' => $validated['receipt_email'] ?? null,
+                    'description' => $validated['description'] ?? null,
+                    'metadata' => $validated['metadata'] ?? null,
+                    'raw_payload' => $validated['raw_payload'] ?? null,
+                ]);
+            }
 
             foreach ($cartItems as $cart) {
                 $quantity = (int) $cart->quantity;

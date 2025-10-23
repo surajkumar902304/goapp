@@ -17,5 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call(SliderHeaderSeeder::class);
         $this->call(MinOrderDelivery::class);
         $this->call(ProductVatSeeder::class);
+        $this->call(IntegrationSettingsSeeder::class);
+        $this->call(StripeIntegrationSeeder::class);
     }
 }
