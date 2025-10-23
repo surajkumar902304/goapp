@@ -122,8 +122,11 @@ Route::middleware(['auth.api'])->group(function () {
     // Stripe Routes 
     Route::get('/stripe-config', [StripeController::class, 'index']);
     Route::post('/create-payment-intent', [StripeController::class, 'createPaymentIntent']);
-    Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
 
-});
+});    
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
+
+
+
 
 

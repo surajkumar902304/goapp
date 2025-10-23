@@ -27,6 +27,7 @@ class StripeWebhookController extends Controller
 
         $payload = $request->getContent();
         $sigHeader = $request->header('Stripe-Signature');
+        
 
         try {
             Stripe::setApiKey($stripeAccount->secret_key);
