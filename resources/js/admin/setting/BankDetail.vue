@@ -136,13 +136,11 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <v-btn class="btn-32-text-12"
+        <v-btn class="btn-32-text-12" :disabled="!isFormChanged"
           style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"
           @click="saveStripeConfig">Update</v-btn>
       </v-card-actions>
     </v-card>
-
-
 
   </div>
 </template>
@@ -210,7 +208,8 @@ export default {
         webhook_secret: '',
         note: '',
         test_mode: 1,
-      }
+      },
+      originalStripeForm: {},
     }
   },
   mounted() {
@@ -225,6 +224,11 @@ export default {
     },
     addSdialogStripes(val) {
       if (!val) this.submittingStripes = false
+    }
+  },
+  computed: {
+    isFormChanged() {
+      return JSON.stringify(this.stripeForm) !== JSON.stringify(this.originalStripeForm);
     }
   },
 
@@ -355,12 +359,18 @@ export default {
         const res = await axios.get('/admin/stripe-integration/vlist');
         if (res.data.status && res.data.stripe.length > 0) {
           const stripe = res.data.stripe[0];
-          this.stripeForm.stripe_integration_id = stripe.stripe_integration_id;
-          this.stripeForm.publishable_key = stripe.publishable_key;
-          this.stripeForm.secret_key = stripe.secret_key;
-          this.stripeForm.webhook_secret = stripe.webhook_secret;
-          this.stripeForm.note = stripe.note;
-          this.stripeForm.test_mode = stripe.test_mode ? 1 : 0;
+
+          this.stripeForm = {
+            stripe_integration_id: stripe.stripe_integration_id,
+            publishable_key: stripe.publishable_key,
+            secret_key: stripe.secret_key,
+            webhook_secret: stripe.webhook_secret,
+            note: stripe.note,
+            test_mode: stripe.test_mode ? 1 : 0,
+          };
+
+          this.originalStripeForm = { ...this.stripeForm };
+
         }
       } catch (error) {
         console.error(error);
@@ -371,6 +381,7 @@ export default {
       try {
         await axios.post('/admin/stripe-integration/update', this.stripeForm);
         this.$toast.success('Stripe configuration updated!', { timeout: 500 })
+        this.fetchStripeConfig()
       } catch (error) {
         console.error('Update error:', error);
         this.$toast.error('Failed to updated.', { timeout: 800 })

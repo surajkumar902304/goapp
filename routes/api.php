@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\SendcloudWebhookController;
 
 /*
 |--------------------------------------------------------------------------
@@ -125,6 +126,7 @@ Route::middleware(['auth.api'])->group(function () {
 
 });    
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook']);
+Route::post('/sendcloud/webhook', [SendcloudWebhookController::class, 'handle']);
 
 
 

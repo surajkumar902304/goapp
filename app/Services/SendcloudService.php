@@ -15,10 +15,7 @@ class SendcloudService
 
     // Defaults
     private int $senderAddressId = 701837;   // your sender address id
-    private int $defaultShipmentId = 8;      // Royal Mail Tracked 48
     private float $defaultItemWeightKg = 0.5;
-    private int $len = 10, $wid = 10, $hgt = 5;
-    private bool $autoLabel = true;
 
     public function __construct()
     {
@@ -42,7 +39,6 @@ class SendcloudService
     {
         $items = [];
         $totalWeightKg = 0.0;
-        $totalValue = 0.0;
 
         foreach ($order->items as $row) {
             $variant = $row->variant;
@@ -61,52 +57,38 @@ class SendcloudService
                 'value'          => $price,
                 'origin_country' => strtoupper((string) ($order->userCompanyAddress->company_country ?? 'GB')),
                 'sku'            => (string) ($variant->sku ?? ('SKU-'.$variant->mvariant_id)),
-                'product_type'   => 'goods',
-                // 'hs_code'      => (string) ($variant->hs_code ?? '610910'),
             ];
 
             $totalWeightKg += $wKg * $qty;
-            $totalValue    += $price * $qty;
         }
 
         if ($totalWeightKg <= 0) $totalWeightKg = max($this->defaultItemWeightKg, 0.1);
 
         $addr1 = trim((string) ($order->userCompanyAddress->company_address1 ?? ''));
         $addr2 = trim((string) ($order->userCompanyAddress->company_address2 ?? ''));
-        $address     = $addr1 ?: 'Unknown street';
-        $houseNumber = '1';
-
-        $shipmentId = $this->mapShipmentByName((string) ($order->deliveryMethod->delivery_method_name ?? ''));
 
         $payload = [
             'parcel' => [
-                'sender_address'           => $this->senderAddressId,
+                // 'sender_address'           => $this->senderAddressId,
                 'name'                     => (string) ($order->user->name ?? 'Customer'),
                 'company_name'             => (string) ($order->userCompanyAddress->user_company_name ?? ''),
-                'address'                  => $address,
-                'address_2'                => $addr2 ? $addr1 : null,
-                'house_number'             => $houseNumber,
+                'address'                  => $addr1,
+                'address_2'                => $addr2 ?? null,
                 'city'                     => (string) ($order->userCompanyAddress->company_city ?? ''),
                 'postal_code'              => (string) ($order->userCompanyAddress->company_postcode ?? ''),
                 'country'                  => strtoupper((string) ($order->userCompanyAddress->company_country ?? 'GB')),
                 'email'                    => (string) ($order->user->email ?? ''),
                 'telephone'                => (string) ($order->user->mobile ?? ''),
                 'weight'                   => round($totalWeightKg, 3),
-                'length'                   => $this->len,
-                'width'                    => $this->wid,
-                'height'                   => $this->hgt,
-                'order_number'             => (string) $order->order_id,
-                'external_reference'       => 'Order-'.$order->order_id,
-                'reference'                => 'Order-'.$order->order_id,
-                'integration'              => 524494,
-                'request_label'            => $this->autoLabel,
-                'shipment'                 => ['id' => $shipmentId],
-                'total_order_value'        => round($totalValue, 2),
+                'order_number'             => (string) '#TR00'.$order->order_id,
+                'request_label'            => false,
+                'total_order_value'        => round($order->total_paid, 2),
                 'total_order_value_currency' => 'GBP',
-                'customs_declaration' => [
-                    'invoice_number' => (string) $order->order_id,
-                    'items'          => $items,
-                ],
+
+                'order_shop_status'     => $order->fulfillment_status ?? 'unfulfilled',
+                'order_payment_status'  => $order->status ?? 'unpaid',
+                'shipping_method_checkout_name' => (string) ($order->deliveryMethod->delivery_method_name ?? ''),
+
                 "parcel_items" => $items,
             ],
         ];
@@ -117,18 +99,9 @@ class SendcloudService
         if ($res->successful() && isset($res['parcel'])) {
             $p   = $res['parcel'];
             $pid = $p['id'] ?? null;
-            $trk = $p['tracking_number'] ?? null;
-
-            $labelUrl = $p['label']['label_printer'] ?? null;
-            if (!$labelUrl && !empty($p['label']['normal_printer'])) $labelUrl = $p['label']['normal_printer'][0] ?? null;
-            if (!$labelUrl && !empty($p['documents'])) {
-                foreach ($p['documents'] as $d) if (($d['type'] ?? '') === 'label') { $labelUrl = $d['link'] ?? null; break; }
-            }
 
             $order->update([
                 'sendcloud_parcel_id' => $pid,
-                'tracking_number'     => $trk,
-                'label_url'           => $labelUrl,
                 'cnd_status'          => 'created',
                 'pushed_to_cnd_at'    => now(),
                 'cnd_last_error'      => null,
@@ -146,15 +119,4 @@ class SendcloudService
         return ['ok' => false, 'status' => $res->status(), 'error' => $res->json() ?? $res->body()];
     }
 
-    private function mapShipmentByName(string $deliveryMethodName): int
-    {
-        // dynamic mapping (future): fill this array; default remains 8
-        $map = [
-            // 'ROYAL MAIL TRACKED 24 - SMALL PARCEL' => 7,
-            // 'ROYAL MAIL TRACKED 48 - SMALL PARCEL' => 8,
-            // 'DHL EXPRESS' => 65,
-        ];
-        $key = strtoupper(trim($deliveryMethodName));
-        return $map[$key] ?? $this->defaultShipmentId;
-    }
 }
