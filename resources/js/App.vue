@@ -220,12 +220,10 @@ export default {
   mounted() {
     this.fetchOrderCount();
 
-    // Auto-refresh every 10 seconds (adjust as needed)
     this.refreshInterval = setInterval(() => {
       this.fetchOrderCount();
-    }, 10000);
+    }, 1000);
 
-    // Optional: listen for a custom event from child components
     this.$root.$on('order-updated', this.fetchOrderCount);
   },
 
