@@ -85,9 +85,9 @@ class SendcloudService
                 'total_order_value'        => round($order->total_paid, 2),
                 'total_order_value_currency' => 'GBP',
 
-                'order_shop_status'     => $order->fulfillment_status ?? 'unfulfilled',
-                'order_payment_status'  => $order->status ?? 'unpaid',
-                'shipping_method_checkout_name' => (string) ($order->deliveryMethod->delivery_method_name ?? ''),
+                // 'order_shop_status'     => $order->fulfillment_status ?? 'unfulfilled',
+                // 'order_payment_status'  => $order->status ?? 'unpaid',
+                // 'shipping_method_checkout_name' => (string) ($order->deliveryMethod->delivery_method_name ?? ''),
 
                 "parcel_items" => $items,
             ],
