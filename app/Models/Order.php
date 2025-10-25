@@ -12,9 +12,11 @@ class Order extends Model
     protected $table = 'orders';
     protected $fillable = [
         'user_id',
+        'sendcloud_parcel_id',
         'total_amount',
         'wallet_discount',
         'coupon_discount',
+        'coupon_id',
         'status',
         'fulfillment_status',
         'user_company_address_id',
@@ -23,18 +25,19 @@ class Order extends Model
         'total_paid',
         'product_total_amount',
         'delivery_instructions',
-        'coupon_id',
         'pay_by_bank',
-        'royalmail_order_identifier',
         'pushed_to_cnd_at',
         'cnd_status',
         'cnd_last_error',
         'payment_status',
         'payment_provider',
         'payment_reference',
-        'sendcloud_parcel_id',
-        'label_url',
         'tracking_number',
+        'label_url',
+        'shipment_status',
+        'tracking_url',
+        'dispatched_at',
+        
     ];
 
     protected $casts = [

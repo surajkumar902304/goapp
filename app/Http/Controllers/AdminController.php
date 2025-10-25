@@ -339,10 +339,13 @@ class AdminController extends Controller
         $product = Mproduct::where('status','active')->with('mvariants')
         ->get();
 
+        $usedVariantIds = Product_Offer::pluck('mvariant_id')->toArray();
+
         return response()->json([
             'status' => true,
             'productoffers' => $productoffer,
             'products' => $product,
+            'used_variant_ids' => $usedVariantIds,
         ],200);
     }
 
@@ -354,15 +357,23 @@ class AdminController extends Controller
             'variant_ids'        => 'required|array',
             'variant_ids.*'      => 'exists:mvariants,mvariant_id',
             'product_deal_tag'   => 'nullable|string|max:255',
-            'product_offer'      => 'nullable|string|max:255',
+            'product_type'       => 'nullable|in:volume_discount,buy_x_get_y',
+            'buy_qty'            => 'nullable|integer|min:1|required_if:product_type,buy_x_get_y',
+            'get_qty'            => 'nullable|integer|min:1|required_if:product_type,buy_x_get_y',
+            'min_qty'            => 'nullable|integer|min:1|required_if:product_type,volume_discount',
+            'discount_amount'    => 'nullable|numeric|regex:/^\d+(\.\d{1,2})?$/|required_if:product_type,volume_discount',
         ]);
 
         foreach ($request->variant_ids as $variantId) {
             Product_Offer::updateOrCreate(
                 ['mvariant_id' => $variantId],
                 [
-                    'product_offer'     => $request->product_offer,
                     'product_deal_tag'  => $request->product_deal_tag,
+                    'product_type'      => $request->product_type,
+                    'buy_qty'           => $request->buy_qty,
+                    'get_qty'           => $request->get_qty,
+                    'min_qty'           => $request->min_qty,
+                    'discount_amount'   => $request->discount_amount,
                 ]
             );
         }
@@ -376,25 +387,36 @@ class AdminController extends Controller
     public function editProductoffer(Request $request)
     {
         $data = $request->validate([
-            'product_offer_id'  => ['required', 'integer', 'exists:product__offers,product_offer_id'],
-            'mvariant_id'       => ['required', 'integer', 'exists:mvariants,mvariant_id'],
-            'product_deal_tag'  => ['nullable', 'string', 'max:255'],
-            'product_offer'     => ['nullable', 'string', 'max:255'],
+            'product_offer_id'   => ['required', 'integer', 'exists:product__offers,product_offer_id'],
+            'mvariant_id'        => ['required', 'integer', 'exists:mvariants,mvariant_id'],
+            'product_deal_tag'   => ['nullable', 'string', 'max:255'],
+
+            'product_type'       => 'nullable|in:volume_discount,buy_x_get_y',
+            'buy_qty'            => 'nullable|integer|min:1|required_if:product_type,buy_x_get_y',
+            'get_qty'            => 'nullable|integer|min:1|required_if:product_type,buy_x_get_y',
+            'min_qty'            => 'nullable|integer|min:1|required_if:product_type,volume_discount',
+            'discount_amount'    => 'nullable|numeric|regex:/^\d+(\.\d{1,2})?$/|required_if:product_type,volume_discount',
         ]);
 
-        $offer = Product_Offer::find($data['product_offer_id']);
-        
+        $offer = Product_Offer::findOrFail($data['product_offer_id']);
+
         $offer->update([
-            'mvariant_id'      => $data['mvariant_id'],
-            'product_deal_tag' => $data['product_deal_tag'],
-            'product_offer'    => $data['product_offer'],
+            'mvariant_id'       => $data['mvariant_id'],
+            'product_deal_tag'  => $data['product_deal_tag'],
+            'product_type'      => $data['product_type'],
+            'buy_qty'           => $data['product_type'] === 'buy_x_get_y' ? $data['buy_qty'] : null,
+            'get_qty'           => $data['product_type'] === 'buy_x_get_y' ? $data['get_qty'] : null,
+            'min_qty'           => $data['product_type'] === 'volume_discount' ? $data['min_qty'] : null,
+            'discount_amount'   => $data['product_type'] === 'volume_discount' ? $data['discount_amount'] : null,
         ]);
 
         return response()->json([
             'status'  => true,
-            'message' => 'Offer updated',
+            'message' => 'Offer updated successfully',
+            'data'    => $offer
         ], 200);
     }
+
 
     public function deleteProductoffer(Request $request)
     {

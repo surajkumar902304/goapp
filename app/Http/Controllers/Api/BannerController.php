@@ -181,7 +181,7 @@ class BannerController extends Controller
                     },
                     'details:mvariant_detail_id,mvariant_id,options,option_value',
                     'mstock:mstock_id,mvariant_id,quantity,mlocation_id',
-                    'productoffer:product_offer_id,mvariant_id,product_deal_tag,product_offer',
+                    'productoffer:product_offer_id,mvariant_id,product_deal_tag,product_type,buy_qty,get_qty,min_qty,discount_amount',
                 ])
                 ->get();
 
@@ -224,6 +224,15 @@ class BannerController extends Controller
                             $effective = 0.0;
                     }
 
+                    $offerText = null;
+                    if ($v->productoffer) {
+                        if ($v->productoffer->product_type === 'buy_x_get_y') {
+                            $offerText = "Buy {$v->productoffer->buy_qty} Get {$v->productoffer->get_qty}";
+                        } elseif ($v->productoffer->product_type === 'volume_discount') {
+                            $offerText = "Any {$v->productoffer->min_qty} for £{$v->productoffer->discount_amount}";
+                        }
+                    }
+
                     return [
                         $sliderKeyName => $sliderMap[$v->mvariant_id] ?? null,
                         'mvariant_id' => $v->mvariant_id,
@@ -254,7 +263,7 @@ class BannerController extends Controller
                             'option_value' => (object) $optVals,
                             'mlocation_id' => $v->mstock?->mlocation_id,
                             'product_deal_tag' => optional($v->productoffer)->product_deal_tag,
-                            'product_offer' => optional($v->productoffer)->product_offer,
+                            'product_offer' => $offerText,
                             'user_info_wishlist' => $inWishlist,
                         ],
                     ];

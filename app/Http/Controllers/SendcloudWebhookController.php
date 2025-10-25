@@ -10,32 +10,41 @@ class SendcloudWebhookController extends Controller
 {
     public function handle(Request $request)
     {
-        Log::info('Sendcloud Webhook Received', $request->all());
+        Log::info('✅ Sendcloud Webhook Received:', $request->all());
+        // file_put_contents('sendcloud_log.txt', json_encode($request->all(), JSON_PRETTY_PRINT), FILE_APPEND);
 
         $payload = $request->all();
 
-        if (!isset($payload['parcel'])) {
-            return response()->json(['error' => 'Invalid payload'], 400);
+        if (!isset($payload['parcel']['id'])) {
+            return response()->json(['message' => 'No parcel data'], 200); 
         }
 
         $parcel = $payload['parcel'];
-
-        $orderNumber = $parcel['order_number'] ?? null;
-        $orderId = str_replace('#TR00', '', $orderNumber); 
-
-        if (!$orderId) {
-            return response()->json(['error' => 'Order ID not found'], 400);
-        }
-
         $tracking = $parcel['tracking_number'] ?? null;
         $labelUrl = $parcel['label']['normal_printer'][0] ?? null;
+        $shipmentStatus = $parcel['status']['message'] ?? 'updated';
+        $sendcloudParcelId = $parcel['id'];
 
-        Order::where('order_id', $orderId)->update([
-            'tracking_number' => $tracking,
-            'label_url' => $labelUrl,
-            'shipment_status' => $payload['status']['message'] ?? 'updated',
-        ]);
+        // Find order using sendcloud_parcel_id
+        $order = Order::where('sendcloud_parcel_id', $sendcloudParcelId)->first();
 
-        return response()->json(['success' => true]);
+        if ($order) {
+            $order->update([
+                'tracking_number' => $tracking,
+                'label_url' => $labelUrl,
+                'shipment_status' => $shipmentStatus,
+                'updated_at' => now(),
+            ]);
+
+            Log::info('✅ Order updated from webhook', [
+                'order_id' => $order->order_id,
+                'tracking_number' => $tracking,
+                'status' => $shipmentStatus
+            ]);
+        } else {
+            Log::warning('⚠ Order not found for parcel id ' . $sendcloudParcelId);
+        }
+
+        return response()->json(['message' => 'Webhook processed'], 200);
     }
 }

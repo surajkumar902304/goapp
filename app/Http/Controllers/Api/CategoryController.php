@@ -146,7 +146,7 @@ class CategoryController extends Controller
         $sub,
         ?array $brandIds = null,
         array $wishlistVariantIds = [],
-        $tagParam = null // int (legacy) OR array ['id'=>int,'type'=>'custom|percentage','discount'=>float]
+        $tagParam = null 
     ) {
         $allTags = Mtag::select('mtag_id', 'mtag_name')->get()->keyBy('mtag_id');
 
@@ -160,19 +160,17 @@ class CategoryController extends Controller
 
             if ($tagType === 'percentage') {
                 $raw = (float) ($tagParam['discount'] ?? 0);
-                $percent = max(0.0, min(100.0, $raw)); // clamp 0..100
+                $percent = max(0.0, min(100.0, $raw)); 
             }
         } elseif (is_int($tagParam)) {
-            // legacy: passing a plain tag id means “custom” pricing
             $tagType = 'custom';
             $tagId = $tagParam;
         }
 
-        // Preload custom prices only if type is custom
         $tagPriceMap = collect();
         if ($tagType === 'custom' && $tagId) {
             $tagPriceMap = UserTagPrice::where('user_tag_id', $tagId)
-                ->pluck('tag_price', 'mvariant_id'); // mvariant_id => tag_price
+                ->pluck('tag_price', 'mvariant_id'); 
         }
 
         $manualProducts = collect();
@@ -248,6 +246,15 @@ class CategoryController extends Controller
                         $effectivePrice = 0.0;
                 }
 
+                $offerText = null;
+                if ($v->productoffer) {
+                    if ($v->productoffer->product_type === 'buy_x_get_y') {
+                        $offerText = "Buy {$v->productoffer->buy_qty} Get {$v->productoffer->get_qty}";
+                    } elseif ($v->productoffer->product_type === 'volume_discount') {
+                        $offerText = "Any {$v->productoffer->min_qty} for £{$v->productoffer->discount_amount}";
+                    }
+                }
+
                 $row = array_merge($base, [
                     'mvariant_id' => $v->mvariant_id,
                     'sku' => $v->sku,
@@ -262,7 +269,7 @@ class CategoryController extends Controller
                     'option_value' => json_decode($v->option_value, true),
                     'mlocation_id' => $v->mlocation_id,
                     'product_deal_tag' => optional($v->productoffer)->product_deal_tag,
-                    'product_offer' => optional($v->productoffer)->product_offer,
+                    'product_offer' => $offerText,
                     'user_info_wishlist' => $inWishlist,
                 ]);
 

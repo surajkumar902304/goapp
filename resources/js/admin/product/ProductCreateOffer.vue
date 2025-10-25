@@ -29,6 +29,15 @@
             <template #item.variant_label="{ item }">
               <span v-html="item.variant_label_html || item.variant_label || '—'"></span>
             </template>
+            <template #item.product_type="{ item }">
+              <span v-if="item.product_type === 'buy_x_get_y'">
+                Buy {{ item.buy_qty }} Get {{ item.get_qty }}
+              </span>
+              <span v-else-if="item.product_type === 'volume_discount'">
+                Any {{ item.min_qty }} for £{{ item.discount_amount }}
+              </span>
+            </template>
+
             <template #header.actions1>
               <div class="text-center">Action</div>
             </template>
@@ -94,12 +103,13 @@
         </v-card-title>
         <v-form v-model="addValid" @submit.prevent="saveAdd">
           <v-card-text>
-            <v-autocomplete class="dialog-variants" v-model="addForm.product_ids" :items="products" item-text="mproduct_title"
-              item-value="mproduct_id" label="Products" multiple small-chips deletable-chips :rules="[required]"
-              @change="loadAddVariants" />
-            <v-autocomplete class="dialog-variants" ref="variantSelect" v-model="addForm.variant_ids" :items="addVariants"
-              item-text="option_label" item-value="mvariant_id" label="Variants" multiple small-chips deletable-chips
-              :rules="[required]" :menu-props="{ offsetY: true, contentClass: 'variant-menu' }">
+            <v-autocomplete class="dialog-variants" v-model="addForm.product_ids" :items="products"
+              item-text="mproduct_title" item-value="mproduct_id" label="Products" multiple small-chips deletable-chips
+              :rules="[required]" @change="loadAddVariants" />
+            <v-autocomplete class="dialog-variants" ref="variantSelect" v-model="addForm.variant_ids"
+              :items="addVariants" item-text="option_label" item-value="mvariant_id" label="Variants" multiple
+              small-chips deletable-chips :rules="[required]"
+              :menu-props="{ offsetY: true, contentClass: 'variant-menu' }">
               <template v-slot:append-item>
                 <div v-if="(addForm.variant_ids || []).length" class="pa-2 text-right">
                   <v-btn small color="primary" class="px-4" @click.stop="applyVariantSelection">
@@ -111,13 +121,42 @@
 
             <v-select v-model="addForm.product_deal_tag" :items="dealTagOptions" item-text="label" item-value="value"
               label="Product Deal Tag" dense :menu-props="{ offsetY: true }" />
-            <v-text-field v-model="addForm.product_offer" label="Product Offer" />
+            <v-select v-model="addForm.product_type" :items="offerOptions" item-text="label" item-value="value"
+              label="Product Offer Type" dense></v-select>
+            <!-- Buy X Get Y -->
+            <div v-if="addForm.product_type === 'buy_x_get_y'" class="mt-4">
+              <v-row>
+                <v-col cols="6">
+                  <v-text-field v-model="rule.buy_qty" label="Buy Quantity" type="number" dense outlined
+                    min="1" />
+                </v-col>
+                <v-col cols="6">
+                  <v-text-field v-model="rule.get_qty" label="Get Free Quantity" type="number" dense outlined
+                    min="1" />
+                </v-col>
+              </v-row>
+            </div>
+
+            <!-- Volume Discount -->
+            <div v-if="addForm.product_type === 'volume_discount'" class="mt-4">
+              <v-row>
+                <v-col cols="6">
+                  <v-text-field v-model="rule.min_qty" label="Minimum Quantity" type="number" dense outlined
+                    min="1" />
+                </v-col>
+                <v-col cols="6">
+                  <v-text-field v-model="rule.discount_amount" label="Fixed Price (£)" dense outlined
+                    @input="validateDecimal" :error-messages="discountError" placeholder="e.g. 19.99" />
+                </v-col>
+              </v-row>
+            </div>
+
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn class="btn-32-text-12" type="submit"
               style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"
-              :disabled="!addValid">Add Offer</v-btn>
+              :disabled="isAddDisabled">Add Offer</v-btn>
           </v-card-actions>
         </v-form>
       </v-card>
@@ -140,13 +179,31 @@
 
             <v-select v-model="editForm.product_deal_tag" :items="dealTagOptions" item-text="label" item-value="value"
               label="Product Deal Tag" dense :menu-props="{ offsetY: true }" />
-            <v-text-field v-model="editForm.product_offer" label="Product Offer" />
+            <v-select v-model="editForm.product_type" :items="offerOptions" item-text="label" item-value="value"
+              label="Product Offer Type" dense></v-select>
+
+            <!-- BUY X GET Y -->
+            <div v-if="editForm.product_type === 'buy_x_get_y'" class="d-flex">
+              <v-text-field v-model="editForm.buy_qty" label="Buy Qty" type="number" min="1" dense outlined 
+                class="mr-2"></v-text-field>
+              <v-text-field v-model="editForm.get_qty" label="Get Qty" type="number" min="1" dense 
+                outlined></v-text-field>
+            </div>
+
+            <!-- VOLUME DISCOUNT -->
+            <div v-if="editForm.product_type === 'volume_discount'" class="d-flex">
+              <v-text-field v-model="editForm.min_qty" label="Minimum Qty" type="number" min="1" dense outlined
+                class="mr-2"></v-text-field>
+              <v-text-field v-model="editForm.discount_amount" label="Fixed Price (£)" type="number" min="0" step="0.01"
+                dense outlined></v-text-field>
+            </div>
+
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn class="btn-32-text-12" type="submit"
               style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"
-              :disabled="!editValid || saving">
+              :disabled="isEditDisabled">
               Update
             </v-btn>
           </v-card-actions>
@@ -185,10 +242,10 @@
     <!-- Bulk-add confirmation -->
     <v-dialog v-model="bulkAddDialog" max-width="500">
       <v-card elevation="5">
-        <v-card-title class="text-h6">Add Tags</v-card-title>
+        <v-card-title class="text-h6">Add Product Deal Tags</v-card-title>
         <v-card-text>
           <v-select v-model="bulk_product_tag" :items="dealTagOptions" item-text="label" item-value="value"
-            label="Product tag" dense :menu-props="{ offsetY: true }" />
+            label="Product deal tag" dense :menu-props="{ offsetY: true }" />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
@@ -202,8 +259,9 @@
     <!-- Bulk-remove confirmation -->
     <v-dialog v-model="bulkRemoveDialog" max-width="500">
       <v-card elevation="5">
-        <v-card-title class="text-h6">Remove Tag</v-card-title>
-        <v-card-text>Are you sure you want to remove <strong>{{ selectedtag.length }}</strong> offers tag?</v-card-text>
+        <v-card-title class="text-h6">Remove Product Deal Tag</v-card-title>
+        <v-card-text>Are you sure you want to remove <strong>{{ selectedtag.length }}</strong> product deal
+          tag?</v-card-text>
         <v-spacer></v-spacer>
         <v-card-actions>
           <v-spacer />
@@ -229,8 +287,8 @@ export default {
         { text: '', value: 'data-table-select' },
         { text: "Product", value: "mproduct_title" },
         { text: "Variant", value: "variant_label" },
-        { text: "Product offer", value: "product_offer" },
         { text: "Product deal tag", value: "product_deal_tag" },
+        { text: "Product offer", value: "product_type" },
         { text: 'Action', value: 'actions1', sortable: false },
         { text: 'Action', value: 'actions2', sortable: false },
         { text: '', value: 'delete', sortable: false, width: '130px' }
@@ -245,7 +303,7 @@ export default {
         product_ids: [],
         variant_ids: [],
         product_deal_tag: "",
-        product_offer: "",
+        product_type: null,
       },
 
       editDialog: false,
@@ -255,14 +313,30 @@ export default {
         product_offer_id: null,
         product_id: null,
         variant_id: null,
-        product_deal_tag: "",
-        product_offer: "",
+        product_deal_tag: null,
+        product_type: null,
+        buy_qty: null,
+        get_qty: null,
+        min_qty: null,
+        discount_amount: null
       },
 
       dealTagOptions: [
         { label: 'No tag', value: null },
         { label: 'Flash Deal', value: 'Flash Deal' },
         { label: 'Sale', value: 'Sale' },
+      ],
+      discountError: '',
+      rule: {
+        buy_qty: null,
+        get_qty: null,
+        min_qty: null,
+        discount_amount: null,
+      },
+      offerOptions: [
+        { label: 'No offer', value: null },
+        { label: "Volume Discount", value: 'volume_discount' },
+        { label: "Buy X Get Y", value: 'buy_x_get_y' },
       ],
 
       deleteDialog: false,
@@ -296,6 +370,40 @@ export default {
           this.$set(this.editForm, 'product_deal_tag', null)
         }
       }
+    },
+    'addForm.product_type'(val) {
+      this.rule = { buy_qty: null, get_qty: null, min_qty: null, discount_amount: null };
+    }
+  },
+  computed: {
+    isAddDisabled() {
+      if (!this.addValid || !this.addForm.product_ids.length || !this.addForm.variant_ids.length) {
+        return true;
+      }
+
+      if (this.addForm.product_type === 'buy_x_get_y') {
+        return !(this.rule.buy_qty > 0 && this.rule.get_qty > 0);
+      }
+
+      if (this.addForm.product_type === 'volume_discount') {
+        return !(this.rule.min_qty > 0 && this.rule.discount_amount > 0);
+      }
+
+      return false;
+    },
+    isEditDisabled() {
+      if (!this.editValid || this.saving) return true;
+      if (!this.editForm.product_id || !this.editForm.variant_id) return true;
+
+      if (this.editForm.product_type === 'buy_x_get_y') {
+        return !(this.editForm.buy_qty > 0 && this.editForm.get_qty > 0);
+      }
+
+      if (this.editForm.product_type === 'volume_discount') {
+        return !(this.editForm.min_qty > 0 && this.editForm.discount_amount > 0);
+      }
+
+      return false;
     }
   },
 
@@ -320,6 +428,14 @@ export default {
         const extra = vIndex.get(offer.mvariant_id) || { mproduct_title: '', variant_label: '', variant_label_html: '' };
         return { ...offer, ...extra };
       });
+    },
+    validateDecimal(value) {
+      const regex = /^\d+(\.\d{1,2})?$/;
+      if (!regex.test(this.rule.discount_amount)) {
+        this.discountError = "Only decimal allowed up to 2 places";
+      } else {
+        this.discountError = "";
+      }
     },
     formatVariantValues(optionValue) {
       if (!optionValue) return '';
@@ -434,12 +550,15 @@ export default {
 
       try {
         const { data } = await axios.get('/admin/product-offers/vlist');
+        const usedVariants = data.used_variant_ids || [];
         const allVariants = [];
 
         for (const product of data.products) {
           if (!this.addForm.product_ids.includes(product.mproduct_id)) continue;
 
           for (const variant of product.mvariants) {
+            if (usedVariants.includes(variant.mvariant_id)) continue;
+
             let optionVal = variant.option_value;
             if (typeof optionVal === 'string') {
               try {
@@ -473,7 +592,6 @@ export default {
         product_ids: [],
         variant_ids: [],
         product_deal_tag: '',
-        product_offer: ''
       };
       this.addVariants = [];
     },
@@ -486,7 +604,13 @@ export default {
           product_ids: this.addForm.product_ids,
           variant_ids: this.addForm.variant_ids,
           product_deal_tag: this.addForm.product_deal_tag,
-          product_offer: this.addForm.product_offer,
+          product_type: this.addForm.product_type,
+
+          buy_qty: this.rule.buy_qty ?? null,
+          get_qty: this.rule.get_qty ?? null,
+
+          min_qty: this.rule.min_qty ?? null,
+          discount_amount: this.rule.discount_amount ?? null,
         });
 
         this.$toast.success("Offers added successfully!", {
@@ -508,7 +632,11 @@ export default {
         product_id: this.findProductIdByVariant(item.mvariant_id),
         variant_id: item.mvariant_id,
         product_deal_tag: item.product_deal_tag,
-        product_offer: item.product_offer,
+        product_type: item.product_type,
+        buy_qty: item.buy_qty,
+        get_qty: item.get_qty,
+        min_qty: item.min_qty,
+        discount_amount: item.discount_amount,
       };
       this.loadEditVariants();
       this.editDialog = true;
@@ -567,7 +695,11 @@ export default {
         product_id: null,
         variant_id: null,
         product_deal_tag: "",
-        product_offer: "",
+        product_type: null,
+        buy_qty: null,
+        get_qty: null,
+        min_qty: null,
+        discount_amount: null,
       };
       this.editVariants = [];
       this.editValid = false;
@@ -576,18 +708,25 @@ export default {
     async saveEdit() {
       if (!this.editValid || this.saving) return;
       this.saving = true;
+
       try {
         await axios.post("/admin/product-offers/update", {
           product_offer_id: this.editForm.product_offer_id,
           mvariant_id: this.editForm.variant_id,
           product_deal_tag: this.editForm.product_deal_tag,
-          product_offer: this.editForm.product_offer,
+          product_type: this.editForm.product_type,
+          buy_qty: this.editForm.product_type === 'buy_x_get_y' ? this.editForm.buy_qty : null,
+          get_qty: this.editForm.product_type === 'buy_x_get_y' ? this.editForm.get_qty : null,
+          min_qty: this.editForm.product_type === 'volume_discount' ? this.editForm.min_qty : null,
+          discount_amount: this.editForm.product_type === 'volume_discount' ? this.editForm.discount_amount : null,
         });
-        this.$toast?.success('Offer Updated successfully!', {
-          timeout: 500
-        })
+
+        this.$toast?.success('Offer updated successfully!', { timeout: 500 });
         await this.loadAll();
         this.resetEdit();
+      } catch (err) {
+        console.error(err);
+        this.$toast?.error('Failed to update offer', { timeout: 500 });
       } finally {
         this.saving = false;
       }
@@ -729,6 +868,7 @@ export default {
   max-height: 144px;
   overflow-y: auto !important;
 }
+
 .dialog-variants label {
   height: 32px !important;
 }

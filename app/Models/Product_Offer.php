@@ -10,5 +10,5 @@ class Product_Offer extends Model
     use HasFactory;
     protected $primaryKey = 'product_offer_id';
     protected $table = 'product__offers';
-    protected $fillable = ['mvariant_id', 'product_deal_tag', 'product_offer'];
+    protected $fillable = ['mvariant_id', 'product_deal_tag', 'product_type', 'buy_qty', 'get_qty', 'min_qty', 'discount_amount'];
 }
