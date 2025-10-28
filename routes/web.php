@@ -253,7 +253,7 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     Route::get('/orders/count', [OrderController::class, 'countOrders']);
 
     // routes/ Click & drop royal mail
-    Route::post('/royalmail/sync', [SendcloudSyncController::class, 'syncSendcloud']);
+    Route::post('/sendcloud/sync', [SendcloudSyncController::class, 'syncSendcloud']);
 
 
     // Delivery Methods routes

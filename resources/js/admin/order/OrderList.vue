@@ -377,7 +377,7 @@ export default {
     async syncOrders() {
       try {
         this.saving = true
-        const res = await axios.post('/admin/royalmail/sync');
+        const res = await axios.post('/admin/sendcloud/sync');
         this.$toast.success(`Royal Mail sync: (pushed ${res.data.pushed_now} order)`, { timeout: 800 });
         this.getAllOrders();
       } catch (e) {

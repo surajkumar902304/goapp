@@ -119,28 +119,73 @@
       </v-card>
     </v-dialog>
 
-    <v-card class="mt-6 mx-auto p-4" style="height: 540px; width: 1200px;" elevation="5">
-      <v-card-title style="justify-content: center;">
-        <span>Stripe Integration</span>
-      </v-card-title>
-      <v-card-text class="p-2">
-        <label><strong>Test Mode</strong></label>
-        <v-radio-group v-model="stripeForm.test_mode" row class="pb-0">
-          <v-radio class="pb-0" label="True" :value="1"></v-radio>
-          <v-radio label="False" :value="0"></v-radio>
-        </v-radio-group>
-        <v-text-field v-model="stripeForm.publishable_key" label="publishable_key" outlined dense></v-text-field>
-        <v-text-field v-model="stripeForm.secret_key" label="secret_key" outlined dense></v-text-field>
-        <v-text-field v-model="stripeForm.webhook_secret" label="webhook_secret" outlined dense></v-text-field>
-        <v-text-field v-model="stripeForm.note" label="note" outlined dense></v-text-field>
-      </v-card-text>
-      <v-card-actions>
-        <v-spacer />
-        <v-btn class="btn-32-text-12" :disabled="!isFormChanged"
-          style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"
-          @click="saveStripeConfig">Update</v-btn>
-      </v-card-actions>
-    </v-card>
+    <v-row class="mt-8">
+      <v-col cols="12">
+        <h2 class="text-h6 mb-1">Stripe Integrations</h2>
+      </v-col>
+    </v-row>
+
+    <v-row class="mt-0">
+      <v-col cols="12">
+        <v-card elevation="5">
+          <v-data-table :headers="stripeHeaders" :items="stripeData" :items-per-page="-1" hide-default-footer>
+            <template #item.publishable_key="{ item }">
+              <span>{{ item.publishable_key }}</span>
+            </template>
+            <template #item.secret_key="{ item }">
+              <span>{{ item.secret_key }}</span>
+            </template>
+            <template #item.webhook_secret="{ item }">
+              <span>{{ item.webhook_secret }}</span>
+            </template>
+            <template #item.note="{ item }">
+              <span>{{ item.note }}</span>
+            </template>
+            <template #item.is_active="{ item }">
+              <v-switch v-model="item.is_active" :input-value="item.is_active === 1" @change="stripeToggleStatus(item)"
+                dense inset style="transform: scale(0.75);"></v-switch>
+            </template>
+            <template #header.actions>
+              <div class="text-center">Action</div>
+            </template>
+            <template #item.actions="{ item }">
+              <div class="text-center">
+                <v-chip color="primary" class="white--text" outlined pill small @click="openStripeEdit(item)"
+                  style="cursor:pointer;">
+                  <v-icon small left>mdi-pencil</v-icon>Edit
+                </v-chip>
+              </div>
+            </template>
+          </v-data-table>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <v-dialog v-model="stripeDialog" max-width="600px">
+      <v-card>
+        <v-card-title>
+          <span>Edit Stripe Integration</span>
+          <v-spacer></v-spacer>
+          <v-icon @click="closeStripeDialog">mdi-close</v-icon>
+        </v-card-title>
+        <v-card-text>
+          <v-form v-model="stripeFormValid">
+            <v-text-field v-model="stripeForm.publishable_key" label="Publishable Key" outlined dense
+              :rules="[required]" />
+            <v-text-field v-model="stripeForm.secret_key" label="Secret Key" outlined dense :rules="[required]" />
+            <v-text-field v-model="stripeForm.webhook_secret" label="Webhook Secret" outlined dense />
+            <v-text-field v-model="stripeForm.note" label="Notes" outlined dense />
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn class="btn-32-text-12" style="font-weight: bold; color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" 
+            :disabled="!stripeFormValid || savingStripe" @click="saveStripe">
+            Update
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
   </div>
 </template>
@@ -201,19 +246,29 @@ export default {
       bankdetailToDelete: null,
       deleteLoading: false,
 
+      stripeData: [],
+      stripeHeaders: [
+        { text: 'Publishable Key', value: 'publishable_key', sortable: false },
+        { text: 'Secret Key', value: 'secret_key', sortable: false },
+        { text: 'Webhook Secret', value: 'webhook_secret', sortable: false },
+        { text: 'Notes', value: 'note', sortable: false },
+        { text: 'Status', value: 'is_active', sortable: false },
+        { text: 'Action', value: 'actions', sortable: false },
+      ],
+      stripeDialog: false,
+      stripeFormValid: false,
+      savingStripe: false,
       stripeForm: {
         stripe_integration_id: null,
-        publishable_key: '',
-        secret_key: '',
-        webhook_secret: '',
-        note: '',
-        test_mode: 1,
+        publishable_key: null,
+        secret_key: null,
+        webhook_secret: null,
+        note: null,
       },
-      originalStripeForm: {},
     }
   },
   mounted() {
-    this.fetchStripeConfig();
+    this.fetchStripe();
   },
   created() {
     this.getAllbankdetails()
@@ -222,14 +277,6 @@ export default {
     addSdialog(val) {
       if (!val) this.submitting = false
     },
-    addSdialogStripes(val) {
-      if (!val) this.submittingStripes = false
-    }
-  },
-  computed: {
-    isFormChanged() {
-      return JSON.stringify(this.stripeForm) !== JSON.stringify(this.originalStripeForm);
-    }
   },
 
   methods: {
@@ -354,42 +401,50 @@ export default {
         this.bankdetailToDelete = null
       }
     },
-    async fetchStripeConfig() {
-      try {
-        const res = await axios.get('/admin/stripe-integration/vlist');
-        if (res.data.status && res.data.stripe.length > 0) {
-          const stripe = res.data.stripe[0];
-
-          this.stripeForm = {
-            stripe_integration_id: stripe.stripe_integration_id,
-            publishable_key: stripe.publishable_key,
-            secret_key: stripe.secret_key,
-            webhook_secret: stripe.webhook_secret,
-            note: stripe.note,
-            test_mode: stripe.test_mode ? 1 : 0,
-          };
-
-          this.originalStripeForm = { ...this.stripeForm };
-
-        }
-      } catch (error) {
-        console.error(error);
+    async fetchStripe() {
+      const res = await axios.get("/admin/stripe-integration/vlist");
+      if (res.data.status) {
+        this.stripeData = res.data.stripe;
       }
     },
-
-    async saveStripeConfig() {
+    openStripeEdit(item) {
+      this.stripeForm = { ...item };
+      this.stripeDialog = true;
+    },
+    closeStripeDialog() {
+      this.stripeDialog = false;
+    },
+    async saveStripe() {
+      this.savingStripe = true;
       try {
-        await axios.post('/admin/stripe-integration/update', this.stripeForm);
-        this.$toast.success('Stripe configuration updated!', { timeout: 500 })
-        this.fetchStripeConfig()
+        await axios.post("/admin/stripe-integration/update", this.stripeForm);
+        this.$toast.success("Stripe updated successfully");
+        this.stripeDialog = false;
+        this.fetchStripe();
       } catch (error) {
-        console.error('Update error:', error);
-        this.$toast.error('Failed to updated.', { timeout: 800 })
+        this.$toast.error("Failed to update Stripe");
+      } finally {
+        this.savingStripe = false;
       }
-    }
+    },
+    async stripeToggleStatus(item) {
+      try {
+        await axios.post(`/admin/stripe-integration/status-toggle/${item.stripe_integration_id}`, {
+          is_active: item.is_active
+        });
+        this.$toast?.success('Stripe Status updated', { timeout: 500 });
+      } catch (error) {
+        console.error("Failed to toggle status", error);
+        this.$toast?.error('Failed to update status', { timeout: 500 });
+      }
+    },
+    required(v) {
+      return !!v || "This field is required";
+    },
+  },
 
-  }
 }
+
 </script>
 
 <style scoped>
