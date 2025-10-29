@@ -270,6 +270,11 @@ class CategoryController extends Controller
                     'mlocation_id' => $v->mlocation_id,
                     'product_deal_tag' => optional($v->productoffer)->product_deal_tag,
                     'product_offer' => $offerText,
+                    'deal_type' => $v->productoffer->product_type,
+                    'deal_buy_quantity' => $v->productoffer->buy_qty,
+                    'deal_get_quantity' => $v->productoffer->get_qty,
+                    'deal_quantity' => $v->productoffer->min_qty,
+                    'deal_price' => $v->productoffer->discount_amount,
                     'user_info_wishlist' => $inWishlist,
                 ]);
 
