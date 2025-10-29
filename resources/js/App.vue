@@ -61,7 +61,7 @@
 
               <router-link tag="v-list-item" to="/admin/customer-tags" active-class="active-link">
                 <v-list-item-icon><v-icon>mdi-file-document-outline</v-icon></v-list-item-icon>
-                <v-list-item-title>Discount Tabs</v-list-item-title>
+                <v-list-item-title>Discount Tags</v-list-item-title>
               </router-link>
               <router-link tag="v-list-item" to="/admin/custom-price" active-class="active-link">
                 <v-list-item-icon><v-icon>mdi-currency-gbp</v-icon></v-list-item-icon>

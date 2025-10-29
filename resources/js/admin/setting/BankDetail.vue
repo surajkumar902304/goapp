@@ -130,16 +130,16 @@
         <v-card elevation="5">
           <v-data-table :headers="stripeHeaders" :items="stripeData" :items-per-page="-1" hide-default-footer>
             <template #item.publishable_key="{ item }">
-              <span>{{ item.publishable_key }}</span>
+              <div class="wrap-text">{{ item.publishable_key }}</div>
             </template>
             <template #item.secret_key="{ item }">
-              <span>{{ item.secret_key }}</span>
+              <div class="wrap-text">{{ item.secret_key }}</div>
             </template>
             <template #item.webhook_secret="{ item }">
-              <span>{{ item.webhook_secret }}</span>
+              <div class="wrap-text">{{ item.webhook_secret }}</div>
             </template>
             <template #item.note="{ item }">
-              <span>{{ item.note }}</span>
+              <div class="wrap-text">{{ item.note }}</div>
             </template>
             <template #item.is_active="{ item }">
               <v-switch v-model="item.is_active" :input-value="item.is_active === 1" @change="stripeToggleStatus(item)"
@@ -451,6 +451,14 @@ export default {
 .v-input {
   font-size: 12px !important;
 }
+.wrap-text {
+  white-space: normal !important;
+  word-break: break-all;
+  max-width: 250px;
+}
+.v-data-table__wrapper {
+  overflow-x: hidden !important;
+}
 </style>
 <style>
 .page-bank-detail .v-data-table>.v-data-table__wrapper>table>tbody>tr>td {
@@ -460,4 +468,5 @@ export default {
 .page-bank-detail .v-input--radio-group__input label {
   padding-bottom: 0 !important;
 }
+
 </style>

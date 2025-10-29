@@ -3,7 +3,7 @@
     <v-container fluid class="pt-0">
       <v-row class="mt-0 pt-0">
         <v-col cols="12" md="11" class="p-0">
-          <h2 class="text-h6 mb-1">Reps</h2>
+          <h2 class="text-h6 mb-1">Sales Representives</h2>
         </v-col>
 
         <v-col cols="12" md="1" class="p-0 ps-2 text-end">
