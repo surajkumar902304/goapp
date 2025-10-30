@@ -31,7 +31,7 @@
             </template>
             <template #item.product_type="{ item }">
               <span v-if="item.product_type === 'buy_x_get_y'">
-                Buy {{ item.buy_qty }} Get {{ item.get_qty }}
+                Buy {{ item.buy_qty }} Get {{ item.get_qty }} Free
               </span>
               <span v-else-if="item.product_type === 'volume_discount'">
                 Any {{ item.min_qty }} for £{{ item.discount_amount }}

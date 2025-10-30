@@ -249,7 +249,7 @@ class CategoryController extends Controller
                 $offerText = null;
                 if ($v->productoffer) {
                     if ($v->productoffer->product_type === 'buy_x_get_y') {
-                        $offerText = "Buy {$v->productoffer->buy_qty} Get {$v->productoffer->get_qty}";
+                        $offerText = "Buy {$v->productoffer->buy_qty} Get {$v->productoffer->get_qty} Free";
                     } elseif ($v->productoffer->product_type === 'volume_discount') {
                         $offerText = "Any {$v->productoffer->min_qty} for £{$v->productoffer->discount_amount}";
                     }
