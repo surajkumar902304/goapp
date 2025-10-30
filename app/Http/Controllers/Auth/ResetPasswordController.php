@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\ResetsPasswords;
+use Illuminate\Support\Facades\Hash;
 
 class ResetPasswordController extends Controller
 {
@@ -26,5 +27,24 @@ class ResetPasswordController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = RouteServiceProvider::HOME;
+    protected $redirectTo = '/';
+    protected function resetPassword($user, $password)
+    {
+        $user->password = Hash::make($password);
+        $user->save();
+    }
+
+     /**
+     * Redirect after password reset success.
+     */
+    protected function sendResetResponse($response)
+    {
+        try {
+            $message = trans($response);
+        } catch (\Throwable $e) {
+            $message = __('Your password has been successfully reset.');
+        }
+
+        return redirect($this->redirectTo)->with('status', $message);
+    }
 }
