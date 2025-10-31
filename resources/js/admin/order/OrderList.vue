@@ -9,7 +9,7 @@
           <v-btn class="text-none btn-32-text-12" small
             style="color: #1976d2; font-weight: bold; background-color: white !important; border: 1px solid #1976d2 !important;"
             @click="syncOrders" :disabled="saving">
-            Sync Send Cloud
+            Sync Sendcloud
           </v-btn>
 
           <v-overlay :value="saving" opacity="0.6" absolute>
@@ -378,7 +378,7 @@ export default {
       try {
         this.saving = true
         const res = await axios.post('/admin/sendcloud/sync');
-        this.$toast.success(`Royal Mail sync: (pushed ${res.data.pushed_now} order)`, { timeout: 800 });
+        this.$toast.success(`Sendcloud sync: (pushed ${res.data.pushed_now} order)`, { timeout: 800 });
         this.getAllOrders();
       } catch (e) {
         this.$toast.error('Sendcloud keys check.')

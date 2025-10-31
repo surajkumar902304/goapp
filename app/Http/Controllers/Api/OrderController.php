@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Mail\OrderPlacedMail;
 use Illuminate\Support\Facades\Mail;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage;
 
 class OrderController extends Controller
 {
@@ -102,6 +104,7 @@ class OrderController extends Controller
                 'order_date' => $order->created_at->toDateTimeString(),
                 'units' => $units,
                 'payment_status' => $order->status,
+                'invoice_pdf' => $order->invoice_pdf,
                 'fulfillment_status' => $order->fulfillment_status,
                 'skus' => $skus,
                 'delivery' => [
@@ -337,7 +340,7 @@ class OrderController extends Controller
                 'delivery_instructions' => $validated['delivery_instructions'] ?? null,
                 'coupon_id' => $couponId,
                 'pay_by_bank' => $payByBank,
-                'payment_status' => $validated['payment_status'] ?? null,
+                'payment_status' => $validated['payment_status'] ?? 'unpaid',
                 'payment_provider' => $validated['payment_provider'] ?? null,
                 'payment_reference' => $validated['payment_reference'] ?? null,
             ]);
@@ -352,8 +355,8 @@ class OrderController extends Controller
                     'payment_method_id' => $validated['payment_method_id'] ?? null,
                     'customer_id' => $validated['customer_id'] ?? null,
                     'currency' => $validated['currency'],
-                    'amount' => $validated['amount'], 
-                    'status' => $validated['status'], 
+                    'amount' => $validated['amount'],
+                    'status' => $validated['status'],
                     'receipt_email' => $validated['receipt_email'] ?? null,
                     'description' => $validated['description'] ?? null,
                     'metadata' => $validated['metadata'] ?? null,
@@ -460,6 +463,46 @@ class OrderController extends Controller
             ]);
 
             Mail::to($order->user->email)->send(new OrderPlacedMail($order));
+
+            try {
+                $invoiceData = [
+                    'invoice_date' => now()->format('d M Y, H:i A'),
+                    'order' => $order,
+                    'shippingCost' => $deliveryCharge,
+                    'seller' => [
+                        'name' => 'TrueWeb Pro Limited',
+                        'address1' => '6 Park Lane, M45 7PB,',
+                        'address2' => 'Manchester, United Kingdom',
+                        'email' => 'info@truewebpro.co.uk',
+                    ],
+                ];
+
+                if (!view()->exists('pdf.invoice')) {
+                    throw new \Exception("Invoice view not found");
+                }
+
+                $pdf = Pdf::loadView('pdf.invoice', $invoiceData);
+
+                $filename = 'pdf_' . uniqid() . '.pdf';
+                $invoicepath = 'goapp/order/invoice/' . $filename;
+
+                Storage::disk('s3')->put($invoicepath, $pdf->output());
+
+                if (!$invoicepath) {
+                    throw new \Exception("S3 returned empty URL for {$invoicepath}");
+                }
+
+                $order->invoice_pdf = $invoicepath;
+                $order->save();
+
+                \Log::info('Invoice uploaded successfully: ' . $invoicepath);
+
+            } catch (\Throwable $e) {
+                \Log::error('Invoice PDF generation/upload failed', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
+            }
 
             return response()->json([
                 'status' => true,
@@ -571,6 +614,7 @@ class OrderController extends Controller
             'order_date' => $order->created_at->toDateTimeString(),
             'units' => $units,
             'payment_status' => $order->status,
+            'invoice_pdf' => $order->invoice_pdf,
             'fulfillment_status' => $order->fulfillment_status,
             'skus' => $skus,
 

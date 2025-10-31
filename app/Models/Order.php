@@ -32,6 +32,7 @@ class Order extends Model
         'payment_status',
         'payment_provider',
         'payment_reference',
+        'invoice_pdf',
         'tracking_number',
         'label_url',
         'shipment_status',
