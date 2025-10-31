@@ -13,6 +13,7 @@ use App\Models\Order;
 use App\Models\OrderCommission;
 use App\Models\OrderItem;
 use App\Models\Payment;
+use App\Models\Product_Offer;
 use App\Models\Referral;
 use App\Models\Setting;
 use App\Models\UserTag;
@@ -233,9 +234,12 @@ class OrderController extends Controller
             $totalvat = 0.0;
             $effectiveUnit = [];
 
+            $pendingFreeItems = [];
+
             foreach ($cartItems as $cart) {
                 $quantity = (int) $cart->quantity;
                 $basePrice = (float) $cart->mvariant->price;
+                $mvariantId = $cart->mvariant_id;
 
                 $eff = $basePrice;
                 if ($tagType === 'custom') {
@@ -248,6 +252,70 @@ class OrderController extends Controller
                         $eff = 0.0;
                 }
 
+                $offer = Product_Offer::where('mvariant_id', $mvariantId)->first();
+
+                if ($offer && $offer->product_type === 'buy_x_get_y' && $quantity >= $offer->buy_qty) {
+                    $setCount = intdiv($quantity, $offer->buy_qty); 
+                    $freeQty = $setCount * (int) $offer->get_qty;  
+                    $quantityToCharge = $quantity; 
+
+                    $productTotal += $eff * $quantityToCharge;
+                    if ((int) $cart->mvariant->taxable === 1) {
+                        $totalvat += ($eff * $vatPercent) * $quantityToCharge;
+                    }
+
+                    $pendingFreeItems[] = [
+                        'mvariant_id' => $mvariantId,
+                        'quantity' => $quantityToCharge,
+                        'unit_price' => $eff,
+                    ];
+
+                    if ($freeQty > 0) {
+                        $pendingFreeItems[] = [
+                            'mvariant_id' => $mvariantId,
+                            'quantity' => $freeQty,
+                            'unit_price' => 0.00,
+                        ];
+                    }
+
+                    $effectiveUnit[$mvariantId] = $eff;
+                    continue;
+                }
+
+                if ($offer && $offer->product_type === 'volume_discount' && $quantity >= $offer->min_qty) {
+                    $setCount = intdiv($quantity, $offer->min_qty);
+                    $discountQtyTotal = $setCount * (int) $offer->min_qty; 
+                    $normalQty = $quantity - $discountQtyTotal; 
+                    $discountAmount = (float) $offer->discount_amount;
+                    $discountPerSet = round($discountAmount / $offer->min_qty, 2);
+                    $discountedUnitPrice = $discountPerSet;
+
+                    $totalDiscountValue = $discountAmount * $setCount;
+                    $productTotal += $totalDiscountValue;
+                    $totalvat += 0;
+
+                    $pendingFreeItems[] = [
+                        'mvariant_id' => $mvariantId,
+                        'quantity' => $discountQtyTotal,
+                        'unit_price' => $discountedUnitPrice,
+                    ];
+
+                    if ($normalQty > 0) {
+                        $productTotal += $eff * $normalQty;
+                        if ((int) $cart->mvariant->taxable === 1) {
+                            $totalvat += ($eff * $vatPercent) * $normalQty;
+                        }
+
+                        $pendingFreeItems[] = [
+                            'mvariant_id' => $mvariantId,
+                            'quantity' => $normalQty,
+                            'unit_price' => $eff,
+                        ];
+                    }
+
+                    continue;
+                }
+
                 $effectiveUnit[$cart->mvariant_id] = $eff;
 
                 $vatAmountPerUnit = 0.0;
@@ -257,6 +325,12 @@ class OrderController extends Controller
 
                 $productTotal += $eff * $quantity;
                 $totalvat += $vatAmountPerUnit * $quantity;
+
+                $pendingFreeItems[] = [
+                    'mvariant_id' => $mvariantId,
+                    'quantity' => $quantity,
+                    'unit_price' => $eff,
+                ];
             }
 
             $freeDeliveryLimit = (float) (Setting::where('key', 'min_order_free_delivery')->value('value') ?? 0);
@@ -364,20 +438,37 @@ class OrderController extends Controller
                 ]);
             }
 
-            foreach ($cartItems as $cart) {
-                $quantity = (int) $cart->quantity;
-                $unit_price = $effectiveUnit[$cart->mvariant_id] ?? (float) $cart->mvariant->price;
-
+            foreach ($pendingFreeItems as $itemData) {
                 OrderItem::create([
                     'order_id' => $order->order_id,
-                    'mvariant_id' => $cart->mvariant_id,
-                    'quantity' => $quantity,
-                    'unit_price' => $unit_price,
+                    'mvariant_id' => $itemData['mvariant_id'],
+                    'quantity' => $itemData['quantity'],
+                    'unit_price' => $itemData['unit_price'],
                 ]);
 
-                Mstock::where('mvariant_id', $cart->mvariant_id)
-                    ->decrement('quantity', $quantity);
+                // Deduct stock only for non-free items
+                if ($itemData['unit_price'] > 0) {
+                    Mstock::where('mvariant_id', $itemData['mvariant_id'])
+                        ->decrement('quantity', $itemData['quantity']);
+                }
             }
+
+            // foreach ($cartItems as $cart) {
+            //     $quantity = (int) $cart->quantity;
+            //     $unit_price = $effectiveUnit[$cart->mvariant_id] ?? (float) $cart->mvariant->price;
+
+            //     OrderItem::create([
+            //         'order_id' => $order->order_id,
+            //         'mvariant_id' => $cart->mvariant_id,
+            //         'quantity' => $quantity,
+            //         'unit_price' => $unit_price,
+            //     ]);
+
+            //     Mstock::where('mvariant_id', $cart->mvariant_id)
+            //         ->decrement('quantity', $quantity);
+            // }
+
+            OrderItem::where('order_id', 0)->update(['order_id' => $order->order_id]);
 
             Cart_item::where('user_id', $user->id)->delete();
 

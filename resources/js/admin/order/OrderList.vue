@@ -12,8 +12,8 @@
             Sync Sendcloud
           </v-btn>
 
-          <v-overlay :value="saving" opacity="0.6" absolute>
-            <div class="d-flex flex-column align-center">
+          <v-overlay v-model="saving" class="d-flex justify-center align-center" scrim persistent>
+            <div class="text-center">
               <v-progress-circular indeterminate size="64" color="primary" />
               <div class="mt-4 font-weight-medium">Processing… please wait</div>
             </div>
@@ -252,7 +252,7 @@ export default {
       });
     },
     clearSelection() {
-      this.selected = []; 
+      this.selected = [];
     },
     statusColor(status) {
       switch (status.toLowerCase()) {
