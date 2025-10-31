@@ -15,10 +15,15 @@
 
           <h6 class="text-h6 font-weight-bold mb-0">#TR00{{ order.order_id }}</h6>
 
-          <v-chip small class="ma-1 mr-0 text-capitalize"
-            :color="order.payment_status.toLowerCase() === 'paid' ? '#e0e0e0' : '#ffd6a4'" text-color="black">
+          <v-chip small class="ma-1 mr-0 text-capitalize" :color="order.payment_status?.toLowerCase() === 'paid' && order.fulfillment_status?.toLowerCase() === 'fulfilled'
+              ? '#b8e986'     
+              : order.payment_status?.toLowerCase() === 'paid'
+                ? '#e0e0e0'    
+                : '#ffd6a4'    
+            " text-color="black">
             {{ order.payment_status }}
           </v-chip>
+
 
           <v-chip small class="ma-1" :color="getFulfillmentStatusColor(order.fulfillment_status)" text-color="black">
             {{ formatFulfillmentStatus(order.fulfillment_status) }}
