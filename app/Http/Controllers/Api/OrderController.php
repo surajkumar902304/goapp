@@ -767,6 +767,15 @@ class OrderController extends Controller
             ], 404);
         }
 
+        if (!empty($order->invoice_pdf)) {
+            return response()->json([
+                'status' => true,
+                'message' => 'Invoice already generated',
+                'cdnURL' => config('cdn.url'),
+                'invoice_pdf' => $order->invoice_pdf
+            ]);
+        }
+
         try {
             $vatPercentage = ProductVat::value('product_vat') ?? 20;
 
