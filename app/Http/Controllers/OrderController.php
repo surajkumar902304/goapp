@@ -412,6 +412,7 @@ class OrderController extends Controller
             'order_number' => '#00' . $order->order_id,
             'cnd_status' => $order->cnd_status,
             'pay_by_bank' => $order->pay_by_bank,
+            'tracking_number' => $order->tracking_number,
             'user' => [
                 'id' => $order->user->id,
                 'name' => $order->user->name,
@@ -661,13 +662,13 @@ class OrderController extends Controller
     {
         $data = $req->validate([
             'order_id' => 'required|integer|exists:orders,order_id',
-            'tracking_id' => 'required|string|max:255',
+            'tracking_number' => 'required|string|max:255',
             'shipping_courier' => 'nullable|string|max:255',
         ]);
 
         $f = Order::findOrFail($data['order_id']);
         $f->update([
-            'tracking_number' => $data['tracking_id'],
+            'tracking_number' => $data['tracking_number'],
             'shipping_courier' => $data['shipping_courier'],
         ]);
 

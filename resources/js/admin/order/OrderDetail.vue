@@ -132,32 +132,32 @@
 
 
         <v-card v-for="f in (order.fulfillments || [])" :key="f.order_fulfillment_id" elevation="5"
-          class="mb-4 mt-4 rounded-3">
+          class="mb-4 rounded-3">
           <v-row class="m-0">
             <v-col cols="12" md="6">
               <v-card-title class="py-2 pb-0">
                 <div class="subtitle-2 font-weight-bold">Fulfilled ({{ f.items.length }})</div>
               </v-card-title>
             </v-col>
-            <v-col v-if="!f.tracking_id" cols="12" md="6">
+            <v-col v-if="!order.tracking_number" cols="12" md="6">
               <v-card-actions class="justify-end">
 
               </v-card-actions>
             </v-col>
-            <!-- <v-col v-if="f.tracking_id" cols="12" md="6">
+            <v-col v-if="order.tracking_number" cols="12" md="6">
               <div class="py-2 pb-0 me-2">
                 <div class="subtitle-2 text-end">
-                  {{ f.shipping_courier || 'Royal Mail' }} tracking: {{ f.tracking_id }}
-                  <a
-                    :href="`https://www.royalmail.com/track-your-item#/tracking-results/${f.tracking_id}`"
+                  Sendcloud tracking number: <span class="font-weight-bold">{{ order.tracking_number }}</span>
+                  <!-- <a
+                    :href="`https://www.royalmail.com/track-your-item#/tracking-results/${order.tracking_number}`"
                     target="_blank"
                     class="blue--text text-decoration-underline"
                   >
-                    {{ f.tracking_id }}
-                  </a>
+                    {{ order.tracking_number }}
+                  </a> -->
                 </div>
               </div>
-            </v-col> -->
+            </v-col>
           </v-row>
 
           <div class="list-wrap px-3">
@@ -205,7 +205,7 @@
                 : `Show ${hiddenFulfilledCount(f)} more` }}
             </v-btn>
             <v-spacer />
-            <v-btn v-if="!f.tracking_id" class="btn-32-text-12 me-2"
+            <v-btn v-if="!order.tracking_number" class="btn-32-text-12 me-2"
               style="color: black; background-color: white !important; border: 1px solid black !important;" small
               @click="openTrackingDialog(f)">
               + Add Tracking
@@ -592,7 +592,7 @@ export default {
 
     openTrackingDialog(f) {
       this.currentFulfillment = f
-      this.trackingId = f.tracking_id || ''
+      this.trackingId = f.tracking_number || ''
       this.courier = f.shipping_courier || ''
       this.trackingDialog = true
     },
@@ -603,7 +603,7 @@ export default {
       try {
         await axios.post('/admin/orders/fulfillments/add-tracking', {
           order_id: this.order.order_id,
-          tracking_id: this.trackingId,
+          tracking_number: this.trackingId,
           shipping_courier: this.courier
         })
         this.$toast.success('Tracking saved', { timeout: 600 })
