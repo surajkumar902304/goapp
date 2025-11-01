@@ -214,6 +214,9 @@
             <template #item.product_vat="{ item }">
               {{ item.product_vat }}
             </template>
+            <template #item.is_active="{ item }">
+              <v-switch v-model="item.is_active" @change="toggleVatStatus(item)" dense inset style="transform:scale(0.75);"/>
+            </template>
             <template #header.actions><div class="text-center">Action</div></template>
             <template #item.actions="{ item }">
               <div class="text-center">
@@ -318,6 +321,7 @@ export default {
       vatRequirements: [],
       vatHeaders: [
         { text:'Vat (%)',  value:'product_vat' },
+        { text:'Status',    value:'is_active' },
         { text:'Action',   value:'actions',  sortable:false },
       ],
       addVatDialog: false,
@@ -473,6 +477,16 @@ export default {
         this.$toast.error('Save failed')
       } finally {
         this.savingVat = false
+      }
+    },
+    async toggleVatStatus(item) {
+      try {
+        await axios.post(`/admin/product-vat/toggle/${item.product_vat_id}`, {
+          is_active: item.is_active
+        });
+        this.$toast.success('Status updated', { timeout: 500 });
+      } catch (e) {
+        this.$toast.error('Could not update status');
       }
     },
     getAlldeliverymethods() {

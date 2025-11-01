@@ -1,7 +1,6 @@
 @php
     use Illuminate\Support\Str;
     use Carbon\Carbon;
-    use App\Models\ProductVat; 
 
     $cdn = 'https://cdn.truewebpro.com/';
 
@@ -327,12 +326,16 @@
                 <td align="right">£{{ number_format($order->product_total_amount, 2) }}</td>
             </tr>
             <tr>
-                <td>Shipping</td>
-                <td align="right">{{ ($shippingCost ?? 0) > 0 ? '£ ' . number_format($shippingCost, 2) : 'Free' }}</td>
+                <td>Coupon Discount</td>
+                <td align="right">- £ {{ number_format(($order->coupon_discount), 2) }}</td>
             </tr>
             <tr>
-                <td>Discount</td>
-                <td align="right">- £ {{ number_format(($order->coupon_discount + $order->wallet_discount), 2) }}</td>
+                <td>Wallet Discount</td>
+                <td align="right">- £ {{ number_format(($order->wallet_discount), 2) }}</td>
+            </tr>
+            <tr>
+                <td>Shipping</td>
+                <td align="right">{{ ($shippingCost ?? 0) > 0 ? '£ ' . number_format($shippingCost, 2) : 'Free' }}</td>
             </tr>
             <tr>
                 <td>Vat {{ $vatPercentage }}%</td>

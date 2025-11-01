@@ -14,7 +14,6 @@ use App\Models\OrderCommission;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product_Offer;
-use App\Models\ProductVat;
 use App\Models\Referral;
 use App\Models\Setting;
 use App\Models\UserTag;
@@ -229,8 +228,8 @@ class OrderController extends Controller
                 }
             }
 
-            $vatPercent = DB::table('product_vats')->value('product_vat') ?? 20;
-            $vatPercent = $vatPercent / 100;
+            $vatPercentdb = DB::table('product_vats')->where('is_active', true)->value('product_vat') ?? 0;
+            $vatPercent = $vatPercentdb / 100;
 
             $productTotal = 0.0;
             $totalvat = 0.0;
@@ -411,6 +410,7 @@ class OrderController extends Controller
                 'user_company_address_id' => $validated['user_company_address_id'],
                 'delivery_method_id' => $validated['delivery_method_id'],
                 'vat' => $totalvat,
+                'vat_percentage' => $vatPercentdb,
                 'total_paid' => $finalTotal,
                 'product_total_amount' => $productTotal,
                 'delivery_instructions' => $validated['delivery_instructions'] ?? null,
@@ -667,6 +667,8 @@ class OrderController extends Controller
             'units' => $units,
             'payment_status' => $order->status,
             'invoice_pdf' => $order->invoice_pdf,
+            'tracking_number' => $order->tracking_number,
+            'track_your_order' => 'https://tracking.eu-central-1-0.sendcloud.sc/',
             'fulfillment_status' => $order->fulfillment_status,
             'skus' => $skus,
 
@@ -777,13 +779,11 @@ class OrderController extends Controller
         }
 
         try {
-            $vatPercentage = ProductVat::value('product_vat') ?? 20;
-
             $invoiceData = [
                 'invoice_date' => now()->format('d M Y, H:i A'),
                 'order' => $order,
                 'shippingCost' => $order->deliveryMethod->delivery_method_amount ?? 0,
-                'vatPercentage' => $vatPercentage,
+                'vatPercentage' => $order->vat_percentage,
                 'seller' => [
                     'name' => 'TrueWeb Pro Limited',
                     'address1' => '6 Park Lane, M45 7PB,',

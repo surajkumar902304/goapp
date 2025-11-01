@@ -7,6 +7,7 @@ use App\Models\Cart_item;
 use App\Models\Coupon;
 use App\Models\CouponUsage;
 use App\Models\Mvariant;
+use App\Models\ProductVat;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -177,8 +178,11 @@ class CartitemController extends Controller
                 }
             }
 
+            $vatpercentage = ProductVat::where('is_active', true)->value('product_vat') ?? 0;
+
             return response()->json([
                 'status' => true,
+                'vat_percentage' => $vatpercentage,
                 'message' => 'Cart updated successfully.'
             ], 200);
 

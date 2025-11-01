@@ -266,6 +266,7 @@ Route::prefix('admin')->middleware('admin.auth')->group(function () {
     // Product vat routes
     Route::get('/product-vat/vlist', [SettingController::class, 'productVatVlist']);
     Route::post('/product-vat/update', [SettingController::class, 'editProductVat']);
+    Route::post('/product-vat/toggle/{id}', [SettingController::class, 'toggleVat']);
 
     // User Tag routes
     Route::get('/user-tags/vlist', [UserTagController::class, 'userTagVlist']);

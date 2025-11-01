@@ -22,6 +22,7 @@ class Order extends Model
         'user_company_address_id',
         'delivery_method_id',
         'vat',
+        'vat_percentage',
         'total_paid',
         'product_total_amount',
         'delivery_instructions',

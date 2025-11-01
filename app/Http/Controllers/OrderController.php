@@ -450,7 +450,7 @@ class OrderController extends Controller
                 'coupon_discount' => $couponDiscount,
                 'delivery_cost' => $deliveryCost,
                 'vat' => $order->vat,
-                'vat_percent' => $vatPercent,
+                'vat_percentage' => $order->vat_percentage,
                 'payment_total' => $order->total_amount,
                 'total_paid' => $order->total_paid,
             ],

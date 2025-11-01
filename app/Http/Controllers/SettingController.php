@@ -169,4 +169,14 @@ class SettingController extends Controller
 
         return response()->json(['status' => true]);
     }
+
+    public function toggleVat(Request $request, $id)
+    {
+        $vat = ProductVat::findOrFail($id);
+        $vat->is_active = $request->is_active;
+        $vat->save();
+
+        return response()->json(['status' => true, 'message' => 'Status updated.']);
+    }
+    
 }

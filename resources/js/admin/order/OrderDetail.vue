@@ -229,21 +229,6 @@
                     <td class="text-right">£{{ order.summary.subtotal | money }}</td>
                   </tr>
                   <tr>
-                    <td>Vat</td>
-                    <td class="text-right">{{ order.summary.vat_percent.product_vat }}%</td>
-                    <td class="text-right">£{{ order.summary.vat | money }}</td>
-                  </tr>
-                  <tr>
-                    <td>Shipping</td>
-                    <td class="text-right">{{ order.delivery.method }}</td>
-                    <td class="text-right">£{{ order.summary.delivery_cost | money }}</td>
-                  </tr>
-                  <tr class="font-weight-bold">
-                    <td>Total</td>
-                    <td></td>
-                    <td class="text-right">£{{ order.summary.payment_total | money }}</td>
-                  </tr>
-                  <tr>
                     <td>Coupon Discount</td>
                     <td></td>
                     <td class="text-right">-£{{ order.summary.coupon_discount | money }}</td>
@@ -252,6 +237,21 @@
                     <td>Wallet Discount</td>
                     <td></td>
                     <td class="text-right">-£{{ order.summary.wallet_discount | money }}</td>
+                  </tr>
+                  <tr>
+                    <td>Shipping</td>
+                    <td class="text-right">{{ order.delivery.method }}</td>
+                    <td class="text-right">£{{ order.summary.delivery_cost | money }}</td>
+                  </tr>
+                  <tr>
+                    <td>Vat</td>
+                    <td class="text-right">{{ order.summary.vat_percentage }}%</td>
+                    <td class="text-right">£{{ order.summary.vat | money }}</td>
+                  </tr>
+                  <tr class="font-weight-bold">
+                    <td>Total</td>
+                    <td></td>
+                    <td class="text-right">£{{ order.summary.total_paid | money }}</td>
                   </tr>
                   <tr>
                     <td>Paid</td>
