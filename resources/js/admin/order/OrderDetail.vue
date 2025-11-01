@@ -244,9 +244,14 @@
                     <td class="text-right">£{{ order.summary.payment_total | money }}</td>
                   </tr>
                   <tr>
-                    <td>Discount</td>
+                    <td>Coupon Discount</td>
                     <td></td>
                     <td class="text-right">-£{{ order.summary.coupon_discount | money }}</td>
+                  </tr>
+                  <tr>
+                    <td>Wallet Discount</td>
+                    <td></td>
+                    <td class="text-right">-£{{ order.summary.wallet_discount | money }}</td>
                   </tr>
                   <tr>
                     <td>Paid</td>

@@ -14,6 +14,7 @@ use App\Models\OrderCommission;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product_Offer;
+use App\Models\ProductVat;
 use App\Models\Referral;
 use App\Models\Setting;
 use App\Models\UserTag;
@@ -556,10 +557,12 @@ class OrderController extends Controller
             Mail::to($order->user->email)->send(new OrderPlacedMail($order));
 
             try {
+                $vatPercentage = ProductVat::value('product_vat') ?? 20;
                 $invoiceData = [
                     'invoice_date' => now()->format('d M Y, H:i A'),
                     'order' => $order,
                     'shippingCost' => $deliveryCharge,
+                    'vatPercentage' => $vatPercentage,
                     'seller' => [
                         'name' => 'TrueWeb Pro Limited',
                         'address1' => '6 Park Lane, M45 7PB,',

@@ -317,7 +317,7 @@ class OrderController extends Controller
         $skus = $order->items->count();
 
         $walletDiscount = $order->wallet_discount ?? 0.00;
-        $couponDiscount = $order->coupon_discount + $order->wallet_discount ?? 0.00;
+        $couponDiscount = $order->coupon_discount ?? 0.00;
 
         $deliveryId = optional($order->deliveryMethod)->delivery_method_id;
         $deliveryName = optional($order->deliveryMethod)->delivery_method_name;

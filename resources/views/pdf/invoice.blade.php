@@ -1,6 +1,7 @@
 @php
     use Illuminate\Support\Str;
     use Carbon\Carbon;
+    use App\Models\ProductVat; 
 
     $cdn = 'https://cdn.truewebpro.com/';
 
@@ -334,7 +335,7 @@
                 <td align="right">- £ {{ number_format(($order->coupon_discount + $order->wallet_discount), 2) }}</td>
             </tr>
             <tr>
-                <td>UK VAT 20% Incl</td>
+                <td>Vat {{ $vatPercentage }}%</td>
                 <td align="right">£ {{ number_format($order->vat, 2) }}</td>
             </tr>
             <tr style="font-weight:bold; border-top:2px solid #000;">
