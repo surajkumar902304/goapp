@@ -96,6 +96,7 @@ Route::middleware(['auth.api'])->group(function () {
 
     // Order Routes 
     Route::apiResource('orders', OrderController::class);
+    Route::post('/order/generate-invoice', [OrderController::class, 'generateInvoice']);
 
     // Coupon Routes 
     Route::get('/coupons',             [CouponController::class, 'index']); 

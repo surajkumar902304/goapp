@@ -28,6 +28,7 @@ use App\Mail\OrderPlacedMail;
 use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -256,9 +257,9 @@ class OrderController extends Controller
                 $offer = Product_Offer::where('mvariant_id', $mvariantId)->first();
 
                 if ($offer && $offer->product_type === 'buy_x_get_y' && $quantity >= $offer->buy_qty) {
-                    $setCount = intdiv($quantity, $offer->buy_qty); 
-                    $freeQty = $setCount * (int) $offer->get_qty;  
-                    $quantityToCharge = $quantity; 
+                    $setCount = intdiv($quantity, $offer->buy_qty);
+                    $freeQty = $setCount * (int) $offer->get_qty;
+                    $quantityToCharge = $quantity;
 
                     $productTotal += $eff * $quantityToCharge;
                     if ((int) $cart->mvariant->taxable === 1) {
@@ -285,8 +286,8 @@ class OrderController extends Controller
 
                 if ($offer && $offer->product_type === 'volume_discount' && $quantity >= $offer->min_qty) {
                     $setCount = intdiv($quantity, $offer->min_qty);
-                    $discountQtyTotal = $setCount * (int) $offer->min_qty; 
-                    $normalQty = $quantity - $discountQtyTotal; 
+                    $discountQtyTotal = $setCount * (int) $offer->min_qty;
+                    $normalQty = $quantity - $discountQtyTotal;
                     $discountAmount = (float) $offer->discount_amount;
                     $discountPerSet = round($discountAmount / $offer->min_qty, 2);
                     $discountedUnitPrice = $discountPerSet;
@@ -556,48 +557,6 @@ class OrderController extends Controller
 
             Mail::to($order->user->email)->send(new OrderPlacedMail($order));
 
-            try {
-                $vatPercentage = ProductVat::value('product_vat') ?? 20;
-                $invoiceData = [
-                    'invoice_date' => now()->format('d M Y, H:i A'),
-                    'order' => $order,
-                    'shippingCost' => $deliveryCharge,
-                    'vatPercentage' => $vatPercentage,
-                    'seller' => [
-                        'name' => 'TrueWeb Pro Limited',
-                        'address1' => '6 Park Lane, M45 7PB,',
-                        'address2' => 'Manchester, United Kingdom',
-                        'email' => 'info@truewebpro.co.uk',
-                    ],
-                ];
-
-                if (!view()->exists('pdf.invoice')) {
-                    throw new \Exception("Invoice view not found");
-                }
-
-                $pdf = Pdf::loadView('pdf.invoice', $invoiceData);
-
-                $filename = 'pdf_' . uniqid() . '.pdf';
-                $invoicepath = 'goapp/order/invoice/' . $filename;
-
-                Storage::disk('s3')->put($invoicepath, $pdf->output());
-
-                if (!$invoicepath) {
-                    throw new \Exception("S3 returned empty URL for {$invoicepath}");
-                }
-
-                $order->invoice_pdf = $invoicepath;
-                $order->save();
-
-                \Log::info('Invoice uploaded successfully: ' . $invoicepath);
-
-            } catch (\Throwable $e) {
-                \Log::error('Invoice PDF generation/upload failed', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
-            }
-
             return response()->json([
                 'status' => true,
                 'message' => 'Order Placed Successfully',
@@ -613,7 +572,6 @@ class OrderController extends Controller
             ], 500);
         }
     }
-
 
     public function show($id)
     {
@@ -753,30 +711,30 @@ class OrderController extends Controller
         ], 200);
     }
 
-    public function update(Request $request, $id)
-    {
-        $order = Order::find($id);
-        if (!$order) {
-            return response()->json(['message' => 'Order not found'], 404);
-        }
+    // public function update(Request $request, $id)
+    // {
+    //     $order = Order::find($id);
+    //     if (!$order) {
+    //         return response()->json(['message' => 'Order not found'], 404);
+    //     }
 
-        $validated = $request->validate([
-            'status' => [
-                'required',
-                Rule::in(['pending', 'paid', 'shipped', 'cancelled']),
-            ],
-        ]);
+    //     $validated = $request->validate([
+    //         'status' => [
+    //             'required',
+    //             Rule::in(['pending', 'paid', 'shipped', 'cancelled']),
+    //         ],
+    //     ]);
 
-        $order->status = $validated['status'];
-        $order->save();
+    //     $order->status = $validated['status'];
+    //     $order->save();
 
-        return response()->json([
-            'status' => true,
-            'cdnURL' => config('cdn.url'),
-            'message' => 'Order Status Updated Successfully',
-            'order' => $order->load(['items', 'user:id,name,email']),
-        ], 200);
-    }
+    //     return response()->json([
+    //         'status' => true,
+    //         'cdnURL' => config('cdn.url'),
+    //         'message' => 'Order Status Updated Successfully',
+    //         'order' => $order->load(['items', 'user:id,name,email']),
+    //     ], 200);
+    // }
 
     public function destroy($id)
     {
@@ -787,5 +745,70 @@ class OrderController extends Controller
 
         $order->delete();
         return response()->json(null, 204);
+    }
+
+    public function generateInvoice(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|integer|exists:orders,order_id',
+        ]);
+
+        $order = Order::with([
+            'items.variant.product',
+            'user',
+            'userCompanyAddress',
+            'deliveryMethod'
+        ])->find($request->order_id);
+
+        if (!$order) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Order not found'
+            ], 404);
+        }
+
+        try {
+            $vatPercentage = ProductVat::value('product_vat') ?? 20;
+
+            $invoiceData = [
+                'invoice_date' => now()->format('d M Y, H:i A'),
+                'order' => $order,
+                'shippingCost' => $order->deliveryMethod->delivery_method_amount ?? 0,
+                'vatPercentage' => $vatPercentage,
+                'seller' => [
+                    'name' => 'TrueWeb Pro Limited',
+                    'address1' => '6 Park Lane, M45 7PB,',
+                    'address2' => 'Manchester, United Kingdom',
+                    'email' => 'info@truewebpro.co.uk',
+                ],
+            ];
+
+            $pdf = Pdf::loadView('pdf.invoice', $invoiceData);
+
+            $filename = 'pdf_' . uniqid() . '.pdf';
+            $invoicepath = "goapp/order/invoice/{$filename}";
+
+            Storage::disk('s3')->put($invoicepath, $pdf->output());
+
+            $order->invoice_pdf = $invoicepath;
+            $order->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Invoice Generated Successfully',
+                'cdnURL' => config('cdn.url'),
+                'invoice_pdf' => $order->invoice_pdf
+            ]);
+
+        } catch (\Throwable $e) {
+            \Log::error('Invoice PDF generation failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'status' => false,
+                'message' => 'Invoice generation failed'
+            ], 500);
+        }
     }
 }
