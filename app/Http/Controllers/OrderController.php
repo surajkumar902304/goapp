@@ -660,14 +660,14 @@ class OrderController extends Controller
     public function addTracking(Request $req)
     {
         $data = $req->validate([
-            'order_fulfillment_id' => 'required|integer|exists:order_fulfillments,order_fulfillment_id',
+            'order_id' => 'required|integer|exists:orders,order_id',
             'tracking_id' => 'required|string|max:255',
             'shipping_courier' => 'nullable|string|max:255',
         ]);
 
-        $f = OrderFulfillment::findOrFail($data['order_fulfillment_id']);
+        $f = Order::findOrFail($data['order_id']);
         $f->update([
-            'tracking_id' => $data['tracking_id'],
+            'tracking_number' => $data['tracking_id'],
             'shipping_courier' => $data['shipping_courier'],
         ]);
 

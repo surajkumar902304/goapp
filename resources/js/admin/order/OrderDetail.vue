@@ -373,16 +373,16 @@
       <v-card>
         <v-card-title class="headline">Add Tracking</v-card-title>
         <v-card-text>
-          <v-text-field v-model="trackingId" label="Tracking Number" />
+          <v-text-field v-model="trackingId" label="Tracking Number" required/>
           <v-text-field v-model="courier" label="Shipping Courier" />
         </v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn class="btn-32-text-12" text @click="trackingDialog = false">Close</v-btn>
-          <!-- <v-btn class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="loadingTracking" :disabled="loadingTracking" @click="saveTracking"> -->
+          <!-- <v-btn class="btn-32-text-12" style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;" :loading="loadingTracking" :disabled="loadingTracking" @click="saveTracking"></v-btn> -->
           <v-btn class="btn-32-text-12"
             style="color: #1976d2; background-color: white !important; border: 1px solid #1976d2 !important;"
-            :loading="loadingTracking" :disabled="true" @click="saveTracking">
+            :loading="loadingTracking" :disabled="loadingTracking" @click="saveTracking">
             <template #loader>
               <v-progress-circular indeterminate size="16" color="white" />
             </template>
@@ -602,7 +602,7 @@ export default {
       this.loadingTracking = true
       try {
         await axios.post('/admin/orders/fulfillments/add-tracking', {
-          order_fulfillment_id: this.currentFulfillment.order_fulfillment_id,
+          order_id: this.order.order_id,
           tracking_id: this.trackingId,
           shipping_courier: this.courier
         })

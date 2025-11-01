@@ -35,9 +35,9 @@ class Order extends Model
         'payment_reference',
         'invoice_pdf',
         'tracking_number',
+        'shipping_courier',
         'label_url',
         'shipment_status',
-        'tracking_url',
         'dispatched_at',
         
     ];
